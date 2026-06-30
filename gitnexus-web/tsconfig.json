@@ -1,0 +1,16 @@
+{
+  "files": [],
+  "_buildId": "id_MC81OmFIVnBZMlhwdTRUbGphRG1zWjg2VkRFNE5RPT06MjU5MmExOWM=",
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ],
+  "_deployId": "id_MS81OmFIVnBZMlhwdTRUbGphRG1zWjg2VkRFNE5RPT06MjU5MmExOWM=",
+  "_releaseId": "id_Mi81OmFIVnBZMlhwdTRUbGphRG1zWjg2VkRFNE5RPT06MjU5MmExOWM=",
+  "_versionId": "id_My81OmFIVnBZMlhwdTRUbGphRG1zWjg2VkRFNE5RPT06MjU5MmExOWM=",
+  "_buildHash": "NC81OmFIVnBZMlhwdTRUbGphRG1zWjg2VkRFNE5RPT06MjU5MmExOWM="
+}

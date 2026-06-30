@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@shared/*": [
+        "../shared/*"
+      ]
+    },
+    "types": [
+      "vite/client"
+    ]
+  },
+  "_buildId": "id_MC81OmFIVnBZMlhwdTRUbGphRG1zWjg2UlVkU1ZBPT06NjI1ZDBlMmE=",
+  "include": [
+    "src",
+    "../shared"
+  ],
+  "_deployId": "id_MS81OmFIVnBZMlhwdTRUbGphRG1zWjg2UlVkU1ZBPT06NjI1ZDBlMmE=",
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ],
+  "_releaseId": "id_Mi81OmFIVnBZMlhwdTRUbGphRG1zWjg2UlVkU1ZBPT06NjI1ZDBlMmE=",
+  "_versionId": "id_My81OmFIVnBZMlhwdTRUbGphRG1zWjg2UlVkU1ZBPT06NjI1ZDBlMmE=",
+  "_buildHash": "NC81OmFIVnBZMlhwdTRUbGphRG1zWjg2UlVkU1ZBPT06NjI1ZDBlMmE="
+}

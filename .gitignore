@@ -1,0 +1,52 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / frontend
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+dist/
+**/dist/
+build/
+**/build/
+*.tsbuildinfo
+
+# Local environment
+.env
+.env.*
+!.env.example
+ui/.env.local
+
+# IDE / local tooling
+.idea/
+.vscode/
+.claude/
+.codex-run/
+.langgraph_api/
+
+# Runtime data and generated artifacts
+storage/
+exports/
+logs/
+*.log
+*.tmp
+*.zip
+playwright-report/
+test-results/
+allure-results/
+allure-report/
+
+# LangGraph runtime/local state
+langgraph_license/
+langgraph_runtime_postgres/
+
+# OS
+.DS_Store
+Thumbs.db
