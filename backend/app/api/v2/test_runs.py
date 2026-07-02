@@ -41,8 +41,15 @@ from app.schemas.test_run import (
     TestRunScheduleCreate,
     TestRunScheduleUpdate,
     BatchRetryJobsRequest,
+    AnalyzeFailureRequest,
+    FailureAnalysisInfo,
 )
 from app.schemas.enums import TestResultStatus, TestRunState, ScriptType
+from app.schemas.loop import (
+    FailureLoopRunInfo,
+    FailureLoopStartRequest,
+    FailureLoopStartResult,
+)
 
 router = APIRouter(
     prefix="/projects/{project_identifier}/test-runs",
@@ -486,6 +493,183 @@ async def test_run_events(
         },
     )
 
+# =============== 失败分析子资源 ===============
+
+@router.get(
+    "/{test_run_identifier}/failure-analyses",
+    response_model=SuccessResponse[list[FailureAnalysisInfo]],
+    summary="获取测试运行失败分析列表",
+    description="获取该测试运行下已生成的自动化失败分析结果",
+)
+async def list_failure_analyses(
+    project_identifier: str,
+    test_run_identifier: str,
+    service: TestRunServiceDep,
+) -> SuccessResponse[list[FailureAnalysisInfo]]:
+    from app.services.failure_analysis_service import FailureAnalysisService
+
+    result = await FailureAnalysisService(service.session).list_by_run(
+        project_identifier, test_run_identifier
+    )
+    return SuccessResponse(success=True, data=result)
+
+@router.post(
+    "/{test_run_identifier}/failure-analyses",
+    response_model=SuccessResponse[list[FailureAnalysisInfo]],
+    summary="分析测试运行中的失败作业",
+    description="对该测试运行下所有失败脚本作业生成或刷新失败分析",
+)
+async def analyze_run_failures(
+    project_identifier: str,
+    test_run_identifier: str,
+    data: AnalyzeFailureRequest,
+    service: TestRunServiceDep,
+    db: DbSessionDep,
+) -> SuccessResponse[list[FailureAnalysisInfo]]:
+    from app.services.failure_analysis_service import FailureAnalysisService
+
+    result = await FailureAnalysisService(service.session).analyze_run_failures(
+        project_identifier,
+        test_run_identifier,
+        force=data.force,
+    )
+    await db.commit()
+    return SuccessResponse(success=True, data=result)
+
+@router.get(
+    "/{test_run_identifier}/script-jobs/{job_id}/failure-analysis",
+    response_model=SuccessResponse[FailureAnalysisInfo],
+    summary="获取脚本作业失败分析",
+    description="获取指定脚本作业已生成的失败分析结果",
+)
+async def get_job_failure_analysis(
+    project_identifier: str,
+    test_run_identifier: str,
+    job_id: str,
+    service: TestRunServiceDep,
+) -> SuccessResponse[FailureAnalysisInfo]:
+    from app.services.failure_analysis_service import FailureAnalysisService
+
+    result = await FailureAnalysisService(service.session).get_by_job(
+        project_identifier,
+        test_run_identifier,
+        job_id,
+    )
+    return SuccessResponse(success=True, data=result)
+
+@router.post(
+    "/{test_run_identifier}/script-jobs/{job_id}/failure-analysis",
+    response_model=SuccessResponse[FailureAnalysisInfo],
+    summary="分析脚本作业失败原因",
+    description="对指定失败脚本作业生成或刷新失败分析",
+)
+async def analyze_job_failure(
+    project_identifier: str,
+    test_run_identifier: str,
+    job_id: str,
+    data: AnalyzeFailureRequest,
+    service: TestRunServiceDep,
+    db: DbSessionDep,
+) -> SuccessResponse[FailureAnalysisInfo]:
+    from app.services.failure_analysis_service import FailureAnalysisService
+
+    result = await FailureAnalysisService(service.session).analyze_job_failure(
+        project_identifier,
+        test_run_identifier,
+        job_id,
+        force=data.force,
+    )
+    await db.commit()
+    return SuccessResponse(success=True, data=result)
+# =============== 失败闭环子资源 ===============
+
+@router.get(
+    "/{test_run_identifier}/failure-loops",
+    response_model=SuccessResponse[list[FailureLoopRunInfo]],
+    summary="获取测试运行失败闭环列表",
+    description="获取该测试运行下已启动的 API/UI 失败闭环记录",
+)
+async def list_failure_loops(
+    project_identifier: str,
+    test_run_identifier: str,
+    service: TestRunServiceDep,
+) -> SuccessResponse[list[FailureLoopRunInfo]]:
+    from app.services.failure_loop_service import FailureLoopService
+
+    result = await FailureLoopService(service.session).list_by_run(
+        project_identifier,
+        test_run_identifier,
+    )
+    return SuccessResponse(success=True, data=result)
+
+@router.post(
+    "/{test_run_identifier}/failure-loops",
+    response_model=SuccessResponse[FailureLoopStartResult],
+    summary="启动测试失败自动分析/修复闭环",
+    description=(
+        "启动 dry-run 闭环：统一持久化状态，"
+        "并按 script_type 自动分流 API/UI 失败策略"
+    ),
+)
+async def start_failure_loop(
+    project_identifier: str,
+    test_run_identifier: str,
+    data: FailureLoopStartRequest,
+    service: TestRunServiceDep,
+    db: DbSessionDep,
+) -> SuccessResponse[FailureLoopStartResult]:
+    from app.services.failure_loop_service import FailureLoopService
+
+    result = await FailureLoopService(service.session).start_failure_loop(
+        project_identifier,
+        test_run_identifier,
+        data,
+    )
+    await db.commit()
+    return SuccessResponse(success=True, data=result)
+
+@router.post(
+    "/{test_run_identifier}/failure-loops/{loop_run_id}/continue",
+    response_model=SuccessResponse[FailureLoopRunInfo],
+    summary="继续失败闭环验证",
+    description="重置闭环关联的失败作业并提交测试运行到后台执行，用于验证修复计划",
+)
+async def continue_failure_loop(
+    project_identifier: str,
+    test_run_identifier: str,
+    loop_run_id: str,
+    service: TestRunServiceDep,
+    db: DbSessionDep,
+) -> SuccessResponse[FailureLoopRunInfo]:
+    from app.services.failure_loop_service import FailureLoopService
+
+    result = await FailureLoopService(service.session).continue_failure_loop(
+        project_identifier,
+        test_run_identifier,
+        loop_run_id,
+    )
+    await db.commit()
+    return SuccessResponse(success=True, data=result)
+@router.get(
+    "/{test_run_identifier}/failure-loops/{loop_run_id}",
+    response_model=SuccessResponse[FailureLoopRunInfo],
+    summary="获取失败闭环详情",
+    description="获取指定 API/UI 失败闭环的阶段、步骤和最终结果",
+)
+async def get_failure_loop(
+    project_identifier: str,
+    test_run_identifier: str,
+    loop_run_id: str,
+    service: TestRunServiceDep,
+) -> SuccessResponse[FailureLoopRunInfo]:
+    from app.services.failure_loop_service import FailureLoopService
+
+    result = await FailureLoopService(service.session).get_loop_run(
+        project_identifier,
+        test_run_identifier,
+        loop_run_id,
+    )
+    return SuccessResponse(success=True, data=result)
 # =============== 脚本作业子资源 ===============
 
 @router.get(
@@ -829,3 +1013,4 @@ async def delete_schedule(
         success=True,
         message=f"Schedule {schedule_id} has been deleted successfully",
     )
+

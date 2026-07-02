@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import * as React from "react";
@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   Loader2,
   Zap,
+  Wand2,
   CalendarClock,
   Bot,
   FileCode,
@@ -67,6 +68,12 @@ import {
   getJobReportPreview,
   mapJobsToTestCases,
   subscribeToTestRunEvents,
+  listFailureAnalyses,
+  analyzeRunFailures,
+  analyzeJobFailure,
+  listFailureLoops,
+  startFailureLoop,
+  continueFailureLoop,
   type TestRunInfo,
   type TestRunScriptJobInfo,
   type TestRunState,
@@ -74,6 +81,8 @@ import {
   type TriggerType,
   type ScriptType,
   type JobStatus,
+  type FailureAnalysisInfo,
+  type FailureLoopRunInfo,
 } from "@/lib/api";
 import { ApiError } from "@/lib/api/client";
 
@@ -127,6 +136,54 @@ const JOB_STATUS_BADGE: Record<
   cancelled: { label: "已取消", variant: "outline" },
 };
 
+
+const FAILURE_CATEGORY_LABEL: Record<string, string> = {
+  product_bug: "产品缺陷",
+  test_script_error: "脚本问题",
+  assertion_mismatch: "断言不一致",
+  ui_locator_issue: "UI 定位问题",
+  timeout_or_flaky: "超时/不稳定",
+  environment_issue: "环境问题",
+  test_data_issue: "测试数据问题",
+  unknown: "待确认",
+};
+
+const LOOP_PHASE_LABEL: Record<string, string> = {
+  discover: "发现",
+  plan: "计划",
+  execute: "执行",
+  verify: "验证",
+  iterate: "迭代",
+  stopped: "已停止",
+};
+
+const LOOP_STATUS_LABEL: Record<string, string> = {
+  running: "运行中",
+  completed: "已完成",
+  needs_human_review: "待人工确认",
+  blocked: "已阻塞",
+  failed: "失败",
+};
+
+type LoopPlanItem = {
+  job_id?: string;
+  category?: string;
+  severity?: string;
+  confidence?: number;
+  auto_fixable?: boolean;
+  actions?: string[];
+};
+
+function getLoopRemediationPlan(loop: FailureLoopRunInfo | null): LoopPlanItem[] {
+  const plan = loop?.final_result?.remediation_plan;
+  return Array.isArray(plan) ? (plan as LoopPlanItem[]) : [];
+}
+const SEVERITY_BADGE: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  critical: { label: "严重", variant: "destructive" },
+  high: { label: "高", variant: "destructive" },
+  medium: { label: "中", variant: "secondary" },
+  low: { label: "低", variant: "outline" },
+};
 function formatDuration(ms?: number | null): string {
   if (!ms) return "-";
   if (ms < 1000) return `${ms}ms`;
@@ -156,6 +213,15 @@ export default function TestRunDetailPage() {
 
   const [scriptJobs, setScriptJobs] = React.useState<TestRunScriptJobInfo[]>([]);
   const [jobsLoading, setJobsLoading] = React.useState(false);
+  const [failureAnalyses, setFailureAnalyses] = React.useState<FailureAnalysisInfo[]>([]);
+  const [failureLoops, setFailureLoops] = React.useState<FailureLoopRunInfo[]>([]);
+  const [analysesLoading, setAnalysesLoading] = React.useState(false);
+  const [loopsLoading, setLoopsLoading] = React.useState(false);
+  const [analyzingRun, setAnalyzingRun] = React.useState(false);
+  const [startingLoop, setStartingLoop] = React.useState(false);
+  const [autoRepairingLoop, setAutoRepairingLoop] = React.useState(false);
+  const [continuingLoop, setContinuingLoop] = React.useState(false);
+  const [analyzingJobId, setAnalyzingJobId] = React.useState<string | null>(null);
   const [activeTab, setActiveTab] = React.useState<ScriptType | "all">("all");
   const [cancelling, setCancelling] = React.useState(false);
   const [retryingJobId, setRetryingJobId] = React.useState<string | null>(null);
@@ -318,10 +384,36 @@ export default function TestRunDetailPage() {
     }
   }, [projectId, runId]);
 
+  const loadFailureAnalyses = React.useCallback(async () => {
+    if (!projectId || !runId) return;
+    setAnalysesLoading(true);
+    try {
+      const response = await listFailureAnalyses(projectId, runId);
+      setFailureAnalyses(response.data);
+    } catch {
+      setFailureAnalyses([]);
+    } finally {
+      setAnalysesLoading(false);
+    }
+  }, [projectId, runId]);
+  const loadFailureLoops = React.useCallback(async () => {
+    if (!projectId || !runId) return;
+    setLoopsLoading(true);
+    try {
+      const response = await listFailureLoops(projectId, runId);
+      setFailureLoops(response.data);
+    } catch {
+      setFailureLoops([]);
+    } finally {
+      setLoopsLoading(false);
+    }
+  }, [projectId, runId]);
   React.useEffect(() => {
     loadDetail();
     loadScriptJobs();
-  }, [loadDetail, loadScriptJobs]);
+    loadFailureAnalyses();
+    loadFailureLoops();
+  }, [loadDetail, loadScriptJobs, loadFailureAnalyses, loadFailureLoops]);
 
   async function handleExecute() {
     if (!testRun) return;
@@ -475,6 +567,95 @@ export default function TestRunDetailPage() {
     }
   }
 
+
+  async function handleAnalyzeRunFailures(force = false) {
+    if (!testRun) return;
+    setAnalyzingRun(true);
+    try {
+      const response = await analyzeRunFailures(projectId, testRun.identifier, { force });
+      setFailureAnalyses(response.data);
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "失败分析失败";
+      setError(msg);
+    } finally {
+      setAnalyzingRun(false);
+    }
+  }
+  async function handleStartFailureLoop() {
+    if (!testRun) return;
+    setStartingLoop(true);
+    try {
+      const response = await startFailureLoop(projectId, testRun.identifier, {
+        max_iterations: 3,
+        force_analysis: failureAnalyses.length === 0,
+        dry_run: true,
+      });
+      setFailureLoops((prev) => [response.data.loop_run, ...prev.filter((item) => item.id !== response.data.loop_run.id)]);
+      if (response.data.analyses.length > 0) {
+        setFailureAnalyses(response.data.analyses);
+      }
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "启动失败闭环失败";
+      setError(msg);
+    } finally {
+      setStartingLoop(false);
+    }
+  }
+  async function handleStartAutoRepairLoop() {
+    if (!testRun) return;
+    setAutoRepairingLoop(true);
+    try {
+      const response = await startFailureLoop(projectId, testRun.identifier, {
+        max_iterations: 3,
+        force_analysis: failureAnalyses.length === 0,
+        dry_run: false,
+      });
+      setFailureLoops((prev) => [response.data.loop_run, ...prev.filter((item) => item.id !== response.data.loop_run.id)]);
+      if (response.data.analyses.length > 0) {
+        setFailureAnalyses(response.data.analyses);
+      }
+      await loadFailureLoops();
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "自动修复失败";
+      setError(msg);
+    } finally {
+      setAutoRepairingLoop(false);
+    }
+  }
+  async function handleContinueFailureLoop() {
+    if (!testRun || !latestFailureLoop) return;
+    setContinuingLoop(true);
+    try {
+      const response = await continueFailureLoop(projectId, testRun.identifier, latestFailureLoop.id);
+      setFailureLoops((prev) => [response.data, ...prev.filter((item) => item.id !== response.data.id)]);
+      await loadScriptJobs();
+      await loadFailureAnalyses();
+      await loadFailureLoops();
+      await loadDetailSilent();
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "执行闭环验证失败";
+      setError(msg);
+    } finally {
+      setContinuingLoop(false);
+    }
+  }
+
+  async function handleAnalyzeJobFailure(job: TestRunScriptJobInfo, force = false) {
+    if (!testRun) return;
+    setAnalyzingJobId(job.id);
+    try {
+      const response = await analyzeJobFailure(projectId, testRun.identifier, job.id, { force });
+      setFailureAnalyses((prev) => {
+        const others = prev.filter((item) => item.job_id !== job.id);
+        return [response.data, ...others];
+      });
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : "失败分析失败";
+      setError(msg);
+    } finally {
+      setAnalyzingJobId(null);
+    }
+  }
   const filteredJobs = React.useMemo(() => {
     if (activeTab === "all") return scriptJobs;
     return scriptJobs.filter((j) => j.script_type === activeTab);
@@ -488,6 +669,23 @@ export default function TestRunDetailPage() {
     return counts;
   }, [scriptJobs]);
 
+  const failedJobs = React.useMemo(() => {
+    return scriptJobs.filter((job) => {
+      const summary = job.result_summary as Record<string, number> | null | undefined;
+      return job.status === "failed" || Number(summary?.failed || 0) > 0;
+    });
+  }, [scriptJobs]);
+
+  const analysisByJobId = React.useMemo(() => {
+    return new Map(failureAnalyses.map((item) => [item.job_id, item]));
+  }, [failureAnalyses]);
+  const latestFailureLoop = React.useMemo(() => {
+    return failureLoops[0] || null;
+  }, [failureLoops]);
+
+  const latestLoopPlan = React.useMemo(() => {
+    return getLoopRemediationPlan(latestFailureLoop);
+  }, [latestFailureLoop]);
   if (loading) {
     return (
       <MainLayout title="测试运行详情">
@@ -664,6 +862,212 @@ export default function TestRunDetailPage() {
           </div>
         </div>
 
+        {/* AI 失败分析 */}
+        {(failedJobs.length > 0 || failureAnalyses.length > 0 || failureLoops.length > 0) && (
+          <div className="rounded-lg border bg-card">
+            <div className="border-b p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-4 w-4 text-primary" />
+                    <h2 className="font-medium">AI 失败分析</h2>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {failureAnalyses.length > 0
+                      ? `已分析 ${failureAnalyses.length} 个失败作业`
+                      : `发现 ${failedJobs.length} 个失败作业`}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={analyzingRun || failedJobs.length === 0}
+                    onClick={() => handleAnalyzeRunFailures(failureAnalyses.length > 0)}
+                  >
+                    {analyzingRun ? (
+                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Bot className="mr-2 h-3.5 w-3.5" />
+                    )}
+                    {failureAnalyses.length > 0 ? "重新分析失败" : "分析失败"}
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    disabled={startingLoop || failedJobs.length === 0}
+                    onClick={handleStartFailureLoop}
+                  >
+                    {startingLoop ? (
+                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="mr-2 h-3.5 w-3.5" />
+                    )}
+                    启动闭环计划
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={autoRepairingLoop || failedJobs.length === 0}
+                    onClick={handleStartAutoRepairLoop}
+                  >
+                    {autoRepairingLoop ? (
+                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Wand2 className="mr-2 h-3.5 w-3.5" />
+                    )}
+                    自动修复
+                  </Button>
+                </div>
+              </div>
+            </div>
+            {(loopsLoading || latestFailureLoop) && (
+              <div className="border-b p-4">
+                {loopsLoading && !latestFailureLoop ? (
+                  <div className="flex h-16 items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : latestFailureLoop ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Zap className="h-4 w-4 text-primary" />
+                          <span className="font-medium">失败闭环计划</span>
+                          <Badge variant="outline">
+                            {latestFailureLoop.strategy === "ui_failure" ? "UI 自动化" : "API 接口"}
+                          </Badge>
+                          <Badge variant="secondary">
+                            {LOOP_STATUS_LABEL[latestFailureLoop.status] || latestFailureLoop.status}
+                          </Badge>
+                          {latestFailureLoop.stop_reason && (
+                            <Badge variant="outline">{latestFailureLoop.stop_reason}</Badge>
+                          )}
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">{latestFailureLoop.goal}</p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="text-xs text-muted-foreground">
+                          迭代 {latestFailureLoop.current_iteration}/{latestFailureLoop.max_iterations}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={continuingLoop || testRun.run_state === "in_progress" || latestFailureLoop.current_iteration >= latestFailureLoop.max_iterations}
+                          onClick={handleContinueFailureLoop}
+                        >
+                          {continuingLoop ? (
+                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                          )}
+                          执行验证
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-2 md:grid-cols-5">
+                      {["discover", "plan", "execute", "verify", "iterate"].map((phase) => {
+                        const step = latestFailureLoop.steps.find((item) => item.phase === phase);
+                        return (
+                          <div key={phase} className="rounded-md border bg-background p-3">
+                            <div className="flex items-center gap-2">
+                              {step ? (
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              ) : (
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                              )}
+                              <span className="text-sm font-medium">{LOOP_PHASE_LABEL[phase]}</span>
+                            </div>
+                            <p className="mt-2 line-clamp-3 text-xs text-muted-foreground">
+                              {step?.output_summary || "等待执行"}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {latestLoopPlan.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">修复动作建议</div>
+                        <div className="grid gap-2 md:grid-cols-2">
+                          {latestLoopPlan.map((item, index) => {
+                            const job = scriptJobs.find((scriptJob) => scriptJob.id === item.job_id);
+                            const category = item.category ? (FAILURE_CATEGORY_LABEL[item.category] || item.category) : "待确认";
+                            return (
+                              <div key={`${item.job_id || "loop"}-${index}`} className="rounded-md border bg-background p-3">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-sm font-medium">
+                                    {job?.script_name || job?.script_identifier || item.job_id || `失败项 ${index + 1}`}
+                                  </span>
+                                  <Badge variant="outline">{category}</Badge>
+                                  <Badge variant={item.auto_fixable ? "default" : "secondary"}>
+                                    {item.auto_fixable ? "可自动修复" : "需确认"}
+                                  </Badge>
+                                  {typeof item.confidence === "number" && (
+                                    <Badge variant="outline">置信度 {item.confidence}%</Badge>
+                                  )}
+                                </div>
+                                {item.actions && item.actions.length > 0 && (
+                                  <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                                    {item.actions.slice(0, 4).map((action, actionIndex) => (
+                                      <li key={`${item.job_id || index}-action-${actionIndex}`}>{action}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            )}            {analysesLoading ? (
+              <div className="flex h-24 items-center justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : failureAnalyses.length === 0 ? (
+              <div className="p-4 text-sm text-muted-foreground">
+                尚未生成失败分析。
+              </div>
+            ) : (
+              <div className="divide-y">
+                {failureAnalyses.map((analysis) => {
+                  const job = scriptJobs.find((item) => item.id === analysis.job_id);
+                  const severity = SEVERITY_BADGE[analysis.severity] || SEVERITY_BADGE.medium;
+                  const category = FAILURE_CATEGORY_LABEL[analysis.failure_category] || analysis.failure_category;
+                  return (
+                    <div key={analysis.id} className="p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">
+                          {job?.script_name || job?.script_identifier || analysis.job_id}
+                        </span>
+                        <Badge variant="outline">{SCRIPT_TYPE_LABEL[analysis.script_type]}</Badge>
+                        <Badge variant={severity.variant}>{severity.label}</Badge>
+                        <Badge variant="secondary">{category}</Badge>
+                        <Badge variant="outline">置信度 {analysis.confidence}%</Badge>
+                        <Badge variant="outline">{analysis.analysis_source === "llm" ? "LLM" : "规则"}</Badge>
+                      </div>
+                      <p className="mt-2 text-sm">{analysis.summary}</p>
+                      {analysis.root_cause && (
+                        <p className="mt-2 text-sm text-muted-foreground">{analysis.root_cause}</p>
+                      )}
+                      {analysis.recommendations.length > 0 && (
+                        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                          {analysis.recommendations.slice(0, 3).map((item, index) => (
+                            <li key={`${analysis.id}-rec-${index}`}>{item}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
         {/* 脚本作业 */}
         {scriptJobs.length > 0 && (
           <div className="rounded-lg border bg-card">
@@ -753,6 +1157,8 @@ export default function TestRunDetailPage() {
                       const failedPct = total > 0 ? (failed / total) * 100 : 0;
                       const skippedPct = total > 0 ? (skipped / total) * 100 : 0;
                       const canRetry = ["failed", "skipped", "cancelled"].includes(job.status);
+                      const analysis = analysisByJobId.get(job.id);
+                      const canAnalyzeFailure = job.status === "failed" || failed > 0;
 
                       return (
                         <div key={job.id} className="p-4 hover:bg-muted/50 transition-colors">
@@ -894,6 +1300,24 @@ export default function TestRunDetailPage() {
                             </div>
                           )}
 
+                          {analysis && (
+                            <div className="mt-3 rounded-md border bg-muted/30 p-3">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <Bot className="h-3.5 w-3.5 text-primary" />
+                                <span className="text-xs font-medium">AI 失败分析</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {FAILURE_CATEGORY_LABEL[analysis.failure_category] || analysis.failure_category}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  置信度 {analysis.confidence}%
+                                </Badge>
+                              </div>
+                              <p className="mt-2 text-sm">{analysis.summary}</p>
+                              {analysis.root_cause && (
+                                <p className="mt-1 text-xs text-muted-foreground">{analysis.root_cause}</p>
+                              )}
+                            </div>
+                          )}
                           {/* 错误信息（可折叠） */}
                           {job.error_message && (
                             <div className="mt-3">

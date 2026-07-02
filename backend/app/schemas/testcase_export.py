@@ -17,9 +17,8 @@ ExportFormat = Literal["excel", "word", "json"]
 class TestCaseExportRequest(BaseModel):
     """测试用例导出请求模型"""
     test_case_ids: list[str] = Field(
-        ...,
-        min_length=1,
-        description="要导出的测试用例标识符列表，如 ['TC-1234', 'TC-1235']"
+        default_factory=list,
+        description="测试用例标识符列表；为空时导出项目全部用例"
     )
     format: ExportFormat = Field(
         default="excel",

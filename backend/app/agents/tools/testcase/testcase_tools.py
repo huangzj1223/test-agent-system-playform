@@ -5,6 +5,7 @@
 """
 
 import logging
+import re
 from typing import Optional, Any
 
 import httpx
@@ -17,6 +18,105 @@ logger = logging.getLogger(__name__)
 
 API_BASE_URL = f"http://localhost:{settings.app_port}"
 API_PREFIX = settings.api_prefix
+
+_STEP_TEXT_KEYS = (
+    "action",
+    "step_action",
+    "step_description",
+    "description",
+    "content",
+    "operation",
+    "操作步骤",
+    "测试步骤",
+    "步骤描述",
+    "输入及操作",
+)
+_STEP_NUMBER_KEYS = ("step", "步骤", "seq", "index", "order", "step_number")
+_RESULT_KEYS = (
+    "result",
+    "expected_result",
+    "expected",
+    "expect",
+    "assertion",
+    "预期结果",
+    "期望结果",
+    "期望结果与评估标准",
+)
+
+
+def _strip_step_number(value: str) -> str:
+    return re.sub(r"^\s*\d+\s*[.、)：:)\-]\s*", "", value).strip()
+
+
+def _ensure_list(value: Any) -> list[Any]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, tuple):
+        return list(value)
+    if isinstance(value, str):
+        lines = [line.strip() for line in value.splitlines() if line.strip()]
+        return lines or [value]
+    return [value]
+
+
+def _extract_first(data: dict[str, Any], keys: tuple[str, ...]) -> Any:
+    for key in keys:
+        value = data.get(key)
+        if value is not None and str(value).strip():
+            return value
+    return None
+
+
+def _normalize_step_items(
+    steps: Any,
+    expected_results: Any = None,
+) -> list[dict[str, Optional[str]]]:
+    """Normalize AI/export step variants to backend API shape: {step, result}."""
+    raw_steps = _ensure_list(steps)
+    raw_expected = _ensure_list(expected_results)
+    normalized: list[dict[str, Optional[str]]] = []
+
+    for index, item in enumerate(raw_steps):
+        result_value: Any = raw_expected[index] if index < len(raw_expected) else None
+
+        if isinstance(item, dict):
+            action_value = _extract_first(item, _STEP_TEXT_KEYS)
+            fallback_step = _extract_first(item, _STEP_NUMBER_KEYS)
+            item_result = _extract_first(item, _RESULT_KEYS)
+            if item_result is not None:
+                result_value = item_result
+            if action_value is None:
+                action_value = fallback_step
+        else:
+            action_value = item
+
+        action = _strip_step_number(str(action_value or ""))
+        result = _strip_step_number(str(result_value or "")) if result_value is not None else None
+        if action:
+            normalized.append({"step": action, "result": result or None})
+
+    return normalized
+
+
+def _normalize_test_case_steps(test_case_data: dict[str, Any]) -> list[dict[str, Optional[str]]]:
+    steps = (
+        test_case_data.get("test_case_steps")
+        or test_case_data.get("steps")
+        or test_case_data.get("测试步骤")
+        or test_case_data.get("操作步骤")
+        or test_case_data.get("输入及操作")
+    )
+    expected_results = (
+        test_case_data.get("expected_results")
+        or test_case_data.get("expected_result")
+        or test_case_data.get("expected")
+        or test_case_data.get("预期结果")
+        or test_case_data.get("期望结果")
+        or test_case_data.get("期望结果与评估标准")
+    )
+    return _normalize_step_items(steps, expected_results)
 
 def _get_api_url(path: str) -> str:
     """构建完整的 API URL"""
@@ -52,6 +152,18 @@ async def _make_http_request(
     except Exception as e:
         raise Exception(f"请求失败: {str(e)}")
 
+async def _resolve_default_test_case_folder_id(project_identifier: str) -> Optional[str]:
+    """Return the first test_case folder id for a project, if one exists."""
+    url = _get_api_url(f"/projects/{project_identifier}/folders")
+    response_data = await _make_http_request(
+        method="GET",
+        url=url,
+        params={"folder_type": "test_case", "page_size": 100},
+    )
+    folders = response_data.get("data") or []
+    if not folders:
+        return None
+    return str(folders[0].get("id") or "") or None
 async def _create_test_case_impl(
     project_identifier: str,
     folder_id: Optional[str],
@@ -105,10 +217,11 @@ async def _create_test_case_impl(
             request_data["background"] = background
     else:
         if test_case_steps is not None:
-            request_data["test_case_steps"] = test_case_steps
+            request_data["test_case_steps"] = _normalize_step_items(test_case_steps)
 
-    if folder_id:
-        url = _get_api_url(f"/projects/{project_identifier}/folders/{folder_id}/test-cases")
+    target_folder_id = folder_id or await _resolve_default_test_case_folder_id(project_identifier)
+    if target_folder_id:
+        url = _get_api_url(f"/projects/{project_identifier}/folders/{target_folder_id}/test-cases")
     else:
         url = _get_api_url(f"/projects/{project_identifier}/test-cases")
     response_data = await _make_http_request(method="POST", url=url, json_data=request_data)
@@ -244,7 +357,7 @@ async def _update_test_case_impl(
     if custom_fields is not None:
         request_data["custom_fields"] = custom_fields
     if test_case_steps is not None:
-        request_data["test_case_steps"] = test_case_steps
+        request_data["test_case_steps"] = _normalize_step_items(test_case_steps)
     if feature is not None:
         request_data["feature"] = feature
     if scenario is not None:
@@ -367,7 +480,7 @@ async def _batch_create_test_cases_impl(
 
     for index, test_case_data in enumerate(test_cases):
         try:
-            name = test_case_data.get("name")
+            name = (test_case_data.get("name") or test_case_data.get("title") or test_case_data.get("case_name") or test_case_data.get("用例标题") or test_case_data.get("测试用例名称"))
             if not name:
                 results.append({
                     "index": index,
@@ -382,8 +495,8 @@ async def _batch_create_test_cases_impl(
                 project_identifier=project_identifier,
                 folder_id=folder_id,
                 name=name,
-                description=test_case_data.get("description"),
-                preconditions=test_case_data.get("preconditions"),
+                description=(test_case_data.get("description") or test_case_data.get("remarks") or test_case_data.get("备注")),
+                preconditions=(test_case_data.get("preconditions") or test_case_data.get("前置条件")),
                 priority=test_case_data.get("priority", "medium"),
                 status=test_case_data.get("status", "new"),
                 case_type=test_case_data.get("case_type", "functional"),
@@ -393,7 +506,7 @@ async def _batch_create_test_cases_impl(
                 automation_status=test_case_data.get("automation_status", "not_automated"),
                 custom_fields=test_case_data.get("custom_fields"),
                 template=test_case_data.get("template", "test_case"),
-                test_case_steps=test_case_data.get("test_case_steps"),
+                test_case_steps=_normalize_test_case_steps(test_case_data),
                 feature=test_case_data.get("feature"),
                 scenario=test_case_data.get("scenario"),
                 background=test_case_data.get("background"),

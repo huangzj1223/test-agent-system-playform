@@ -12,7 +12,7 @@ uv sync
 # 前端依赖
 cd ui
 npm install
-```
+``` 
 
 ### 步骤 2: 启动服务
 

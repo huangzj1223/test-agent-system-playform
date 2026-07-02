@@ -269,6 +269,26 @@ async def create_test_case_in_folder(
 
 # ============ 更新测试用例接口 ============
 
+@router.post(
+    "/test-cases",
+    response_model=SuccessResponse[TestCaseInfo],
+    status_code=status.HTTP_201_CREATED,
+    summary="在项目下创建测试用例",
+    description="在项目测试用例库根级创建新的测试用例。优先建议调用文件夹创建接口。",
+)
+async def create_test_case(
+    project_identifier: str,
+    data: TestCaseCreate,
+    service: TestCaseServiceDep,
+    current_user_id: CurrentUserIdDep,
+    db: DbSessionDep,
+) -> SuccessResponse[TestCaseInfo]:
+    """Create a test case without assigning it to a folder."""
+    test_case = await service.create_test_case(
+        project_identifier, data, current_user_id, None
+    )
+    await db.commit()
+    return SuccessResponse(success=True, data=test_case)
 @router.patch(
     "/test-cases/{test_case_identifier}",
     response_model=SuccessResponse[TestCaseInfo],

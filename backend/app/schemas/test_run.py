@@ -333,6 +333,33 @@ class TestRunScriptJobCreate(BaseModel):
     max_retries: int = Field(default=0, ge=0, le=10, description="最大重试次数")
 # type: ignore  My80OmFIVnBZMlhwdTRUbGphRG1zWjg2WTBGTVl3PT06MGNkZTZkNWE=
 
+
+class AnalyzeFailureRequest(BaseModel):
+    """触发失败分析请求"""
+    force: bool = Field(default=False, description="是否强制重新分析")
+
+class FailureAnalysisInfo(BaseModel):
+    """自动化失败分析信息"""
+    id: UUID = Field(..., description="分析 ID")
+    project_id: UUID = Field(..., description="项目 ID")
+    test_run_id: UUID = Field(..., description="测试运行 ID")
+    job_id: UUID = Field(..., description="脚本作业 ID")
+    script_type: ScriptType = Field(..., description="脚本类型")
+    analysis_status: str = Field(..., description="分析状态")
+    failure_category: str = Field(..., description="失败分类")
+    severity: str = Field(..., description="严重程度")
+    confidence: int = Field(..., description="置信度 0-100")
+    summary: str = Field(..., description="失败摘要")
+    root_cause: Optional[str] = Field(default=None, description="根因分析")
+    evidence: list[dict[str, Any]] = Field(default_factory=list, description="证据")
+    recommendations: list[str] = Field(default_factory=list, description="建议动作")
+    knowledge_refs: list[dict[str, Any]] = Field(default_factory=list, description="知识库引用")
+    raw_context: Optional[dict[str, Any]] = Field(default=None, description="裁剪上下文")
+    model_name: Optional[str] = Field(default=None, description="使用的模型")
+    analysis_source: str = Field(..., description="分析来源")
+    error_message: Optional[str] = Field(default=None, description="分析错误")
+    created_at: datetime = Field(..., description="创建时间")
+    updated_at: Optional[datetime] = Field(default=None, description="更新时间")
 class TestRunScriptJobUpdate(BaseModel):
     """更新测试运行脚本作业"""
     execution_order: Optional[int] = Field(default=None, description="执行顺序")

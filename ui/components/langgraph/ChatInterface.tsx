@@ -87,6 +87,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(({ assistant, initia
     setFiles,
     isLoading,
     isThreadLoading,
+    agentError,
     interrupt,
     sendMessage,
     stopStream,
@@ -348,6 +349,11 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(({ assistant, initia
           className="mx-auto w-full max-w-[1024px] px-6 pb-6 pt-4"
           ref={contentRef}
         >
+          {agentError && (
+            <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {agentError}
+            </div>
+          )}
           {isThreadLoading ? (
             <div className="flex items-center justify-center p-8">
               <p className="text-muted-foreground">加载中...</p>
@@ -642,3 +648,4 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(({ assistant, initia
 
 ChatInterface.displayName = "ChatInterface";
 // eslint-disable  My80OmFIVnBZMlhwdTRUbGphRG1zWjg2YmtKTE1RPT06YWYwNDUyY2E=
+

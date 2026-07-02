@@ -32,10 +32,33 @@ class TestCaseExportService:
 
     COLLECTION_NAME = "testcase_export_jobs"
     EXPORTS_DIR = Path(__file__).resolve().parents[2] / "exports"
+    _memory_jobs: dict[str, dict] = {}
 
-    def __init__(self, db: AsyncSession, mongodb: AsyncIOMotorDatabase):
+    def __init__(self, db: AsyncSession, mongodb: AsyncIOMotorDatabase | None):
         self.db = db
         self.mongodb = mongodb
+
+    async def _insert_job(self, job: dict) -> None:
+        if self.mongodb is None:
+            self._memory_jobs[job["_id"]] = job
+            return
+        await self.mongodb[self.COLLECTION_NAME].insert_one(job)
+
+    async def _find_job(self, export_id: str) -> Optional[dict]:
+        if self.mongodb is None:
+            return self._memory_jobs.get(export_id)
+        return await self.mongodb[self.COLLECTION_NAME].find_one({"_id": export_id})
+
+    async def _update_job(self, export_id: str, values: dict) -> None:
+        if self.mongodb is None:
+            job = self._memory_jobs.get(export_id)
+            if job is not None:
+                job.update(values)
+            return
+        await self.mongodb[self.COLLECTION_NAME].update_one(
+            {"_id": export_id},
+            {"$set": values},
+        )
 
     async def start_export(
         self,
@@ -78,11 +101,11 @@ class TestCaseExportService:
             "completed_at": None,
         }
 
-        await self.mongodb[self.COLLECTION_NAME].insert_one(export_job)
+        await self._insert_job(export_job)
 
         # 同步处理导出任务（简化实现，生产环境应使用 Celery 等异步任务队列）
         await self._process_export(export_id)
-        export_job = await self.mongodb[self.COLLECTION_NAME].find_one({"_id": export_id}) or {}
+        export_job = await self._find_job(export_id) or {}
 
         status_url = f"{settings.api_prefix}/testcase-exports/{export_id}/status"
 
@@ -101,13 +124,10 @@ class TestCaseExportService:
         """
         try:
             # 更新状态为处理中
-            await self.mongodb[self.COLLECTION_NAME].update_one(
-                {"_id": export_id},
-                {"$set": {"status": ExportStatus.PROCESSING.value}}
-            )
+            await self._update_job(export_id, {"status": ExportStatus.PROCESSING.value})
 
             # 获取导出任务信息
-            job = await self.mongodb[self.COLLECTION_NAME].find_one({"_id": export_id})
+            job = await self._find_job(export_id)
             if not job:
                 return
 
@@ -130,92 +150,67 @@ class TestCaseExportService:
             download_url = f"{settings.api_prefix}/testcase-exports/{export_id}/download"
 
             # 更新任务状态为完成
-            await self.mongodb[self.COLLECTION_NAME].update_one(
-                {"_id": export_id},
-                {
-                    "$set": {
-                        "status": ExportStatus.COMPLETED.value,
-                        "download_url": download_url,
-                        "file_path": str(file_path),
-                        "filename": filename,
-                        "content_type": content_type,
-                        "completed_at": datetime.utcnow(),
-                    }
-                }
-            )
+            await self._update_job(export_id, {"status": ExportStatus.COMPLETED.value, "download_url": download_url, "file_path": str(file_path), "filename": filename, "content_type": content_type, "completed_at": datetime.utcnow()})
 
         except Exception as e:
             # 更新任务状态为失败
-            await self.mongodb[self.COLLECTION_NAME].update_one(
-                {"_id": export_id},
-                {
-                    "$set": {
-                        "status": ExportStatus.FAILED.value,
-                        "error_message": str(e),
-                        "completed_at": datetime.utcnow(),
-                    }
-                }
-            )
+            await self._update_job(export_id, {"status": ExportStatus.FAILED.value, "error_message": str(e), "completed_at": datetime.utcnow()})
 
     async def _fetch_test_cases(
         self,
         project_id: str,
         test_case_ids: list[str]
     ) -> list[dict]:
-        """
-        从数据库查询测试用例数据并转换为导出器所需的字典格式
-
-        Args:
-            project_id: 项目 ID
-            test_case_ids: 测试用例标识符列表
-
-        Returns:
-            list[dict]: 测试用例字典列表
-        """
-        from app.repositories.test_case_repository import TestCaseRepository
+        """Fetch test cases and convert them to exporter input format."""
+        from app.repositories.test_case_repo import TestCaseRepository
 
         repo = TestCaseRepository(self.db)
-        test_cases = []
+        test_cases: list[dict] = []
 
-        for tc_id in test_case_ids:
-            tc = await repo.get_by_identifier(tc_id)
-            if tc and str(tc.project_id) == project_id:
-                # 转换为导出器所需的字典格式
-                test_case_dict = {
-                    "id": tc.identifier,
-                    "title": tc.name,
-                    "name": tc.name,
-                    "module": tc.folder.name if tc.folder else "未分类",
-                    "type": tc.test_case_type.value if tc.test_case_type else "functional",
-                    "case_type": tc.test_case_type.value if tc.test_case_type else "functional",
-                    "priority": tc.priority.value if tc.priority else "medium",
-                    "preconditions": tc.preconditions or "",
-                    "remarks": tc.description or "",
-                    "steps": [],
-                    "expected_results": [],
-                }
+        if test_case_ids:
+            source_cases = []
+            for tc_id in test_case_ids:
+                tc = await repo.get_by_identifier(tc_id)
+                if tc and str(tc.project_id) == project_id:
+                    source_cases.append(tc)
+        else:
+            source_cases = await repo.get_by_project(UUID(project_id), offset=0, limit=10000)
 
-                # 转换测试步骤
-                if tc.steps:
-                    for step in sorted(tc.steps, key=lambda s: s.step_number):
-                        test_case_dict["steps"].append({
-                            "seq": step.step_number,
-                            "action": step.action,
-                            "step": step.step_number,
-                            "操作描述": step.action,
-                        })
-                        if step.expected_result:
-                            test_case_dict["expected_results"].append(
-                                step.expected_result
-                            )
+        for tc in source_cases:
+            if str(tc.project_id) != project_id:
+                continue
 
-                # BDD 字段
-                if tc.template and tc.template.value == "test_case_bdd":
-                    test_case_dict["feature"] = tc.feature
-                    test_case_dict["scenario"] = tc.scenario
-                    test_case_dict["background"] = tc.background
+            test_case_dict = {
+                "id": tc.identifier,
+                "title": tc.name,
+                "name": tc.name,
+                "module": tc.folder.name if tc.folder else "未分类",
+                "type": tc.test_case_type.value if tc.test_case_type else "functional",
+                "case_type": tc.test_case_type.value if tc.test_case_type else "functional",
+                "priority": tc.priority.value if tc.priority else "medium",
+                "preconditions": tc.preconditions or "",
+                "remarks": tc.description or "",
+                "steps": [],
+                "expected_results": [],
+            }
 
-                test_cases.append(test_case_dict)
+            if tc.steps:
+                for step in sorted(tc.steps, key=lambda s: s.step_number):
+                    test_case_dict["steps"].append({
+                        "seq": step.step_number,
+                        "action": step.action,
+                        "step": step.step_number,
+                        "操作描述": step.action,
+                    })
+                    if step.expected_result:
+                        test_case_dict["expected_results"].append(step.expected_result)
+
+            if tc.template and tc.template.value == "test_case_bdd":
+                test_case_dict["feature"] = tc.feature
+                test_case_dict["scenario"] = tc.scenario
+                test_case_dict["background"] = tc.background
+
+            test_cases.append(test_case_dict)
 
         return test_cases
 
@@ -275,7 +270,7 @@ class TestCaseExportService:
         Returns:
             dict: 导出状态信息
         """
-        job = await self.mongodb[self.COLLECTION_NAME].find_one({"_id": export_id})
+        job = await self._find_job(export_id)
         if not job:
             raise NotFoundException(f"导出任务 {export_id} 不存在")
 
@@ -301,7 +296,7 @@ class TestCaseExportService:
         Returns:
             Tuple[bytes, str, str]: (文件内容, 文件名, 内容类型)
         """
-        job = await self.mongodb[self.COLLECTION_NAME].find_one({"_id": export_id})
+        job = await self._find_job(export_id)
         if not job:
             raise NotFoundException(f"导出任务 {export_id} 不存在")
 

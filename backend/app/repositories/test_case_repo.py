@@ -43,6 +43,9 @@ class TestCaseRepository(BaseRepository[TestCase]):
                 select(TestCase)
                 .options(selectinload(TestCase.steps))
                 .options(selectinload(TestCase.tags))
+                .options(selectinload(TestCase.folder))
+                .options(selectinload(TestCase.owner))
+                .options(selectinload(TestCase.creator))
                 .where(TestCase.id == uuid_val)
             )
             tc = result.scalar_one_or_none()
@@ -56,6 +59,9 @@ class TestCaseRepository(BaseRepository[TestCase]):
             select(TestCase)
             .options(selectinload(TestCase.steps))
             .options(selectinload(TestCase.tags))
+            .options(selectinload(TestCase.folder))
+            .options(selectinload(TestCase.owner))
+            .options(selectinload(TestCase.creator))
             .where(TestCase.identifier == identifier)
         )
         return result.scalar_one_or_none()
@@ -66,9 +72,11 @@ class TestCaseRepository(BaseRepository[TestCase]):
             select(TestCase)
             .options(selectinload(TestCase.steps))
             .options(selectinload(TestCase.tags))
+            .options(selectinload(TestCase.folder))
             .options(selectinload(TestCase.owner))
             .options(selectinload(TestCase.creator))
             .where(TestCase.id == id)
+            .execution_options(populate_existing=True)
         )
         return result.scalar_one_or_none()
     
@@ -99,6 +107,7 @@ class TestCaseRepository(BaseRepository[TestCase]):
             select(TestCase)
             .options(selectinload(TestCase.steps))
             .options(selectinload(TestCase.tags))
+            .options(selectinload(TestCase.folder))
             .where(TestCase.project_id == project_id)
         )
         
@@ -162,6 +171,7 @@ class TestCaseRepository(BaseRepository[TestCase]):
             select(TestCase)
             .options(selectinload(TestCase.steps))
             .options(selectinload(TestCase.tags))
+            .options(selectinload(TestCase.folder))
             .options(selectinload(TestCase.owner))
             .options(selectinload(TestCase.creator))
             .where(TestCase.project_id == project_id)
@@ -365,6 +375,26 @@ class TestCaseRepository(BaseRepository[TestCase]):
         await self.session.refresh(step)
         return step
     
+    async def replace_steps(
+        self,
+        test_case_id: UUID,
+        steps: list[tuple[int, str, Optional[str]]],
+    ) -> None:
+        """Replace all steps for a test case."""
+        await self.session.execute(
+            delete(TestStep).where(TestStep.test_case_id == test_case_id)
+        )
+        for step_number, action, expected_result in steps:
+            self.session.add(
+                TestStep(
+                    test_case_id=test_case_id,
+                    step_number=step_number,
+                    action=action,
+                    expected_result=expected_result,
+                )
+            )
+        await self.session.flush()
+
     async def get_or_create_tag(
         self, project_id: UUID, name: str
     ) -> Tag:
@@ -446,4 +476,3 @@ class TestCaseRepository(BaseRepository[TestCase]):
             .where(TestCaseTag.test_case_id == test_case_id)
         )
         return list(result.scalars().all())
-

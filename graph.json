@@ -9,6 +9,12 @@
     },
     "web_agent": {
       "path": "./backend/app/agents/web_mcp/agent.py:agent"
+    },
+    "testcase_generator_agent": {
+      "path": "./backend/app/agents/testcase/agent.py:agent"
+    },
+    "security_agent": {
+      "path": "./backend/app/agents/security/agent.py:agent"
     }
   },
   "_deployId": "id_MS81OmFIVnBZMlhwdTRUbGphRG1zWjg2ZDIxRmRnPT06ZjM0ZTY4YjY=",

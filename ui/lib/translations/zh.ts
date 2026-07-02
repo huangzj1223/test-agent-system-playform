@@ -4,7 +4,7 @@
 export const translations = {
   // 元数据
   meta: {
-    title: "测试平台5.0",
+    title: "智能测试平台5.0",
     description: "AI 驱动的智能测试系统",
   },
 

@@ -49,6 +49,7 @@ export function useChat({
 }) {
   const [threadId, setThreadId] = useQueryState("threadId");
   const [assistantId, setAssistantId] = useQueryState("assistantId");
+  const [agentError, setAgentError] = React.useState<string | null>(null);
   const client = useClient();
 
   // 同步 assistantId 到 URL
@@ -65,6 +66,20 @@ export function useChat({
     onTestCaseCreated?.();
   }, [onHistoryRevalidate, onTestCaseCreated]);
 
+  const handleError = useCallback(
+    (error: unknown) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+            ? error
+            : "AI 服务请求失败，请检查 LangGraph 服务是否已启动。";
+      setAgentError(message);
+      onHistoryRevalidate?.();
+    },
+    [onHistoryRevalidate]
+  );
+
   const stream = useStream<StateType>({
     assistantId: activeAssistant?.assistant_id || "",
     client: client ?? undefined,
@@ -75,13 +90,14 @@ export function useChat({
     fetchStateHistory: true,
     // Revalidate thread list when stream finishes, errors, or creates new thread
     onFinish: handleFinish,
-    onError: onHistoryRevalidate,
+    onError: handleError,
     onCreated: onHistoryRevalidate,
     ...(thread ? { thread } : {}),
   });
 
   const sendMessage = useCallback(
     (content: string) => {
+      setAgentError(null);
       const newMessage: Message = { id: uuidv4(), type: "human", content };
 
       // 从 assistant config 中提取 context 信息
@@ -199,6 +215,7 @@ export function useChat({
     messages: stream.messages,
     isLoading: stream.isLoading,
     isThreadLoading: stream.isThreadLoading,
+    agentError,
     interrupt: stream.interrupt,
     getMessagesMetadata: stream.getMessagesMetadata,
     sendMessage,
@@ -210,3 +227,4 @@ export function useChat({
   };
 }
 // NOTE  My80OmFIVnBZMlhwdTRUbGphRG1zWjg2V0c1cVp3PT06ZWYwZjE0ZmQ=
+

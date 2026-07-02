@@ -1,4 +1,4 @@
-﻿
+
 // English translation file
 export const translations = {
   // Metadata
@@ -226,6 +226,16 @@ export const translations = {
     deleting: "Deleting...",
     saving: "Saving...",
 
+    exportTestCases: "Export Test Cases",
+    exportFormat: "Export Format",
+    exportOptions: "Export Options",
+    includeAttachments: "Include attachments",
+    exportStarted: "Export task started, processing...",
+    exportSuccess: "Export completed, starting download...",
+    exportFailed: "Export failed",
+    exporting: "Exporting...",
+    export: "Export",
+    noTestCasesToExport: "No test cases to export",
     // AI assistant
     aiAssistantName: "Test Case Generation Assistant",
 

@@ -411,6 +411,84 @@ export interface TestRunScriptJobUpdate {
   execution_config?: Record<string, unknown>;
 }
 
+
+export interface AnalyzeFailureRequest {
+  force?: boolean;
+}
+
+export interface FailureAnalysisInfo {
+  id: string;
+  project_id: string;
+  test_run_id: string;
+  job_id: string;
+  script_type: ScriptType;
+  analysis_status: string;
+  failure_category: string;
+  severity: string;
+  confidence: number;
+  summary: string;
+  root_cause?: string | null;
+  evidence: Array<{ source: string; message: string }>;
+  recommendations: string[];
+  knowledge_refs: Array<Record<string, unknown>>;
+  raw_context?: Record<string, unknown> | null;
+  model_name?: string | null;
+  analysis_source: string;
+  error_message?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+}
+
+export interface FailureLoopStartRequest {
+  job_id?: string | null;
+  strategy?: "api_failure" | "ui_failure" | null;
+  max_iterations?: number;
+  force_analysis?: boolean;
+  dry_run?: boolean;
+}
+
+export interface FailureLoopStepInfo {
+  id: string;
+  loop_run_id: string;
+  iteration: number;
+  step_order: number;
+  phase: string;
+  status: string;
+  action: string;
+  input_snapshot?: Record<string, unknown> | null;
+  output_summary?: string | null;
+  artifacts?: Record<string, unknown> | null;
+  verification_result?: Record<string, unknown> | null;
+  error_message?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+}
+
+export interface FailureLoopRunInfo {
+  id: string;
+  project_id: string;
+  test_run_id: string;
+  job_id?: string | null;
+  script_type?: ScriptType | null;
+  strategy: "api_failure" | "ui_failure" | string;
+  goal: string;
+  status: string;
+  current_phase: string;
+  current_iteration: number;
+  max_iterations: number;
+  stop_reason?: string | null;
+  safety_flags: Array<Record<string, unknown>>;
+  context_snapshot?: Record<string, unknown> | null;
+  final_result?: Record<string, unknown> | null;
+  steps: FailureLoopStepInfo[];
+  created_at: string;
+  updated_at?: string | null;
+}
+
+export interface FailureLoopStartResult {
+  loop_run: FailureLoopRunInfo;
+  analyses: FailureAnalysisInfo[];
+}
 // ============ 定时调度 ============
 
 export interface TestRunScheduleInfo {

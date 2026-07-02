@@ -1,4 +1,4 @@
-﻿
+
 import { apiClient } from "./client";
 import type {
   PaginatedResponse,
@@ -24,6 +24,11 @@ import type {
   TestRunScheduleCreate,
   TestRunScheduleUpdate,
   ScriptType,
+  AnalyzeFailureRequest,
+  FailureAnalysisInfo,
+  FailureLoopRunInfo,
+  FailureLoopStartRequest,
+  FailureLoopStartResult,
 } from "./types";
 
 // 路径前缀
@@ -272,6 +277,84 @@ export function subscribeToTestRunEvents(
   return es;
 }
 
+
+// =========================================================
+// 失败分析子资源
+// =========================================================
+
+export function listFailureAnalyses(
+  projectIdentifier: string,
+  testRunIdentifier: string
+) {
+  return apiClient.get<SuccessResponse<FailureAnalysisInfo[]>>(
+    `${basePath(projectIdentifier)}/${testRunIdentifier}/failure-analyses`
+  );
+}
+
+export function analyzeRunFailures(
+  projectIdentifier: string,
+  testRunIdentifier: string,
+  data: AnalyzeFailureRequest = { force: false }
+) {
+  return apiClient.post<SuccessResponse<FailureAnalysisInfo[]>>(
+    `${basePath(projectIdentifier)}/${testRunIdentifier}/failure-analyses`,
+    data
+  );
+}
+
+export function getJobFailureAnalysis(
+  projectIdentifier: string,
+  testRunIdentifier: string,
+  jobId: string
+) {
+  return apiClient.get<SuccessResponse<FailureAnalysisInfo>>(
+    `${basePath(projectIdentifier)}/${testRunIdentifier}/script-jobs/${jobId}/failure-analysis`
+  );
+}
+
+export function analyzeJobFailure(
+  projectIdentifier: string,
+  testRunIdentifier: string,
+  jobId: string,
+  data: AnalyzeFailureRequest = { force: false }
+) {
+  return apiClient.post<SuccessResponse<FailureAnalysisInfo>>(
+    `${basePath(projectIdentifier)}/${testRunIdentifier}/script-jobs/${jobId}/failure-analysis`,
+    data
+  );
+}
+// =========================================================
+// 失败闭环子资源
+// =========================================================
+
+export function listFailureLoops(
+  projectIdentifier: string,
+  testRunIdentifier: string
+) {
+  return apiClient.get<SuccessResponse<FailureLoopRunInfo[]>>(
+    `${basePath(projectIdentifier)}/${testRunIdentifier}/failure-loops`
+  );
+}
+
+export function startFailureLoop(
+  projectIdentifier: string,
+  testRunIdentifier: string,
+  data: FailureLoopStartRequest = { max_iterations: 3, dry_run: true }
+) {
+  return apiClient.post<SuccessResponse<FailureLoopStartResult>>(
+    `${basePath(projectIdentifier)}/${testRunIdentifier}/failure-loops`,
+    data
+  );
+}
+export function continueFailureLoop(
+  projectIdentifier: string,
+  testRunIdentifier: string,
+  loopRunId: string
+) {
+  return apiClient.post<SuccessResponse<FailureLoopRunInfo>>(
+    `${basePath(projectIdentifier)}/${testRunIdentifier}/failure-loops/${loopRunId}/continue`
+  );
+}
 // =========================================================
 // 脚本作业子资源
 // =========================================================

@@ -509,17 +509,27 @@ class WebTestExecutor(ScriptExecutor):
                     )
 
                 run_id = result.get("run_id")
-                # WebTestService 已内部创建 WebTestRun 并执行
-                # 这里直接按返回结果判断
-                success = result.get("status") != "failed"
+                run_result = await self._wait_for_web_test_run(
+                    UUID(run_id),
+                    timeout=int(config.get("timeout", 300)) + 30,
+                ) if run_id else None
+                success = bool(run_result and run_result.status == "completed")
                 duration_ms = int(
                     (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
                 )
                 return ExecutionResult(
                     success=success,
                     status=JobStatus.COMPLETED.value if success else JobStatus.FAILED.value,
-                    duration_ms=duration_ms,
-                    error_message=None if success else result.get("error"),
+                    duration_ms=run_result.duration_ms if run_result and run_result.duration_ms else duration_ms,
+                    error_message=None if success else (
+                        run_result.error_message if run_result else "Web test run did not finish."
+                    ),
+                    result_summary={
+                        "total": run_result.total_tests if run_result else 0,
+                        "passed": run_result.passed_tests if run_result else 0,
+                        "failed": run_result.failed_tests if run_result else 1,
+                        "skipped": run_result.skipped_tests if run_result else 0,
+                    },
                     detail_run_id=str(run_id) if run_id else None,
                 )
 
@@ -542,6 +552,27 @@ class WebTestExecutor(ScriptExecutor):
 
     async def cancel(self) -> None:
         self._cancelled = True
+
+
+    async def _wait_for_web_test_run(
+        self,
+        run_id: UUID,
+        timeout: int = 330,
+        interval: float = 1.0,
+    ):
+        from app.repositories.web_test_repo import WebTestRunRepository
+
+        attempts = max(1, int(timeout / interval))
+        for _ in range(attempts):
+            if self._cancelled:
+                return None
+            async with async_session_factory() as session:
+                run_repo = WebTestRunRepository(session)
+                run = await run_repo.get_by_id(run_id)
+                if run and run.status in {"completed", "failed", "cancelled"}:
+                    return run
+            await asyncio.sleep(interval)
+        return None
 
 class ExecutorRegistry:
     """执行器注册表：按 ScriptType 分发给具体执行器"""

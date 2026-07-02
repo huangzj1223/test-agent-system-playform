@@ -295,8 +295,16 @@ class TestCaseService:
                 raise BadRequestException("文件夹不存在或不属于该项目")
 
         # 更新基本信息
-        update_data = data.model_dump(exclude_unset=True, exclude={"steps", "tags"})
+        update_data = data.model_dump(exclude_unset=True, exclude={"test_case_steps", "steps", "tags"})
         tc = await self.repo.update(tc, **update_data)
+
+        if "test_case_steps" in data.model_fields_set:
+            step_rows = [
+                (idx, step.step, step.result)
+                for idx, step in enumerate(data.test_case_steps or [], 1)
+                if step.step.strip()
+            ]
+            await self.repo.replace_steps(tc.id, step_rows)
 
         # 更新版本号
         tc.version = (tc.version or 1) + 1

@@ -14,6 +14,8 @@ from .folder import Folder
 from .folder_type import FolderType
 from .test_case import TestCase, TestStep, Tag, TestCaseTag
 from .test_run import TestRun, TestRunTestCase, TestRunScriptJob, TestRunSchedule
+from .failure_analysis import TestFailureAnalysis
+from .loop import TestFailureLoopRun, TestFailureLoopStep
 from .test_result import TestResult, TestStepResult
 from .attachment import Attachment, AttachmentEntityType
 from .configuration import Configuration
@@ -55,6 +57,9 @@ __all__ = [
     "TestRunTestCase",
     "TestRunScriptJob",
     "TestRunSchedule",
+    "TestFailureAnalysis",
+    "TestFailureLoopRun",
+    "TestFailureLoopStep",
     "TestResult",
     "TestStepResult",
     "Attachment",
@@ -84,3 +89,4 @@ __all__ = [
 ]
 
 # pragma: no cover  My80OmFIVnBZMlhwdTRUbGphRG1zWjg2Ym0wM2RnPT06YjYzMDQxOTg=
+

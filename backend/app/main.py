@@ -28,7 +28,9 @@ from app.models.project import Project
 from app.models.folder import Folder
 from app.models.team import Team
 from app.models.test_case import TestCase, TestStep, Tag, TestCaseTag
-from app.models.test_run import TestRun, TestRunTestCase
+from app.models.test_run import TestRun, TestRunTestCase, TestRunScriptJob, TestRunSchedule
+from app.models.failure_analysis import TestFailureAnalysis
+from app.models.loop import TestFailureLoopRun, TestFailureLoopStep
 from app.models.test_result import TestResult, TestStepResult
 from app.models.attachment import Attachment
 from app.models.configuration import Configuration

@@ -4,6 +4,8 @@
 提供测试用例导出为 Excel/Word/JSON 的接口
 """
 
+from urllib.parse import quote
+
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
@@ -51,7 +53,7 @@ async def export_test_cases(
         raise NotFoundException(resource_type="项目", resource_id=project_identifier)
 
     # 创建导出服务
-    mongodb = await anext(get_mongodb())
+    mongodb = await get_mongodb()
     export_service = TestCaseExportService(db, mongodb)
 
     # 启动导出任务
@@ -90,7 +92,7 @@ async def get_export_status(
 
     返回导出任务的当前状态和下载 URL（如果已完成）
     """
-    mongodb = await anext(get_mongodb())
+    mongodb = await get_mongodb()
     export_service = TestCaseExportService(db, mongodb)
 
     status = await export_service.get_export_status(export_id)
@@ -120,7 +122,7 @@ async def download_export(
 
     返回 Excel/Word/JSON 文件
     """
-    mongodb = await anext(get_mongodb())
+    mongodb = await get_mongodb()
     export_service = TestCaseExportService(db, mongodb)
 
     file_content, filename, content_type = await export_service.download_export(export_id)
@@ -129,7 +131,7 @@ async def download_export(
         iter([file_content]),
         media_type=content_type,
         headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}",
             "Content-Type": content_type,
         }
     )

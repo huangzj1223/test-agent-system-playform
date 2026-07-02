@@ -302,6 +302,8 @@ class WebTestService:
             status="pending",
             execution_config=execution_config or {},
         )
+        await self.session.commit()
+
 
         # 在后台异步执行测试
         asyncio.create_task(
@@ -329,10 +331,10 @@ class WebTestService:
             run_repo = WebTestRunRepository(session)
             try:
                 # 1. 更新状态为 running
-                await run_repo.update(
-                    await run_repo.get_by_id(run_id),
-                    status="running",
-                )
+                run_record = await run_repo.get_by_id(run_id)
+                if not run_record:
+                    return
+                await run_repo.update(run_record, status="running")
                 await session.commit()
 
                 # 2. 从 MinIO 下载脚本
@@ -340,7 +342,10 @@ class WebTestService:
                 script_content = script_content.decode("utf-8")
 
                 # 3. 准备执行环境
-                with tempfile.TemporaryDirectory() as temp_dir:
+                workspace_root = Path(settings.api_workspace_root).resolve()
+                temp_root = workspace_root / ".web-test-runs"
+                temp_root.mkdir(parents=True, exist_ok=True)
+                with tempfile.TemporaryDirectory(dir=temp_root) as temp_dir:
                     temp_path = Path(temp_dir)
 
                     # 写入测试脚本
@@ -366,8 +371,11 @@ class WebTestService:
                     skipped = result.get("skipped", 0)
                     error = result.get("error")
 
+                    run_record = await run_repo.get_by_id(run_id)
+                    if not run_record:
+                        return
                     await run_repo.update(
-                        await run_repo.get_by_id(run_id),
+                        run_record,
                         status="completed" if result.get("success") else "failed",
                         total_tests=total,
                         passed_tests=passed,
@@ -379,12 +387,14 @@ class WebTestService:
                     await session.commit()
 
             except Exception as e:
-                await run_repo.update(
-                    await run_repo.get_by_id(run_id),
-                    status="failed",
-                    error_message=str(e),
-                )
-                await session.commit()
+                run_record = await run_repo.get_by_id(run_id)
+                if run_record:
+                    await run_repo.update(
+                        run_record,
+                        status="failed",
+                        error_message=str(e),
+                    )
+                    await session.commit()
                 print(f"Web 测试执行失败: {e}")
 
     def _generate_playwright_config(
@@ -466,18 +476,27 @@ export default defineConfig({{
 
             duration_ms = int((datetime.now() - start_time).total_seconds() * 1000)
 
+            stdout_text = stdout.decode("utf-8", errors="replace")
+            stderr_text = stderr.decode("utf-8", errors="replace")
+
             # 尝试解析 JSON 结果
             try:
-                result_data = json.loads(stdout.decode("utf-8"))
+                result_data = json.loads(stdout_text)
                 stats = result_data.get("stats", {})
+                passed = int(stats.get("expected") or 0)
+                failed = int(stats.get("unexpected") or 0)
+                skipped = int(stats.get("skipped") or 0)
+                flaky = int(stats.get("flaky") or 0)
+                error_message = stderr_text or self._extract_playwright_json_error(result_data)
+                success = failed == 0 and proc.returncode == 0
                 return {
-                    "success": proc.returncode == 0,
-                    "total": stats.get("tests", 0),
-                    "passed": stats.get("expected", 0),
-                    "failed": stats.get("unexpected", 0),
-                    "skipped": stats.get("skipped", 0),
+                    "success": success,
+                    "total": passed + failed + skipped + flaky,
+                    "passed": passed,
+                    "failed": failed,
+                    "skipped": skipped,
                     "duration_ms": duration_ms,
-                    "error": stderr.decode("utf-8") if proc.returncode != 0 else None,
+                    "error": None if success else error_message,
                 }
             except json.JSONDecodeError:
                 # JSON 解析失败，使用简化结果
@@ -488,7 +507,7 @@ export default defineConfig({{
                     "failed": 0 if proc.returncode == 0 else 1,
                     "skipped": 0,
                     "duration_ms": duration_ms,
-                    "error": stderr.decode("utf-8") if proc.returncode != 0 else None,
+                    "error": None if proc.returncode == 0 else (stderr_text or stdout_text[:4000]),
                 }
 
         except asyncio.TimeoutError:
@@ -511,6 +530,22 @@ export default defineConfig({{
                 "duration_ms": int((datetime.now() - start_time).total_seconds() * 1000),
                 "error": str(e),
             }
+
+    def _extract_playwright_json_error(self, result_data: dict) -> str | None:
+        for suite in result_data.get("suites", []) or []:
+            for spec in suite.get("specs", []) or []:
+                for test in spec.get("tests", []) or []:
+                    for result in test.get("results", []) or []:
+                        error = result.get("error") or {}
+                        if error.get("message"):
+                            return str(error["message"])[:4000]
+                        errors = result.get("errors") or []
+                        if errors and errors[0].get("message"):
+                            return str(errors[0]["message"])[:4000]
+        top_errors = result_data.get("errors") or []
+        if top_errors and top_errors[0].get("message"):
+            return str(top_errors[0]["message"])[:4000]
+        return None
 
     async def get_test_runs(
         self,
@@ -602,3 +637,5 @@ export default defineConfig({{
             "page": page,
             "page_size": page_size,
         }
+
+
