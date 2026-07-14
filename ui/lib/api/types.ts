@@ -416,6 +416,21 @@ export interface AnalyzeFailureRequest {
   force?: boolean;
 }
 
+export interface ProjectDeletionImpact {
+  project_identifier: string;
+  project_name: string;
+  resources: Record<string, number>;
+  total_records: number;
+  stored_objects: number;
+}
+
+export interface ProjectDeletionResult {
+  project_identifier: string;
+  message: string;
+  deleted_records: number;
+  deleted_objects: number;
+}
+
 export interface FailureAnalysisInfo {
   id: string;
   project_id: string;

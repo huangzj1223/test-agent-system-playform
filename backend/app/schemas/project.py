@@ -138,3 +138,22 @@ class ProjectDeleteResponse(BaseResponse):
     success: bool = Field(default=True, description="API 调用成功")
     message: str = Field(..., description="删除结果消息")
 
+
+class ProjectDeletionImpact(BaseModel):
+    """永久删除项目之前展示的关联资源统计。"""
+
+    project_identifier: str
+    project_name: str
+    resources: dict[str, int] = Field(default_factory=dict)
+    total_records: int = 0
+    stored_objects: int = 0
+
+
+class ProjectDeletionResult(BaseModel):
+    """项目及其关联数据的删除结果。"""
+
+    project_identifier: str
+    message: str
+    deleted_records: int = 0
+    deleted_objects: int = 0
+

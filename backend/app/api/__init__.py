@@ -8,7 +8,7 @@ API 路由模块
 
 from fastapi import APIRouter
 
-from .v2 import projects, folders, test_cases, test_runs, test_results, attachments, configurations, test_plans, documents, api_tests, api_tests_extended, api_endpoints, scenarios, web_tests, web_functions, pentests, mcp_proxy, testcase_export
+from .v2 import projects, folders, test_cases, test_runs, test_results, attachments, configurations, test_plans, documents, api_tests, api_tests_extended, api_endpoints, scenarios, web_tests, web_functions, pentests, mcp_proxy, testcase_export, dashboard
 
 # 创建 API v2 路由
 api_router = APIRouter(prefix="/api/v2")
@@ -37,6 +37,7 @@ api_router.include_router(web_tests.router, tags=["Web 测试管理"])
 api_router.include_router(web_functions.router, tags=["Web 功能管理"])
 api_router.include_router(pentests.router, tags=["渗透测试管理"])
 api_router.include_router(mcp_proxy.router, tags=["MCP 代理"])
+api_router.include_router(dashboard.router, tags=["系统总览"])
 
 __all__ = ["api_router"]
 

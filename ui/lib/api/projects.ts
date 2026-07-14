@@ -3,10 +3,11 @@ import { apiClient } from "./client";
 import type {
   PaginatedResponse,
   SuccessResponse,
-  MessageResponse,
   ProjectInfo,
   ProjectCreate,
   ProjectUpdate,
+  ProjectDeletionImpact,
+  ProjectDeletionResult,
 } from "./types";
 
 // 获取项目列表
@@ -37,8 +38,17 @@ export function updateProject(identifier: string, data: ProjectUpdate) {
 }
 
 // 删除项目
-export function deleteProject(identifier: string) {
-  return apiClient.delete<MessageResponse>(`/projects/${identifier}`);
+export function getProjectDeletionImpact(identifier: string) {
+  return apiClient.get<SuccessResponse<ProjectDeletionImpact>>(
+    `/projects/${identifier}/deletion-impact`
+  );
+}
+
+export function deleteProject(identifier: string, confirmation: string) {
+  return apiClient.delete<SuccessResponse<ProjectDeletionResult>>(
+    `/projects/${identifier}`,
+    { params: { confirmation } }
+  );
 }
 
 // FIXME  MS8yOmFIVnBZMlhwdTRUbGphRG1zWjg2VnpaVFRBPT06MjY3MWFiMGI=

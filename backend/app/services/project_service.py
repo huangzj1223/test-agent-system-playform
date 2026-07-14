@@ -4,19 +4,87 @@
 处理项目相关的业务逻辑
 """
 
+from dataclasses import dataclass
+import re
 from typing import Optional
+from urllib.parse import unquote, urlparse
 from uuid import UUID
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 # noqa  MC80OmFIVnBZMlhwdTRUbGphRG1zWjg2TkZKWFF3PT06MWU3ZjNkYTE=
 
 from app.models.project import Project
+from app.models.attachment import Attachment
+from app.models.api_endpoint import APIEndpoint
+from app.models.api_test import APITest, APITestRun
+from app.models.failure_analysis import TestFailureAnalysis
+from app.models.folder import Folder
+from app.models.loop import TestFailureLoopRun
+from app.models.pentest import Pentest, PentestReport, PentestVulnerability
+from app.models.test_case import TestCase
+from app.models.test_plan import TestPlan
+from app.models.test_run import TestRun, TestRunSchedule, TestRunScriptJob
+from app.models.test_scenario import ScenarioRun, TestScenario
+from app.models.web_function import WebFunction, WebSubFunction
+from app.models.web_test import WebTest, WebTestRun
 from app.repositories.project_repo import ProjectRepository
-from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectInfo
+from app.schemas.project import (
+    ProjectCreate,
+    ProjectDeletionImpact,
+    ProjectDeletionResult,
+    ProjectInfo,
+    ProjectUpdate,
+)
 from app.schemas.common import LinkInfo
-from app.utils.exceptions import NotFoundException, ConflictException
+from app.utils.exceptions import BadRequestException, NotFoundException, ConflictException
 from app.utils.identifier import generate_project_identifier
 from app.config.settings import settings
+from app.config.minio_client import MinIOClient
+
+
+@dataclass
+class ProjectDeletionInventory:
+    counts: dict[str, int]
+    object_names: list[str]
+
+
+def normalize_storage_object_name(value: str | None) -> str | None:
+    """Convert stored MinIO URLs to object names and ignore absolute local paths."""
+    if not value:
+        return None
+    candidate = value.strip()
+    if not candidate or candidate.startswith("/") or re.match(r"^[A-Za-z]:[\\/]", candidate):
+        return None
+    if candidate.startswith(("http://", "https://")):
+        path = unquote(urlparse(candidate).path).lstrip("/")
+        bucket_prefix = f"{settings.minio_bucket}/"
+        return path[len(bucket_prefix):] if path.startswith(bucket_prefix) else path or None
+    return candidate.replace("\\", "/")
+
+
+PROJECT_RESOURCE_MODELS = (
+    ("folders", Folder),
+    ("test_cases", TestCase),
+    ("api_endpoints", APIEndpoint),
+    ("api_tests", APITest),
+    ("api_test_runs", APITestRun),
+    ("web_functions", WebFunction),
+    ("web_sub_functions", WebSubFunction),
+    ("web_tests", WebTest),
+    ("web_test_runs", WebTestRun),
+    ("scenario_tests", TestScenario),
+    ("scenario_runs", ScenarioRun),
+    ("test_plans", TestPlan),
+    ("test_runs", TestRun),
+    ("test_run_schedules", TestRunSchedule),
+    ("failure_analyses", TestFailureAnalysis),
+    ("failure_loops", TestFailureLoopRun),
+    ("pentests", Pentest),
+    ("pentest_reports", PentestReport),
+    ("pentest_vulnerabilities", PentestVulnerability),
+    ("attachments", Attachment),
+)
 
 class ProjectService:
     """
@@ -213,7 +281,76 @@ class ProjectService:
             ),
         )
 
-    async def delete_project(self, project_identifier: str) -> str:
+    async def get_deletion_impact(
+        self,
+        project_identifier: str,
+    ) -> ProjectDeletionImpact:
+        project = await self.repo.get_by_identifier(project_identifier)
+        if not project:
+            raise NotFoundException(resource_type="项目", resource_id=project_identifier)
+
+        inventory = await self._get_deletion_inventory(project.id)
+        return ProjectDeletionImpact(
+            project_identifier=project.identifier,
+            project_name=project.name,
+            resources=inventory.counts,
+            total_records=sum(inventory.counts.values()),
+            stored_objects=len(inventory.object_names),
+        )
+
+    async def _get_deletion_inventory(self, project_id: UUID) -> ProjectDeletionInventory:
+        counts: dict[str, int] = {}
+        for key, model in PROJECT_RESOURCE_MODELS:
+            result = await self.session.execute(
+                select(func.count()).select_from(model).where(model.project_id == project_id)
+            )
+            counts[key] = int(result.scalar_one() or 0)
+
+        script_jobs = await self.session.execute(
+            select(func.count())
+            .select_from(TestRunScriptJob)
+            .join(TestRun, TestRun.id == TestRunScriptJob.test_run_id)
+            .where(TestRun.project_id == project_id)
+        )
+        counts["test_run_script_jobs"] = int(script_jobs.scalar_one() or 0)
+
+        attachments = await self.session.execute(
+            select(Attachment.object_name).where(Attachment.project_id == project_id)
+        )
+        object_names = list(attachments.scalars().all())
+
+        storage_path_queries = (
+            select(APITest.schema_path).where(APITest.project_id == project_id),
+            select(APITest.script_path).where(APITest.project_id == project_id),
+            select(APITestRun.report_path).where(APITestRun.project_id == project_id),
+            select(WebTest.script_path).where(WebTest.project_id == project_id),
+            select(WebTestRun.report_path).where(WebTestRun.project_id == project_id),
+            select(WebTestRun.screenshots_path).where(WebTestRun.project_id == project_id),
+            select(ScenarioRun.report_path).where(ScenarioRun.project_id == project_id),
+            select(PentestReport.file_path).where(PentestReport.project_id == project_id),
+            select(TestRunScriptJob.report_path)
+            .join(TestRun, TestRun.id == TestRunScriptJob.test_run_id)
+            .where(TestRun.project_id == project_id),
+        )
+        for statement in storage_path_queries:
+            values = await self.session.execute(statement)
+            object_names.extend(value for value in values.scalars().all() if value)
+
+        normalized_objects = [
+            normalized
+            for value in object_names
+            if (normalized := normalize_storage_object_name(value)) is not None
+        ]
+        return ProjectDeletionInventory(
+            counts=counts,
+            object_names=list(dict.fromkeys(normalized_objects)),
+        )
+
+    async def delete_project(
+        self,
+        project_identifier: str,
+        confirmation: str,
+    ) -> ProjectDeletionResult:
         """
         删除项目
 
@@ -230,6 +367,16 @@ class ProjectService:
                 resource_id=project_identifier
             )
 
+        if confirmation != project.name:
+            raise BadRequestException("确认项目名称与目标项目不一致")
+
+        inventory = await self._get_deletion_inventory(project.id)
+        MinIOClient.delete_files(inventory.object_names)
         await self.repo.delete(project)
-        return f"项目 {project_identifier} 已成功删除"
+        return ProjectDeletionResult(
+            project_identifier=project_identifier,
+            message=f"项目 {project_identifier} 及其关联数据已永久删除",
+            deleted_records=sum(inventory.counts.values()),
+            deleted_objects=len(inventory.object_names),
+        )
 

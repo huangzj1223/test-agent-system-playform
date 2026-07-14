@@ -217,6 +217,12 @@ class MinIOClient:
             )
 
     @classmethod
+    def delete_files(cls, object_names: list[str]) -> None:
+        """删除一组对象；任一对象删除失败时立即终止。"""
+        for object_name in dict.fromkeys(name for name in object_names if name):
+            cls.delete_file(object_name)
+
+    @classmethod
     def file_exists(cls, object_name: str) -> bool:
         """
         检查文件是否存在

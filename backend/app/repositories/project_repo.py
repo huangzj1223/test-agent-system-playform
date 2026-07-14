@@ -42,7 +42,7 @@ class ProjectRepository(BaseRepository[Project]):
         """
         result = await self.session.execute(
             select(Project)
-            .options(selectinload(Project.teams))
+            .options(selectinload(Project.teams)).options(selectinload(Project.creator))
             .where(Project.identifier == identifier)
         )
         return result.scalar_one_or_none()
@@ -59,7 +59,7 @@ class ProjectRepository(BaseRepository[Project]):
         """
         result = await self.session.execute(
             select(Project)
-            .options(selectinload(Project.teams))
+            .options(selectinload(Project.teams)).options(selectinload(Project.creator))
             .options(selectinload(Project.creator))
             .where(Project.id == id)
         )
@@ -82,7 +82,7 @@ class ProjectRepository(BaseRepository[Project]):
         """
         result = await self.session.execute(
             select(Project)
-            .options(selectinload(Project.teams))
+            .options(selectinload(Project.teams)).options(selectinload(Project.creator))
             .options(selectinload(Project.creator))
             .offset(offset)
             .limit(limit)

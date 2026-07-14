@@ -5,7 +5,7 @@
 参考: https://www.browserstack.com/docs/test-management/api-reference/projects
 """
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import (
@@ -14,8 +14,14 @@ from app.api.deps import (
     CurrentUserIdDep,
     DbSessionDep,
 )
-from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectInfo
-from app.schemas.common import SuccessResponse, MessageResponse
+from app.schemas.project import (
+    ProjectCreate,
+    ProjectDeletionImpact,
+    ProjectDeletionResult,
+    ProjectInfo,
+    ProjectUpdate,
+)
+from app.schemas.common import SuccessResponse
 from app.schemas.pagination import PaginatedResponse, PaginationInfo
 from app.config.settings import settings
 
@@ -136,9 +142,22 @@ async def update_project(
     await db.commit()
     return SuccessResponse(success=True, data=project)
 
+@router.get(
+    "/{project_identifier}/deletion-impact",
+    response_model=SuccessResponse[ProjectDeletionImpact],
+    summary="查询项目删除影响",
+)
+async def get_project_deletion_impact(
+    project_identifier: str,
+    service: ProjectServiceDep,
+) -> SuccessResponse[ProjectDeletionImpact]:
+    impact = await service.get_deletion_impact(project_identifier)
+    return SuccessResponse(success=True, data=impact)
+
+
 @router.delete(
     "/{project_identifier}",
-    response_model=MessageResponse,
+    response_model=SuccessResponse[ProjectDeletionResult],
     summary="删除项目",
     description="删除指定的项目及其所有关联数据",
 )
@@ -146,7 +165,8 @@ async def delete_project(
     project_identifier: str,
     service: ProjectServiceDep,
     db: DbSessionDep,
-) -> MessageResponse:
+    confirmation: str = Query(..., min_length=1),
+) -> SuccessResponse[ProjectDeletionResult]:
     """
     删除项目
 
@@ -154,8 +174,12 @@ async def delete_project(
 
     注意: 删除项目将同时删除该项目下的所有文件夹和测试用例
     """
-    message = await service.delete_project(project_identifier)
-    await db.commit()
-    return MessageResponse(success=True, message=message)
+    try:
+        result = await service.delete_project(project_identifier, confirmation)
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
+    return SuccessResponse(success=True, data=result)
 
 # noqa  My80OmFIVnBZMlhwdTRUbGphRG1zWjg2UWt0bWF3PT06NzAzMDY1YjI=
