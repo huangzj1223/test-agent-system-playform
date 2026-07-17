@@ -1,32 +1,43 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import Link from "next/link";
-import { ArrowUpRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import {
+  ArrowUpRight,
+  Box,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  Pause,
+  Play,
+} from "lucide-react";
 import type { DashboardAgentStage, DashboardProjectSituation } from "@/lib/api/dashboard";
 import { buildAgentStageView } from "@/lib/dashboard/model";
 import { cn } from "@/lib/utils";
-import { IconFrame, ProductIcon, StatusIcon } from "@/components/icons";
+import { ProductIcon, StatusIcon } from "@/components/icons";
 import type { ProductIconKey, ProductStatus } from "@/lib/icons/icon-system";
 import {
-  buildCarouselTransition,
   buildConstellationViews,
-  clipConnector,
+  buildOrbitArc,
+  computeOrbitNode,
+  easeOrbitPhase,
+  getFocusedStageIndex,
+  getForwardPhaseTarget,
+  type GalaxyViewMode,
 } from "@/lib/dashboard/constellation-carousel";
+import { GalaxyParticleLayer } from "@/components/dashboard/galaxy-particle-layer";
+import { GalaxyWebGLLayer } from "@/components/dashboard/galaxy-webgl-layer";
 
-const TRANSITION_DURATION_MS = 850;
-const AUTOPLAY_INTERVAL_MS = 5000;
-
-/* ========== 星盘坐标 (7 节点环形分布) ========== */
-const positions = [
-  { x: 118, y: 80 },
-  { x: 330, y: 52 },
-  { x: 585, y: 83 },
-  { x: 650, y: 220 },
-  { x: 495, y: 307 },
-  { x: 252, y: 310 },
-  { x: 78, y: 224 },
-];
+const STAGE_DURATION_MS = 2300;
+const INTERACTION_PAUSE_MS = 5000;
+const GALAXY_VIEWBOX = { width: 730, height: 360 };
 
 const stageIcons: Record<string, ProductIconKey> = {
   requirements: "testCases",
@@ -38,6 +49,26 @@ const stageIcons: Record<string, ProductIconKey> = {
   verification: "reports",
 };
 
+const stageNames: Record<string, string> = {
+  requirements: "需求分析",
+  design: "测试设计",
+  generation: "脚本生成",
+  execution: "自动执行",
+  analysis: "结果分析",
+  repair: "失败修复",
+  verification: "回归验证",
+};
+
+const stageColors: Record<string, string> = {
+  requirements: "#5d8cff",
+  design: "#54d982",
+  generation: "#39d5c8",
+  execution: "#4f86ff",
+  analysis: "#ff8a32",
+  repair: "#a464ff",
+  verification: "#8aca58",
+};
+
 const statusMap: Record<DashboardAgentStage["status"], ProductStatus> = {
   running: "running",
   attention: "attention",
@@ -46,32 +77,12 @@ const statusMap: Record<DashboardAgentStage["status"], ProductStatus> = {
   unavailable: "unavailable",
 };
 
-const statusStyles = {
-  running: "border-[hsl(var(--agent-running)/0.38)] bg-[hsl(var(--agent-running)/0.08)] text-[hsl(172_66%_31%)]",
-  attention: "border-[hsl(var(--risk-warning)/0.4)] bg-[hsl(var(--risk-warning)/0.09)] text-[hsl(32_72%_38%)]",
-  ready: "border-[hsl(var(--loop-complete)/0.42)] bg-[hsl(var(--loop-complete)/0.09)] text-[hsl(82_48%_32%)]",
-  idle: "border-border bg-muted/35 text-muted-foreground",
-  unavailable: "border-border/70 bg-muted/20 text-muted-foreground",
-};
-
-/* ========== 颜色映射 ========== */
-const statusColor = (status: string) => {
-  switch (status) {
-    case "running": return "#0f9f8f";
-    case "attention": return "#d58b22";
-    case "ready": return "#78a832";
-    case "unavailable": return "#94a3b8";
-    default: return "#64748b";
-  }
-};
-
-const markerId = (status: DashboardAgentStage["status"]) => `constellation-arrow-${status}`;
-
-const riskColors: Record<string, string> = {
-  blocked: "#f06060",
-  attention: "#e0a850",
-  healthy: "#8fc050",
-  no_data: "#9098c0",
+const mobileStatusStyles = {
+  running: "border-cyan-400/35 bg-cyan-400/10 text-cyan-100",
+  attention: "border-amber-400/35 bg-amber-400/10 text-amber-100",
+  ready: "border-lime-400/35 bg-lime-400/10 text-lime-100",
+  idle: "border-white/12 bg-white/5 text-slate-200",
+  unavailable: "border-white/10 bg-white/[0.035] text-slate-400",
 };
 
 const riskLabels: Record<string, string> = {
@@ -81,62 +92,117 @@ const riskLabels: Record<string, string> = {
   no_data: "无数据",
 };
 
-/* ========== 组件 ========== */
 export function AgentConstellation({
-  stages: _globalStages,
+  stages: globalStages,
   projects = [],
 }: {
   stages: DashboardAgentStage[];
   projects?: DashboardProjectSituation[];
 }) {
   const views = useMemo(
-    () => buildConstellationViews(_globalStages, projects),
-    [_globalStages, projects],
+    () => buildConstellationViews(globalStages, projects),
+    [globalStages, projects],
   );
   const [position, setPosition] = useState({ viewIndex: 0, stageIndex: 0 });
+  const [viewMode, setViewMode] = useState<GalaxyViewMode>("3d");
   const [userPaused, setUserPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [hoveredStage, setHoveredStage] = useState<number | null>(null);
   const [interactionPaused, setInteractionPaused] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
-  const [transition, setTransition] = useState<{
-    linkIndex: number;
-    nonce: number;
-  } | null>(null);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  const animationFrameRef = useRef<number | null>(null);
+  const focusAnimationFrameRef = useRef<number | null>(null);
   const interactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const positionRef = useRef(position);
+  const rawPhaseRef = useRef(0);
+  const phaseRef = useRef(0);
+  const focusIndexRef = useRef(0);
+  const lastFrameRef = useRef(0);
+  const viewModeRef = useRef<GalaxyViewMode>("3d");
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const viewportSizeRef = useRef({ width: 0, height: 0 });
+  const stageNodeRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const flowTrackRefs = useRef<Array<SVGPathElement | null>>([]);
+  const flowGlowRefs = useRef<Array<SVGPathElement | null>>([]);
+  const flowBeamRefs = useRef<Array<SVGPathElement | null>>([]);
+  const flowCometRefs = useRef<Array<SVGPathElement | null>>([]);
 
   const currentView = views[position.viewIndex] ?? views[0];
   const currentProject = currentView?.project ?? null;
   const stageViews = useMemo(
-    () => buildAgentStageView(currentView?.stages ?? []),
+    () => buildAgentStageView(currentView?.stages ?? []).slice(0, 7),
     [currentView],
   );
-  const selected = stageViews[position.stageIndex] ?? stageViews[0];
-  const playbackPaused = userPaused || hovered || interactionPaused || !pageVisible;
+  const selectedIndex = hoveredStage !== null && !interactionPaused && !userPaused
+    ? hoveredStage
+    : position.stageIndex;
+  const selected = stageViews[selectedIndex] ?? stageViews[0];
+  const playbackPaused = userPaused || hovered || interactionPaused || !pageVisible || reducedMotion;
+
+  const applyOrbitPhase = useCallback((nextPhase: number) => {
+    const count = stageViews.length;
+    if (count === 0) return;
+
+    const normalizedPhase = positiveModulo(nextPhase, count);
+    const { width, height } = viewportSizeRef.current;
+    const arcOptions = {
+      scaleX: (width || GALAXY_VIEWBOX.width) / GALAXY_VIEWBOX.width,
+      scaleY: (height || GALAXY_VIEWBOX.height) / GALAXY_VIEWBOX.height,
+      screenGap: 72,
+    };
+    phaseRef.current = normalizedPhase;
+
+    stageNodeRefs.current.forEach((node, index) => {
+      if (!node || index >= count) return;
+      const orbit = computeOrbitNode(index, normalizedPhase, count, viewModeRef.current);
+      const offsetX = ((orbit.x - 365) / GALAXY_VIEWBOX.width) * width;
+      const offsetY = ((orbit.y - 183) / GALAXY_VIEWBOX.height) * height;
+
+      node.style.zIndex = String(orbit.zIndex);
+      node.style.opacity = String(orbit.opacity);
+      node.style.filter = `blur(${orbit.blur.toFixed(2)}px) brightness(${orbit.brightness.toFixed(2)})`;
+      node.style.transform = `translate(-50%, -50%) translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, ${Math.round(orbit.depth * 54)}px) scale(${orbit.scale.toFixed(3)})`;
+      node.dataset.depth = orbit.depth.toFixed(3);
+    });
+
+    for (let index = 0; index < count; index += 1) {
+      const path = buildOrbitArc(index, normalizedPhase, count, arcOptions).path;
+      flowTrackRefs.current[index]?.setAttribute("d", path);
+      flowGlowRefs.current[index]?.setAttribute("d", path);
+      flowBeamRefs.current[index]?.setAttribute("d", path);
+      flowCometRefs.current[index]?.setAttribute("d", path);
+    }
+  }, [stageViews.length]);
 
   useEffect(() => {
-    positionRef.current = position;
-  }, [position]);
-
-  const cancelTransition = useCallback(() => {
-    if (transitionTimerRef.current) {
-      clearTimeout(transitionTimerRef.current);
-      transitionTimerRef.current = null;
-    }
-    setTransition(null);
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
   }, []);
 
-  const pauseForInteraction = useCallback(() => {
-    setInteractionPaused(true);
-    if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
-    interactionTimerRef.current = setTimeout(() => setInteractionPaused(false), 8000);
-  }, []);
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
 
-  useEffect(() => () => {
-    if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
-    if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
-  }, []);
+    const updateSize = () => {
+      const bounds = viewport.getBoundingClientRect();
+      viewportSizeRef.current = { width: bounds.width, height: bounds.height };
+      applyOrbitPhase(phaseRef.current);
+    };
+
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(viewport);
+    updateSize();
+    return () => observer.disconnect();
+  }, [applyOrbitPhase]);
+
+  useEffect(() => {
+    viewModeRef.current = viewMode;
+    applyOrbitPhase(phaseRef.current);
+  }, [applyOrbitPhase, viewMode]);
 
   useEffect(() => {
     const handleVisibility = () => setPageVisible(document.visibilityState === "visible");
@@ -146,43 +212,94 @@ export function AgentConstellation({
   }, []);
 
   useEffect(() => {
+    if (!userPaused && pageVisible && !reducedMotion) return;
+    if (focusAnimationFrameRef.current !== null) {
+      cancelAnimationFrame(focusAnimationFrameRef.current);
+      focusAnimationFrameRef.current = null;
+    }
+  }, [pageVisible, reducedMotion, userPaused]);
+
+  useEffect(() => () => {
+    if (animationFrameRef.current !== null) cancelAnimationFrame(animationFrameRef.current);
+    if (focusAnimationFrameRef.current !== null) cancelAnimationFrame(focusAnimationFrameRef.current);
+    if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
+  }, []);
+
+  useEffect(() => {
     setPosition((current) => ({
       viewIndex: Math.min(current.viewIndex, Math.max(views.length - 1, 0)),
       stageIndex: 0,
     }));
-    cancelTransition();
-  }, [cancelTransition, views.length]);
+    rawPhaseRef.current = 0;
+    phaseRef.current = 0;
+    focusIndexRef.current = 0;
+    applyOrbitPhase(0);
+  }, [applyOrbitPhase, views.length]);
 
-  const startTransition = useCallback(() => {
-    if (transitionTimerRef.current || views.length === 0 || stageViews.length === 0) return;
-
-    const nextTransition = buildCarouselTransition(
-      positionRef.current,
-      views.length,
-      stageViews.length,
-    );
-    setTransition({ linkIndex: nextTransition.linkIndex, nonce: Date.now() });
-    transitionTimerRef.current = setTimeout(() => {
-      positionRef.current = nextTransition.target;
-      setPosition(nextTransition.target);
-      setTransition(null);
-      transitionTimerRef.current = null;
-    }, TRANSITION_DURATION_MS);
-  }, [stageViews.length, views.length]);
+  const pauseForInteraction = useCallback(() => {
+    setInteractionPaused(true);
+    if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
+    interactionTimerRef.current = setTimeout(() => {
+      setInteractionPaused(false);
+      interactionTimerRef.current = null;
+    }, INTERACTION_PAUSE_MS);
+  }, []);
 
   useEffect(() => {
-    if (playbackPaused || views.length === 0 || stageViews.length === 0) return;
-    const timer = setInterval(startTransition, AUTOPLAY_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [playbackPaused, stageViews.length, startTransition, views.length]);
+    if (playbackPaused || stageViews.length === 0) {
+      lastFrameRef.current = 0;
+      return;
+    }
+
+    const animate = (time: number) => {
+      if (!lastFrameRef.current) lastFrameRef.current = time;
+      const delta = Math.min(time - lastFrameRef.current, STAGE_DURATION_MS * 0.72);
+      lastFrameRef.current = time;
+
+      let rawPhase = rawPhaseRef.current + delta / STAGE_DURATION_MS;
+      if (rawPhase >= stageViews.length) {
+        rawPhase %= stageViews.length;
+        if (views.length > 1) {
+          setPosition((current) => ({
+            viewIndex: (current.viewIndex + 1) % views.length,
+            stageIndex: 0,
+          }));
+        }
+      }
+
+      rawPhaseRef.current = rawPhase;
+      const nextPhase = easeOrbitPhase(rawPhase);
+      applyOrbitPhase(nextPhase);
+
+      const focusIndex = getFocusedStageIndex(nextPhase, stageViews.length);
+      if (focusIndex !== focusIndexRef.current) {
+        focusIndexRef.current = focusIndex;
+        setPosition((current) => ({ ...current, stageIndex: focusIndex }));
+      }
+
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    animationFrameRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (animationFrameRef.current !== null) cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+      lastFrameRef.current = 0;
+    };
+  }, [applyOrbitPhase, playbackPaused, stageViews.length, views.length]);
 
   const selectView = useCallback((viewIndex: number) => {
-    const nextPosition = { viewIndex, stageIndex: 0 };
-    cancelTransition();
-    positionRef.current = nextPosition;
-    setPosition(nextPosition);
+    if (focusAnimationFrameRef.current !== null) {
+      cancelAnimationFrame(focusAnimationFrameRef.current);
+      focusAnimationFrameRef.current = null;
+    }
+    rawPhaseRef.current = 0;
+    phaseRef.current = 0;
+    focusIndexRef.current = 0;
+    applyOrbitPhase(0);
+    setPosition({ viewIndex, stageIndex: 0 });
     pauseForInteraction();
-  }, [cancelTransition, pauseForInteraction]);
+  }, [applyOrbitPhase, pauseForInteraction]);
 
   const prevProject = useCallback(() => {
     selectView((position.viewIndex - 1 + views.length) % views.length);
@@ -193,341 +310,377 @@ export function AgentConstellation({
   }, [position.viewIndex, selectView, views.length]);
 
   const selectStage = useCallback((stageIndex: number) => {
-    cancelTransition();
-    setPosition((current) => {
-      const nextPosition = { ...current, stageIndex };
-      positionRef.current = nextPosition;
-      return nextPosition;
-    });
+    if (stageViews.length === 0) return;
     pauseForInteraction();
-  }, [cancelTransition, pauseForInteraction]);
+
+    if (focusAnimationFrameRef.current !== null) {
+      cancelAnimationFrame(focusAnimationFrameRef.current);
+    }
+
+    const startPhase = phaseRef.current;
+    const currentFocus = getFocusedStageIndex(startPhase, stageViews.length);
+    if (currentFocus === stageIndex) {
+      focusIndexRef.current = stageIndex;
+      setPosition((current) => ({ ...current, stageIndex }));
+      return;
+    }
+
+    if (reducedMotion || userPaused || !pageVisible) {
+      rawPhaseRef.current = stageIndex;
+      focusIndexRef.current = stageIndex;
+      applyOrbitPhase(stageIndex);
+      setPosition((current) => ({ ...current, stageIndex }));
+      return;
+    }
+
+    const targetPhase = getForwardPhaseTarget(startPhase, stageIndex, stageViews.length);
+    const distance = targetPhase - startPhase;
+    const duration = 620 + Math.min(distance, 4) * 190;
+    const startedAt = performance.now();
+
+    const focusStage = (time: number) => {
+      const progress = Math.min(1, (time - startedAt) / duration);
+      const eased = -(Math.cos(Math.PI * progress) - 1) / 2;
+      const absolutePhase = startPhase + distance * eased;
+      const normalizedPhase = absolutePhase % stageViews.length;
+
+      rawPhaseRef.current = normalizedPhase;
+      applyOrbitPhase(normalizedPhase);
+      const focusIndex = getFocusedStageIndex(normalizedPhase, stageViews.length);
+      if (focusIndex !== focusIndexRef.current) {
+        focusIndexRef.current = focusIndex;
+        setPosition((current) => ({ ...current, stageIndex: focusIndex }));
+      }
+
+      if (progress < 1) {
+        focusAnimationFrameRef.current = requestAnimationFrame(focusStage);
+        return;
+      }
+
+      rawPhaseRef.current = positiveModulo(targetPhase, stageViews.length);
+      focusIndexRef.current = stageIndex;
+      setPosition((current) => ({ ...current, stageIndex }));
+      focusAnimationFrameRef.current = null;
+    };
+
+    focusAnimationFrameRef.current = requestAnimationFrame(focusStage);
+  }, [applyOrbitPhase, pageVisible, pauseForInteraction, reducedMotion, stageViews.length, userPaused]);
 
   const centerTitle = currentView?.title ?? "全部项目";
   const centerSub = currentProject
-    ? `${riskLabels[currentProject.risk_level] ?? ""} · ${currentProject.test_cases}用例 · ${currentProject.test_runs}次运行`
-    : `${stageViews.filter((stage) => stage.status === "running").length} 个阶段运行中`;
-
-  const centerRiskColor = currentProject ? (riskColors[currentProject.risk_level] ?? "#9098c0") : "#9098c0";
-
-  const runningCount = stageViews.filter((s) => s.status === "running").length;
-  const attentionCount = stageViews.filter((s) => s.status === "attention").length;
+    ? `${riskLabels[currentProject.risk_level] ?? ""} · ${currentProject.test_cases} 用例 · ${currentProject.test_runs} 次运行`
+    : "7 个阶段流转中";
+  const centerHref = currentProject
+    ? `/projects/${currentProject.identifier}`
+    : "/projects/spaces";
+  const runningCount = stageViews.filter((stage) => stage.status === "running").length;
+  const attentionCount = stageViews.filter((stage) => stage.status === "attention").length;
 
   return (
-    <div
-      className="constellation-surface relative overflow-hidden rounded-lg pb-5 md:h-[468px]"
+    <section
+      className="constellation-surface galaxy-constellation relative overflow-hidden rounded-lg md:h-[640px]"
+      data-paused={playbackPaused ? "true" : "false"}
+      data-reduced-motion={reducedMotion ? "true" : "false"}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={() => {
+        setHovered(false);
+        setHoveredStage(null);
+      }}
     >
-      {/* ---- 顶部标题栏 ---- */}
-      <div className="flex items-center justify-between border-b bg-background/72 px-5 py-4 backdrop-blur-sm">
-        <div>
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <ProductIcon name="agents" className="h-4 w-4 text-[hsl(var(--agent-running))]" />
+      <header className="galaxy-toolbar relative z-[140] flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-sm font-semibold text-white">
+            <span className="galaxy-title-icon flex h-7 w-7 items-center justify-center rounded-md">
+              <ProductIcon name="agents" className="h-4 w-4" />
+            </span>
             智能体协作星图
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {centerTitle} · {position.viewIndex + 1}/{views.length} · 阶段自动巡航
+          <p className="mt-0.5 truncate text-[11px] text-slate-300/80">
+            {centerTitle} · 7 阶段自动流转 · {position.viewIndex + 1}/{views.length}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {/* 状态摘要 */}
-          <div className="hidden items-center gap-3 text-[11px] sm:flex">
-            {runningCount > 0 && (
-              <span className="flex items-center gap-1 text-[hsl(var(--agent-running))]">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[hsl(var(--agent-running))]" />
-                {runningCount}运行
-              </span>
-            )}
-            {attentionCount > 0 && (
-              <span className="flex items-center gap-1 text-[hsl(var(--risk-warning))]">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[hsl(var(--risk-warning))]" />
-                {attentionCount}关注
-              </span>
-            )}
-            <span className="text-muted-foreground">
-              <StatusIcon status="running" />
-            </span>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="hidden items-center gap-2 text-[10px] text-slate-300 lg:flex">
+            {runningCount > 0 && <span className="text-cyan-300">{runningCount} 运行</span>}
+            {attentionCount > 0 && <span className="text-amber-300">{attentionCount} 关注</span>}
           </div>
-          {/* 轮播控制 */}
-          {views.length > 1 && (
-            <div className="flex items-center gap-1 rounded-lg border bg-background p-1 shadow-sm">
-              <button
-                type="button"
-                className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                onClick={prevProject}
-                aria-label="上一个星图"
-              >
+
+          <div className="galaxy-controls flex items-center rounded-md p-0.5">
+            {views.length > 1 && (
+              <button type="button" onClick={prevProject} aria-label="上一个星图" className="galaxy-control-button">
                 <ChevronLeft className="h-3.5 w-3.5" />
               </button>
-              <button
-                type="button"
-                className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                onClick={() => setUserPaused((value) => !value)}
-                aria-label={userPaused ? "继续轮播" : "暂停轮播"}
-              >
-                {userPaused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
-              </button>
-              <button
-                type="button"
-                className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                onClick={nextProject}
-                aria-label="下一个星图"
-              >
+            )}
+            <button
+              type="button"
+              onClick={() => setUserPaused((value) => !value)}
+              aria-label={userPaused ? "继续星图动画" : "暂停星图动画"}
+              className="galaxy-control-button"
+            >
+              {userPaused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode((mode) => mode === "3d" ? "2d" : "3d")}
+              aria-label={viewMode === "3d" ? "切换为 2D 视图" : "切换为 3D 视图"}
+              className="galaxy-view-toggle"
+            >
+              {viewMode === "3d" ? <Box className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+              <span>{viewMode === "3d" ? "3D" : "2D"}</span>
+            </button>
+            {views.length > 1 && (
+              <button type="button" onClick={nextProject} aria-label="下一个星图" className="galaxy-control-button">
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* ---- SVG 星图 ---- */}
-      <div className="hidden px-4 pt-2 md:block">
-        <svg viewBox="0 0 730 360" className="mx-auto h-[270px] w-full max-w-[860px]" role="img" aria-label={`${centerTitle} 智能体协作阶段图`}>
+      <div ref={viewportRef} className="galaxy-viewport relative z-20 hidden h-[474px] md:block">
+        <GalaxyParticleLayer paused={playbackPaused} reducedMotion={reducedMotion} />
+        <GalaxyWebGLLayer paused={playbackPaused} reducedMotion={reducedMotion} />
+        <svg
+          viewBox={`0 0 ${GALAXY_VIEWBOX.width} ${GALAXY_VIEWBOX.height}`}
+          preserveAspectRatio="none"
+          className="pointer-events-none absolute inset-0 h-full w-full"
+          role="img"
+          aria-label={`${centerTitle} 银河质量闭环`}
+        >
           <defs>
-            {(["running", "attention", "ready", "idle", "unavailable"] as const).map((status) => (
-              <marker key={status} id={markerId(status)} markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-                <path d="M 0 1 L 9 5 L 0 9 Z" fill={statusColor(status)} />
+            <radialGradient id="galaxy-core-glow">
+              <stop offset="0%" stopColor="#eef7ff" stopOpacity="0.95" />
+              <stop offset="34%" stopColor="#7de5ff" stopOpacity="0.42" />
+              <stop offset="72%" stopColor="#5f61ff" stopOpacity="0.13" />
+              <stop offset="100%" stopColor="#271f88" stopOpacity="0" />
+            </radialGradient>
+            <linearGradient id="galaxy-orbit-gradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#66e6ff" stopOpacity="0.12" />
+              <stop offset="48%" stopColor="#7d7bff" stopOpacity="0.72" />
+              <stop offset="100%" stopColor="#be6cff" stopOpacity="0.12" />
+            </linearGradient>
+            <filter id="galaxy-flow-glow" x="-40%" y="-80%" width="180%" height="260%">
+              <feGaussianBlur stdDeviation="2.4" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <filter id="galaxy-arrow-head-glow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="1.8" result="arrow-blur" />
+              <feMerge><feMergeNode in="arrow-blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <marker
+              id="galaxy-arrow-white"
+              markerWidth="16"
+              markerHeight="16"
+              refX="14"
+              refY="8"
+              orient="auto"
+              markerUnits="userSpaceOnUse"
+              viewBox="0 0 16 16"
+            >
+              <path d="M 1 1.5 L 15 8 L 1 14.5 L 5 8 Z" fill="#edfcff" filter="url(#galaxy-arrow-head-glow)" />
+            </marker>
+            {stageViews.map((stage) => (
+              <marker
+                key={stage.key}
+                id={`galaxy-arrow-${stage.key}`}
+                markerWidth="18"
+                markerHeight="18"
+                refX="16"
+                refY="9"
+                orient="auto"
+                markerUnits="userSpaceOnUse"
+                viewBox="0 0 18 18"
+              >
+                <path
+                  d="M 1 1.5 L 17 9 L 1 16.5 L 5.4 9 Z"
+                  fill={stageColors[stage.key] ?? "#8fe9ff"}
+                  filter="url(#galaxy-arrow-head-glow)"
+                />
               </marker>
             ))}
-            <filter id="constellation-node-shadow" x="-20%" y="-30%" width="140%" height="170%">
-              <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#17213b" floodOpacity="0.12" />
-            </filter>
-            <filter id="constellation-packet-glow" x="-250%" y="-250%" width="600%" height="600%">
-              <feGaussianBlur stdDeviation="3" result="packet-blur" />
-              <feMerge>
-                <feMergeNode in="packet-blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            {positions.map((pos, index) => (
-              <clipPath id={`constellation-node-clip-${index}`} key={`node-clip-${index}`}>
-                <rect x={pos.x - 75} y={pos.y - 34} width="150" height="68" rx="8" />
-              </clipPath>
-            ))}
           </defs>
-          {/* 背景轨道 */}
-          <g className="constellation-orbit">
-            <ellipse cx="365" cy="183" rx="285" ry="136" fill="none" stroke="#64748b35" strokeDasharray="2 7" />
-            <ellipse cx="365" cy="183" rx="210" ry="98" fill="none" stroke="#64748b20" strokeDasharray="2 10" />
-          </g>
 
-          {/* 中心→节点辐线 + 箭头 */}
-          {positions.map((pos, i) => {
-            const stage = stageViews[i];
-            if (!stage) return null;
-            const dx = pos.x - 365;
-            const dy = pos.y - 183;
-            const len = Math.sqrt(dx * dx + dy * dy);
-            const ux = dx / len;
-            const uy = dy / len;
-            const connector = clipConnector({ x: 365, y: 183 }, pos, 75, 34);
-            const spokeColor = statusColor(stage.status);
+          <ellipse cx="365" cy="183" rx="324" ry="139" className="galaxy-dust-orbit" />
+          <ellipse cx="365" cy="183" rx="278" ry="113" className="galaxy-main-orbit" />
+          <ellipse cx="365" cy="183" rx="212" ry="82" className="galaxy-energy-orbit" />
+          <ellipse cx="365" cy="183" rx="151" ry="55" className="galaxy-inner-orbit" />
+          <ellipse cx="365" cy="183" rx="126" ry="79" fill="url(#galaxy-core-glow)" className="galaxy-nebula-breath" />
+
+          {stageViews.map((stage, index) => {
+            const viewportWidth = viewportSizeRef.current.width || GALAXY_VIEWBOX.width;
+            const viewportHeight = viewportSizeRef.current.height || GALAXY_VIEWBOX.height;
+            const arc = buildOrbitArc(index, phaseRef.current, stageViews.length, {
+              scaleX: viewportWidth / GALAXY_VIEWBOX.width,
+              scaleY: viewportHeight / GALAXY_VIEWBOX.height,
+              screenGap: 72,
+            });
+            const color = stageColors[stage.key] ?? "#8fe9ff";
+            const active = position.stageIndex === index;
             return (
-              <g key={`spoke-${i}`}>
-                <line
-                  x1={365 + ux * 58} y1={183 + uy * 58}
-                  x2={connector.x2} y2={connector.y2}
-                  className={cn("constellation-link-subtle", position.stageIndex === i && "constellation-link-selected")}
-                  stroke={spokeColor}
-                  strokeWidth={position.stageIndex === i ? 1.8 : 1.1}
-                  strokeDasharray="4 6"
-                  opacity={position.stageIndex === i ? 0.72 : 0.24}
-                  markerEnd={`url(#${markerId(stage.status)})`}
+              <g key={`arc-${stage.key}`}>
+                <path
+                  ref={(node) => { flowTrackRefs.current[index] = node; }}
+                  d={arc.path}
+                  className="galaxy-flow-track"
                 />
-              </g>
-            );
-          })}
-
-          {/* 节点间环形连线 + 箭头 */}
-          {positions.map((pos, i) => {
-            const next = positions[(i + 1) % positions.length];
-            const stage = stageViews[i];
-            if (!stage) return null;
-            const connector = clipConnector(pos, next, 75, 34);
-            const ringColor = statusColor(stage.status);
-            const isTransitioning = transition?.linkIndex === i;
-            return (
-              <g key={`flow-${i}`}>
-                <line
-                  x1={connector.x1} y1={connector.y1}
-                  x2={connector.x2} y2={connector.y2}
-                  className={cn("constellation-link-flow", isTransitioning && "constellation-link-active")}
-                  stroke={ringColor}
-                  strokeWidth={isTransitioning ? 2.4 : 1.35}
-                  strokeDasharray="5 7"
-                  opacity={isTransitioning ? 1 : 0.46}
-                  markerEnd={`url(#${markerId(stage.status)})`}
+                <path
+                  ref={(node) => { flowGlowRefs.current[index] = node; }}
+                  d={arc.path}
+                  className={cn("galaxy-flow-glow", active && "galaxy-flow-glow-active")}
+                  style={{ "--flow-color": color } as CSSProperties}
                 />
-              </g>
-            );
-          })}
-
-          {transition && (() => {
-            const from = positions[transition.linkIndex];
-            const to = positions[(transition.linkIndex + 1) % positions.length];
-            const connector = clipConnector(from, to, 75, 34);
-            return (
-              <circle
-                key={transition.nonce}
-                r="4.5"
-                fill={statusColor(stageViews[transition.linkIndex]?.status ?? "running")}
-                className="constellation-data-packet"
-                filter="url(#constellation-packet-glow)"
-              >
-                <animateMotion
-                  dur={`${TRANSITION_DURATION_MS}ms`}
-                  path={`M ${connector.x1} ${connector.y1} L ${connector.x2} ${connector.y2}`}
-                  fill="freeze"
+                <path
+                  ref={(node) => { flowBeamRefs.current[index] = node; }}
+                  d={arc.path}
+                  className={cn("galaxy-flow-beam", active && "galaxy-flow-beam-active")}
+                  style={{ "--flow-color": color } as CSSProperties}
+                  markerEnd={active ? `url(#galaxy-arrow-${stage.key})` : "url(#galaxy-arrow-white)"}
                 />
-              </circle>
-            );
-          })()}
-
-          {/* ---- 中心枢纽：项目名称 ---- */}
-          {/* 外光晕 */}
-          <circle cx="365" cy="183" r="67" fill="hsla(174,55%,42%,0.08)" className="constellation-core-ring" />
-          {/* 主圆盘 */}
-          <circle cx="365" cy="183" r="50" fill="#ffffff" filter="url(#constellation-node-shadow)" />
-          {/* 风险色环 */}
-          <circle cx="365" cy="183" r="50" fill="none" stroke={centerRiskColor} strokeWidth="2.5" opacity="0.7" />
-          {/* 项目名称 (最多 8 个字) */}
-          <text x="365" y="177" textAnchor="middle" fill="#17213b" fontSize="15" fontWeight="700">
-            {centerTitle.length > 8 ? centerTitle.slice(0, 7) + "…" : centerTitle}
-          </text>
-          <text x="365" y="198" textAnchor="middle" fill="#64748b" fontSize="10">
-            {centerSub}
-          </text>
-
-          {/* ---- 节点卡片 ---- */}
-          {stageViews.slice(0, 7).map((stage, i) => {
-            const pos = positions[i];
-            const sel = position.stageIndex === i;
-            const color = statusColor(stage.status);
-            return (
-              <g
-                key={stage.key}
-                role="button"
-                tabIndex={0}
-                aria-label={`${stage.name}，${stage.status_label}`}
-                onClick={() => selectStage(i)}
-                onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") selectStage(i); }}
-                className={cn(
-                  "constellation-node cursor-pointer outline-none",
-                  sel && "constellation-node-active",
-                  stage.status === "attention" && "constellation-node-attention",
-                )}
-              >
-                {/* 固定尺寸遥测节点 */}
-                <rect
-                  x={pos.x - 75} y={pos.y - 34}
-                  width="150" height="68" rx="8"
-                  fill={sel ? "#f8fbff" : "#ffffff"}
-                  stroke={sel ? color : "#cbd5e1"}
-                  strokeWidth={sel ? 2 : 1}
-                  filter="url(#constellation-node-shadow)"
+                <path
+                  ref={(node) => { flowCometRefs.current[index] = node; }}
+                  d={arc.path}
+                  pathLength="100"
+                  className={cn("galaxy-flow-comet", active && "galaxy-flow-comet-active")}
+                  style={{ "--flow-color": color, animationDelay: `${index * -0.37}s` } as CSSProperties}
                 />
-                <rect x={pos.x - 75} y={pos.y - 25} width="4" height="50" rx="2" fill={color} opacity={sel ? 1 : 0.78} />
-                {sel && (
-                  <rect
-                    x={pos.x - 70}
-                    y={pos.y - 34}
-                    width="140"
-                    height="11"
-                    fill={color}
-                    opacity="0.1"
-                    clipPath={`url(#constellation-node-clip-${i})`}
-                    className="constellation-node-scan"
-                  />
-                )}
-                <text x={pos.x - 60} y={pos.y - 20} fill="#94a3b8" fontSize="8" fontWeight="700">
-                  {String(i + 1).padStart(2, "0")}
-                </text>
-                <circle cx={pos.x + 59} cy={pos.y - 21} r="3.5" fill={color} className="constellation-signal-dot" />
-                <foreignObject x={pos.x - 60} y={pos.y - 12} width="26" height="26" className="pointer-events-none">
-                  <div
-                    className="flex h-[26px] w-[26px] items-center justify-center rounded-md"
-                    style={{ color, backgroundColor: `${color}18` }}
-                  >
-                    <ProductIcon name={stageIcons[stage.key] || "agents"} className="h-3.5 w-3.5" />
-                  </div>
-                </foreignObject>
-                <text x={pos.x - 27} y={pos.y + 1} fill="#17213b" fontSize="11" fontWeight="700">
-                  {stage.name}
-                </text>
-                <text x={pos.x - 27} y={pos.y + 18} fill="#64748b" fontSize="9">
-                  {stage.data_available ? stage.status_label : "数据待接入"}
-                </text>
-                <text x={pos.x + 60} y={pos.y + 18} textAnchor="end" fill={color} fontSize="9" fontWeight="700">
-                  {stage.value_label}
-                </text>
               </g>
             );
           })}
         </svg>
-      </div>
 
-      {/* ---- 移动端简化列表 ---- */}
-      <div className="grid gap-2 p-3 md:hidden">
-        {stageViews.map((stage, index) => (
-          <button
-            key={stage.key}
-            type="button"
-            className={cn(
-              "flex min-h-14 items-center justify-between rounded-lg border px-3 py-2 text-left transition-colors",
-              statusStyles[stage.status],
-              position.stageIndex === index && "ring-2 ring-[hsl(var(--primary)/0.28)] shadow-sm",
-            )}
-            onClick={() => selectStage(index)}
-          >
-            <span>
-              <span className="block text-sm font-medium text-foreground">{stage.name}</span>
-              <span className="mt-0.5 block text-[11px] opacity-80">{stage.description}</span>
-            </span>
-            <span className="text-xs font-semibold">{stage.value_label}</span>
-          </button>
-        ))}
-      </div>
+        <Link href={centerHref} className="galaxy-project-core group" aria-label={`进入${centerTitle}`}>
+          <span className="galaxy-gravity-well" aria-hidden="true" />
+          <span className="galaxy-lensing-ring" aria-hidden="true" />
+          <span className="galaxy-core-depth-halo" aria-hidden="true" />
+          <span className="galaxy-core-orbit galaxy-core-orbit-outer" />
+          <span className="galaxy-core-accretion-disk" aria-hidden="true" />
+          <span className="galaxy-core-orbit galaxy-core-orbit-inner" />
+          <span className="galaxy-core-foreground-lens" aria-hidden="true" />
+          <span className="galaxy-event-horizon" aria-hidden="true" />
+          <span className="galaxy-core-content">
+            <span className="text-[9px] font-medium tracking-[0.18em] text-cyan-100/80">协作核心</span>
+            <strong className="mt-1 max-w-[92px] truncate text-[15px] text-white">{centerTitle}</strong>
+            <span className="mt-1 text-[9px] text-indigo-100/70">{centerSub}</span>
+          </span>
+        </Link>
 
-      {/* ---- 底部详情卡片 ---- */}
-      {selected && (
-        <div className="m-3 mt-0 flex min-h-[72px] flex-col justify-between gap-3 rounded-lg border bg-background/84 px-4 py-3 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center md:m-4 md:mt-0">
-          <div className="flex min-w-0 items-start gap-3">
-            <IconFrame variant="status" className={cn("mt-0.5 border", statusStyles[selected.status])}>
-              <ProductIcon name={stageIcons[selected.key] || "agents"} className="h-4 w-4" />
-            </IconFrame>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-medium text-[hsl(var(--agent-running))]">{centerTitle}</span>
-                <span className="text-[10px] text-muted-foreground/50">/</span>
-                <span className="text-sm font-semibold text-foreground">{selected.name}</span>
-                <StatusIcon status={statusMap[selected.status]} showLabel className="text-[10px]" />
-                {selected.issue_count > 0 && (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-[hsl(var(--risk-warning))]">
-                    <StatusIcon status="attention" />{selected.issue_count} 个异常
+        {stageViews.map((stage, index) => {
+          const orbit = computeOrbitNode(index, phaseRef.current, stageViews.length, viewMode);
+          const color = stageColors[stage.key] ?? "#8fe9ff";
+          const focused = position.stageIndex === index;
+          const stageName = stageNames[stage.key] ?? stage.name;
+          const viewportWidth = viewportSizeRef.current.width || GALAXY_VIEWBOX.width;
+          const viewportHeight = viewportSizeRef.current.height || 300;
+          const offsetX = ((orbit.x - 365) / GALAXY_VIEWBOX.width) * viewportWidth;
+          const offsetY = ((orbit.y - 183) / GALAXY_VIEWBOX.height) * viewportHeight;
+          const style = {
+            zIndex: orbit.zIndex,
+            opacity: orbit.opacity,
+            filter: `blur(${orbit.blur.toFixed(2)}px) brightness(${orbit.brightness.toFixed(2)})`,
+            transform: `translate(-50%, -50%) translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, ${Math.round(orbit.depth * 54)}px) scale(${orbit.scale.toFixed(3)})`,
+            "--stage-color": color,
+          } as CSSProperties;
+
+          return (
+            <button
+              ref={(node) => { stageNodeRefs.current[index] = node; }}
+              key={stage.key}
+              type="button"
+              className={cn("galaxy-stage-node", focused && "galaxy-stage-node-focused")}
+              style={style}
+              aria-label={`${String(index + 1).padStart(2, "0")} ${stageName}，${stage.status_label}，${stage.value_label}`}
+              onMouseEnter={() => setHoveredStage(index)}
+              onMouseLeave={() => setHoveredStage(null)}
+              onClick={() => selectStage(index)}
+            >
+              <span className="galaxy-stage-halo" />
+              <span className="galaxy-stage-glass">
+                <span className="galaxy-stage-number">{String(index + 1).padStart(2, "0")}</span>
+                <span className="galaxy-stage-icon">
+                  <ProductIcon name={stageIcons[stage.key] || "agents"} className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 flex-1 text-left">
+                  <strong className="block truncate text-[11px] font-semibold text-white">{stageName}</strong>
+                  <span className="mt-0.5 flex items-center gap-1.5 text-[8px] text-slate-200/75">
+                    <span className="galaxy-stage-signal" />
+                    {stage.data_available ? stage.status_label : "数据待接入"}
                   </span>
-                )}
+                </span>
+                <span className="galaxy-stage-value">{stage.value_label}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="relative z-30 grid gap-2 p-3 md:hidden">
+        {stageViews.map((stage, index) => {
+          const stageName = stageNames[stage.key] ?? stage.name;
+          return (
+            <button
+              key={stage.key}
+              type="button"
+              className={cn(
+                "flex min-h-14 items-center justify-between rounded-lg border px-3 py-2 text-left transition-colors",
+                mobileStatusStyles[stage.status],
+                position.stageIndex === index && "ring-2 ring-cyan-300/40",
+              )}
+              onClick={() => selectStage(index)}
+            >
+              <span>
+                <span className="block text-sm font-medium">{String(index + 1).padStart(2, "0")} {stageName}</span>
+                <span className="mt-0.5 block text-[11px] opacity-75">{stage.description}</span>
+              </span>
+              <span className="text-xs font-semibold">{stage.value_label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {selected && (
+        <div className="galaxy-detail-panel relative z-[130] mx-3 mb-3 grid min-h-[92px] gap-3 px-4 py-3 md:mx-4 md:-mt-1 md:grid-cols-[minmax(190px,0.75fr)_minmax(0,1.6fr)]" data-testid="constellation-stage-detail">
+          <div className="flex min-w-0 items-center gap-3 border-b border-slate-200/80 pb-2 md:border-b-0 md:border-r md:pb-0 md:pr-4">
+            <span className="galaxy-detail-icon" style={{ "--stage-color": stageColors[selected.key] ?? "#5d8cff" } as CSSProperties}>
+              <ProductIcon name={stageIcons[selected.key] || "agents"} className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <span className="text-[9px] font-medium tracking-[0.15em] text-slate-400">当前阶段</span>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <strong className="text-sm text-slate-950">{String(selectedIndex + 1).padStart(2, "0")} {stageNames[selected.key] ?? selected.name}</strong>
+                <StatusIcon status={statusMap[selected.status]} showLabel className="text-[9px]" />
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">{selected.description}</p>
+              <p className="mt-1 truncate text-[10px] text-slate-500">阶段 {selectedIndex + 1} / 7 · 负责人：待数据接入</p>
             </div>
           </div>
-          {selected.href && (
-            <Link href={selected.href} className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-[hsl(var(--primary))] hover:text-foreground">
-              查看相关数据 <ArrowUpRight className="h-3.5 w-3.5" />
-            </Link>
-          )}
+
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="line-clamp-1 text-[11px] leading-5 text-slate-600">{selected.description}</p>
+              <div className="mt-1.5 grid grid-cols-3 divide-x divide-slate-200 text-[9px] text-slate-400">
+                <span className="pr-2"><b className="mr-1 text-sm text-slate-900">{selected.task_count ?? 0}</b>关联任务</span>
+                <span className="px-2"><b className={cn("mr-1 text-sm", selected.issue_count > 0 ? "text-rose-600" : "text-slate-900")}>{selected.issue_count ?? 0}</b>风险异常</span>
+                <span className="pl-2"><b className="mr-1 text-[11px] text-slate-900">待接入</b>预计完成</span>
+              </div>
+            </div>
+            {selected.href && (
+              <Link href={selected.href} className="inline-flex shrink-0 items-center gap-1 text-[10px] font-semibold text-indigo-600 hover:text-indigo-900">
+                阶段详情 <ArrowUpRight className="h-3.5 w-3.5" />
+              </Link>
+            )}
+          </div>
         </div>
       )}
 
-      {/* ---- 轮播指示器 ---- */}
       {views.length > 1 && (
-        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+        <div className="absolute bottom-1 left-1/2 z-[145] hidden -translate-x-1/2 gap-1.5 md:flex">
           {views.map((view, index) => (
             <button
               key={view.key}
               type="button"
               className={cn(
-                "h-1.5 rounded-full transition-all duration-300",
-                index === position.viewIndex ? "w-5 bg-[hsl(var(--primary))]" : "w-1.5 bg-foreground/20 hover:bg-foreground/35"
+                "h-1 rounded-full transition-all duration-300",
+                index === position.viewIndex ? "w-5 bg-indigo-500" : "w-1.5 bg-slate-400/40 hover:bg-slate-500/70",
               )}
               onClick={() => selectView(index)}
               aria-label={`切换到 ${view.title}`}
@@ -535,6 +688,10 @@ export function AgentConstellation({
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
+}
+
+function positiveModulo(value: number, divisor: number): number {
+  return ((value % divisor) + divisor) % divisor;
 }
