@@ -35,9 +35,11 @@ import {
 import { GalaxyParticleLayer } from "@/components/dashboard/galaxy-particle-layer";
 import { GalaxyWebGLLayer } from "@/components/dashboard/galaxy-webgl-layer";
 
-const STAGE_DURATION_MS = 2300;
+const GALAXY_CYCLE_DURATION_MS = 16_000;
+const STAGE_DURATION_MS = GALAXY_CYCLE_DURATION_MS / 7;
 const INTERACTION_PAUSE_MS = 5000;
 const GALAXY_VIEWBOX = { width: 730, height: 360 };
+const STAGE_BOUNDARY = { halfWidth: 81, halfHeight: 36, margin: 7 };
 
 const stageIcons: Record<string, ProductIconKey> = {
   requirements: "testCases",
@@ -146,11 +148,6 @@ export function AgentConstellation({
 
     const normalizedPhase = positiveModulo(nextPhase, count);
     const { width, height } = viewportSizeRef.current;
-    const arcOptions = {
-      scaleX: (width || GALAXY_VIEWBOX.width) / GALAXY_VIEWBOX.width,
-      scaleY: (height || GALAXY_VIEWBOX.height) / GALAXY_VIEWBOX.height,
-      screenGap: 72,
-    };
     phaseRef.current = normalizedPhase;
 
     stageNodeRefs.current.forEach((node, index) => {
@@ -167,7 +164,14 @@ export function AgentConstellation({
     });
 
     for (let index = 0; index < count; index += 1) {
-      const path = buildOrbitArc(index, normalizedPhase, count, arcOptions).path;
+      const path = buildStageOrbitArc(
+        index,
+        normalizedPhase,
+        count,
+        viewModeRef.current,
+        width || GALAXY_VIEWBOX.width,
+        height || GALAXY_VIEWBOX.height,
+      ).path;
       flowTrackRefs.current[index]?.setAttribute("d", path);
       flowGlowRefs.current[index]?.setAttribute("d", path);
       flowBeamRefs.current[index]?.setAttribute("d", path);
@@ -464,38 +468,33 @@ export function AgentConstellation({
               <feGaussianBlur stdDeviation="2.4" result="blur" />
               <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
-            <filter id="galaxy-arrow-head-glow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="1.8" result="arrow-blur" />
-              <feMerge><feMergeNode in="arrow-blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
             <marker
               id="galaxy-arrow-white"
-              markerWidth="16"
-              markerHeight="16"
-              refX="14"
-              refY="8"
+              markerWidth="9"
+              markerHeight="9"
+              refX="8"
+              refY="4.5"
               orient="auto"
               markerUnits="userSpaceOnUse"
-              viewBox="0 0 16 16"
+              viewBox="0 0 9 9"
             >
-              <path d="M 1 1.5 L 15 8 L 1 14.5 L 5 8 Z" fill="#edfcff" filter="url(#galaxy-arrow-head-glow)" />
+              <path d="M 1 1.5 L 8 4.5 L 1 7.5 L 3.2 4.5 Z" fill="#b9eaff" fillOpacity="0.78" />
             </marker>
             {stageViews.map((stage) => (
               <marker
                 key={stage.key}
                 id={`galaxy-arrow-${stage.key}`}
-                markerWidth="18"
-                markerHeight="18"
-                refX="16"
-                refY="9"
+                markerWidth="11"
+                markerHeight="11"
+                refX="10"
+                refY="5.5"
                 orient="auto"
                 markerUnits="userSpaceOnUse"
-                viewBox="0 0 18 18"
+                viewBox="0 0 11 11"
               >
                 <path
-                  d="M 1 1.5 L 17 9 L 1 16.5 L 5.4 9 Z"
+                  d="M 1 1.5 L 10 5.5 L 1 9.5 L 3.8 5.5 Z"
                   fill={stageColors[stage.key] ?? "#8fe9ff"}
-                  filter="url(#galaxy-arrow-head-glow)"
                 />
               </marker>
             ))}
@@ -510,11 +509,14 @@ export function AgentConstellation({
           {stageViews.map((stage, index) => {
             const viewportWidth = viewportSizeRef.current.width || GALAXY_VIEWBOX.width;
             const viewportHeight = viewportSizeRef.current.height || GALAXY_VIEWBOX.height;
-            const arc = buildOrbitArc(index, phaseRef.current, stageViews.length, {
-              scaleX: viewportWidth / GALAXY_VIEWBOX.width,
-              scaleY: viewportHeight / GALAXY_VIEWBOX.height,
-              screenGap: 72,
-            });
+            const arc = buildStageOrbitArc(
+              index,
+              phaseRef.current,
+              stageViews.length,
+              viewMode,
+              viewportWidth,
+              viewportHeight,
+            );
             const color = stageColors[stage.key] ?? "#8fe9ff";
             const active = position.stageIndex === index;
             return (
@@ -601,7 +603,7 @@ export function AgentConstellation({
                   <ProductIcon name={stageIcons[stage.key] || "agents"} className="h-4 w-4" />
                 </span>
                 <span className="min-w-0 flex-1 text-left">
-                  <strong className="block truncate text-[11px] font-semibold text-white">{stageName}</strong>
+                  <strong className="block whitespace-nowrap text-[11px] font-semibold text-white">{stageName}</strong>
                   <span className="mt-0.5 flex items-center gap-1.5 text-[8px] text-slate-200/75">
                     <span className="galaxy-stage-signal" />
                     {stage.data_available ? stage.status_label : "数据待接入"}
@@ -694,4 +696,47 @@ export function AgentConstellation({
 
 function positiveModulo(value: number, divisor: number): number {
   return ((value % divisor) + divisor) % divisor;
+}
+
+function buildStageOrbitArc(
+  index: number,
+  phase: number,
+  count: number,
+  mode: GalaxyViewMode,
+  viewportWidth: number,
+  viewportHeight: number,
+) {
+  const scaleX = viewportWidth / GALAXY_VIEWBOX.width;
+  const scaleY = viewportHeight / GALAXY_VIEWBOX.height;
+  const nextIndex = (index + 1) % count;
+  const from = computeOrbitNode(index, phase, count, mode);
+  const to = computeOrbitNode(nextIndex, phase, count, mode);
+
+  return buildOrbitArc(index, phase, count, {
+    scaleX,
+    scaleY,
+    startScreenGap: getStageBoundaryGap(from.angle, from.scale, scaleX, scaleY),
+    endScreenGap: getStageBoundaryGap(to.angle, to.scale, scaleX, scaleY),
+  });
+}
+
+function getStageBoundaryGap(
+  angle: number,
+  nodeScale: number,
+  scaleX: number,
+  scaleY: number,
+): number {
+  const tangentX = -275 * Math.sin(angle) * scaleX;
+  const tangentY = 112 * Math.cos(angle) * scaleY;
+  const tangentLength = Math.max(0.0001, Math.hypot(tangentX, tangentY));
+  const unitX = tangentX / tangentLength;
+  const unitY = tangentY / tangentLength;
+  const horizontalExit = Math.abs(unitX) > 0.0001
+    ? (STAGE_BOUNDARY.halfWidth * nodeScale) / Math.abs(unitX)
+    : Number.POSITIVE_INFINITY;
+  const verticalExit = Math.abs(unitY) > 0.0001
+    ? (STAGE_BOUNDARY.halfHeight * nodeScale) / Math.abs(unitY)
+    : Number.POSITIVE_INFINITY;
+
+  return Math.min(horizontalExit, verticalExit) + STAGE_BOUNDARY.margin;
 }

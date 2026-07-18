@@ -108,10 +108,12 @@ test("银河闭环严格保持七阶段业务顺序", () => {
 });
 
 test("轨道相位先停留再平滑进入下一阶段", () => {
-  assert.equal(easeOrbitPhase(0.2), 0);
-  assert.equal(easeOrbitPhase(1.2), 1);
-  assert.ok(easeOrbitPhase(0.72) > 0);
-  assert.ok(easeOrbitPhase(0.72) < 1);
+  assert.equal(easeOrbitPhase(0.55), 0);
+  assert.equal(easeOrbitPhase(1.55), 1);
+  assert.ok(easeOrbitPhase(0.6) > 0);
+  assert.ok(easeOrbitPhase(0.6) < 0.08);
+  assert.ok(easeOrbitPhase(0.8) > 0.5);
+  assert.ok(easeOrbitPhase(0.8) < 0.7);
   assert.equal(easeOrbitPhase(0.99) < 1, true);
 });
 
@@ -122,28 +124,76 @@ test("焦点索引与点击后的顺时针目标保持业务顺序", () => {
   assert.equal(getForwardPhaseTarget(0.2, 4, 7), 4);
 });
 
-test("3D 节点具有明显远近层次且 2D 模式取消模糊", () => {
+test("Phase B：当前焦点位于椭圆下方最近端并具有最强层次", () => {
   const focus = computeOrbitNode(0, 0, 7, "3d");
-  const far = computeOrbitNode(3, 0, 7, "3d");
-  const flat = computeOrbitNode(3, 0, 7, "2d");
+  const farCandidates = [
+    computeOrbitNode(3, 0, 7, "3d"),
+    computeOrbitNode(4, 0, 7, "3d"),
+  ];
+  const far = farCandidates.reduce((current, candidate) => (
+    candidate.depth < current.depth ? candidate : current
+  ));
 
-  assert.ok(focus.scale >= 1.15);
-  assert.ok(far.scale <= 0.65);
-  assert.ok(focus.opacity > far.opacity);
+  assert.equal(focus.x, 365);
+  assert.equal(focus.y, 295);
+  assert.equal(focus.depth, 1);
+  assert.equal(focus.scale, 1.22);
+  assert.equal(focus.opacity, 1);
   assert.equal(focus.blur, 0);
-  assert.equal(flat.blur, 0);
-  assert.ok(flat.scale >= 0.84);
+  assert.equal(focus.brightness, 1.08);
+
+  assert.ok(far.y < 90, `最远节点应位于椭圆上方，实际 y=${far.y}`);
+  assert.ok(far.scale < 0.64);
+  assert.ok(far.opacity < 0.42);
+  assert.ok(far.blur > 1.35);
+  assert.ok(far.brightness < 0.72);
+  assert.ok(focus.zIndex > far.zIndex);
 });
 
-test("轨道坐标随相位沿屏幕顺时针方向推进", () => {
+test("Phase B：phase 从 0 到 1 时焦点按业务顺序切换到测试设计", () => {
+  const requirementsAtStart = computeOrbitNode(0, 0, 7, "3d");
+  const designAtStart = computeOrbitNode(1, 0, 7, "3d");
+  const requirementsAtNext = computeOrbitNode(0, 1, 7, "3d");
+  const designAtNext = computeOrbitNode(1, 1, 7, "3d");
+
+  assert.equal(requirementsAtStart.depth, 1);
+  assert.ok(requirementsAtStart.depth > designAtStart.depth);
+  assert.equal(designAtNext.depth, 1);
+  assert.equal(designAtNext.y, 295);
+  assert.ok(designAtNext.depth > requirementsAtNext.depth);
+  assert.deepEqual(GALAXY_STAGE_KEYS, [
+    "requirements",
+    "design",
+    "generation",
+    "execution",
+    "analysis",
+    "repair",
+    "verification",
+  ]);
+});
+
+test("Phase B：2D 模式保留统一轨道坐标但取消景深模糊", () => {
+  const spatial = computeOrbitNode(5, 2.25, 7, "3d");
+  const flat = computeOrbitNode(5, 2.25, 7, "2d");
+
+  assert.equal(flat.x, spatial.x);
+  assert.equal(flat.y, spatial.y);
+  assert.equal(flat.angle, spatial.angle);
+  assert.equal(flat.depth, spatial.depth);
+  assert.equal(flat.blur, 0);
+  assert.ok(flat.scale >= 0.86 && flat.scale <= 1);
+  assert.ok(flat.opacity >= 0.68 && flat.opacity <= 1);
+});
+
+test("Phase B：轨道随 phase 推进让下一阶段沿正向路径进入前景", () => {
   const start = computeOrbitNode(0, 0, 7, "3d");
   const later = computeOrbitNode(0, 0.1, 7, "3d");
   const startAngle = Math.atan2(start.y - 183, start.x - 365);
   const laterAngle = Math.atan2(later.y - 183, later.x - 365);
-  const clockwiseDelta = ((laterAngle - startAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+  const forwardDelta = ((startAngle - laterAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
 
-  assert.ok(clockwiseDelta > 0);
-  assert.ok(clockwiseDelta < Math.PI / 2);
+  assert.ok(forwardDelta > 0);
+  assert.ok(forwardDelta < Math.PI / 2);
 });
 
 test("阶段箭头沿椭圆轨道连接相邻节点而不经过中心", () => {
@@ -175,8 +225,70 @@ test("全宽非等比视口下箭头仍按屏幕像素贴近节点边缘", () =>
     const startGap = Math.hypot((arc.start.x - from.x) * scaleX, (arc.start.y - from.y) * scaleY);
     const endGap = Math.hypot((arc.end.x - to.x) * scaleX, (arc.end.y - to.y) * scaleY);
 
-    assert.ok(startGap >= 68 && startGap <= 80);
-    assert.ok(endGap >= 68 && endGap <= 80);
+    // 椭圆左右窄边的相邻节点屏幕间距不足 144px，断口必须在中点前止住，
+    // 因此允许裁剪函数将 72px 目标安全收敛到约 66px，避免首尾交叉。
+    assert.ok(startGap >= 62 && startGap <= 80);
+    assert.ok(endGap >= 62 && endGap <= 80);
+  }
+});
+
+test("Phase C：每段箭头按两端节点景深尺寸裁剪并沿业务正向保留可见弧段", () => {
+  const scaleX = 1164 / 730;
+  const scaleY = 474 / 360;
+  const stageHalfWidth = 81;
+  const stageHalfHeight = 36;
+  const boundaryGap = (node) => {
+    const tangentX = -275 * Math.sin(node.angle) * scaleX;
+    const tangentY = 112 * Math.cos(node.angle) * scaleY;
+    const tangentLength = Math.hypot(tangentX, tangentY);
+    const unitX = tangentX / tangentLength;
+    const unitY = tangentY / tangentLength;
+    const horizontalExit = Math.abs(unitX) > 0.0001
+      ? (stageHalfWidth * node.scale) / Math.abs(unitX)
+      : Number.POSITIVE_INFINITY;
+    const verticalExit = Math.abs(unitY) > 0.0001
+      ? (stageHalfHeight * node.scale) / Math.abs(unitY)
+      : Number.POSITIVE_INFINITY;
+    return Math.min(horizontalExit, verticalExit) + 7;
+  };
+
+  for (let index = 0; index < GALAXY_STAGE_KEYS.length; index += 1) {
+    const nextIndex = (index + 1) % GALAXY_STAGE_KEYS.length;
+    const from = computeOrbitNode(index, 0, GALAXY_STAGE_KEYS.length, "3d");
+    const to = computeOrbitNode(nextIndex, 0, GALAXY_STAGE_KEYS.length, "3d");
+    const startScreenGap = boundaryGap(from);
+    const endScreenGap = boundaryGap(to);
+    const arc = buildOrbitArc(index, 0, GALAXY_STAGE_KEYS.length, {
+      scaleX,
+      scaleY,
+      startScreenGap,
+      endScreenGap,
+    });
+    const actualStartGap = Math.hypot(
+      (arc.start.x - from.x) * scaleX,
+      (arc.start.y - from.y) * scaleY,
+    );
+    const actualEndGap = Math.hypot(
+      (arc.end.x - to.x) * scaleX,
+      (arc.end.y - to.y) * scaleY,
+    );
+
+    assert.ok(actualStartGap >= startScreenGap - 2, `${index} 起点未离开当前节点边缘`);
+    assert.ok(actualEndGap >= endScreenGap - 2, `${index} 终点进入下一节点内部`);
+    assert.ok(arc.endAngle > arc.startAngle, `${index} 箭头弧段必须沿业务正向`);
+    assert.ok(arc.endAngle - arc.startAngle < (Math.PI * 2) / GALAXY_STAGE_KEYS.length);
+    assert.equal(
+      `${GALAXY_STAGE_KEYS[index]}->${GALAXY_STAGE_KEYS[nextIndex]}`,
+      [
+        "requirements->design",
+        "design->generation",
+        "generation->execution",
+        "execution->analysis",
+        "analysis->repair",
+        "repair->verification",
+        "verification->requirements",
+      ][index],
+    );
   }
 });
 

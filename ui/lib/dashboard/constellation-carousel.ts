@@ -101,6 +101,16 @@ export interface OrbitArcOptions {
   scaleX?: number;
   scaleY?: number;
   screenGap?: number;
+  startScreenGap?: number;
+  endScreenGap?: number;
+}
+
+export interface OrbitArc {
+  path: string;
+  start: ConstellationPoint;
+  end: ConstellationPoint;
+  startAngle: number;
+  endAngle: number;
 }
 
 export const GALAXY_STAGE_KEYS = [
@@ -116,8 +126,8 @@ export const GALAXY_STAGE_KEYS = [
 const ORBIT_CENTER = { x: 365, y: 183 };
 const ORBIT_RADIUS_X = 275;
 const ORBIT_RADIUS_Y = 112;
-const ORBIT_BASE_ANGLE = -2.35;
-const ORBIT_HOLD_RATIO = 0.42;
+const ORBIT_FRONT_ANGLE = Math.PI / 2;
+const ORBIT_HOLD_RATIO = 0.56;
 
 export function clipConnector(
   from: ConstellationPoint,
@@ -202,7 +212,7 @@ export function computeOrbitNode(
   if (count <= 0) {
     return {
       ...ORBIT_CENTER,
-      angle: ORBIT_BASE_ANGLE,
+      angle: ORBIT_FRONT_ANGLE,
       depth: 1,
       scale: 1,
       opacity: 1,
@@ -213,10 +223,8 @@ export function computeOrbitNode(
   }
 
   const step = (Math.PI * 2) / count;
-  const angle = ORBIT_BASE_ANGLE + (index + phase) * step;
-  const distance = shortestCyclicDistance(index, phase, count);
-  const depthBase = (Math.cos(distance * step) + 1) / 2;
-  const depth = Math.pow(Math.max(0, depthBase), 2.6);
+  const angle = ORBIT_FRONT_ANGLE + (index - phase) * step;
+  const depth = (Math.sin(angle) + 1) / 2;
   const isThreeDimensional = mode === "3d";
 
   return {
@@ -224,10 +232,10 @@ export function computeOrbitNode(
     y: ORBIT_CENTER.y + ORBIT_RADIUS_Y * Math.sin(angle),
     angle,
     depth,
-    scale: isThreeDimensional ? 0.5 + depth * 0.72 : 0.86 + depth * 0.14,
-    opacity: isThreeDimensional ? 0.38 + depth * 0.62 : 0.68 + depth * 0.32,
-    blur: isThreeDimensional ? 1.8 * (1 - depth) : 0,
-    brightness: isThreeDimensional ? 0.72 + depth * 0.43 : 0.88 + depth * 0.12,
+    scale: isThreeDimensional ? 0.58 + depth * 0.64 : 0.86 + depth * 0.14,
+    opacity: isThreeDimensional ? 0.35 + depth * 0.65 : 0.68 + depth * 0.32,
+    blur: isThreeDimensional ? 1.5 * (1 - depth) : 0,
+    brightness: isThreeDimensional ? 0.66 + depth * 0.42 : 0.88 + depth * 0.12,
     zIndex: 10 + Math.round(depth * 90),
   };
 }
@@ -237,25 +245,33 @@ export function buildOrbitArc(
   phase: number,
   count: number,
   options: OrbitArcOptions = {},
-): { path: string; start: ConstellationPoint; end: ConstellationPoint } {
+): OrbitArc {
   if (count <= 0) {
-    return { path: "", start: ORBIT_CENTER, end: ORBIT_CENTER };
+    return {
+      path: "",
+      start: ORBIT_CENTER,
+      end: ORBIT_CENTER,
+      startAngle: ORBIT_FRONT_ANGLE,
+      endAngle: ORBIT_FRONT_ANGLE,
+    };
   }
 
   const step = (Math.PI * 2) / count;
   const scaleX = Math.max(0.01, options.scaleX ?? 1);
   const scaleY = Math.max(0.01, options.scaleY ?? 1);
   const screenGap = Math.max(1, options.screenGap ?? 58);
+  const startScreenGap = Math.max(1, options.startScreenGap ?? screenGap);
+  const endScreenGap = Math.max(1, options.endScreenGap ?? screenGap);
   const maxPadding = Math.min(step * 0.5, 0.46);
-  const fromAngle = ORBIT_BASE_ANGLE + (index + phase) * step;
-  const toAngle = ORBIT_BASE_ANGLE + (index + 1 + phase) * step;
-  const startAngle = fromAngle + findOrbitAngleForScreenGap(fromAngle, 1, maxPadding, scaleX, scaleY, screenGap);
-  const endAngle = toAngle - findOrbitAngleForScreenGap(toAngle, -1, maxPadding, scaleX, scaleY, screenGap);
+  const fromAngle = ORBIT_FRONT_ANGLE + (index - phase) * step;
+  const toAngle = ORBIT_FRONT_ANGLE + (index + 1 - phase) * step;
+  const startAngle = fromAngle + findOrbitAngleForScreenGap(fromAngle, 1, maxPadding, scaleX, scaleY, startScreenGap);
+  const endAngle = toAngle - findOrbitAngleForScreenGap(toAngle, -1, maxPadding, scaleX, scaleY, endScreenGap);
   const start = orbitPoint(startAngle);
   const end = orbitPoint(endAngle);
   const path = `M ${formatCoordinate(start.x)} ${formatCoordinate(start.y)} A ${ORBIT_RADIUS_X} ${ORBIT_RADIUS_Y} 0 0 1 ${formatCoordinate(end.x)} ${formatCoordinate(end.y)}`;
 
-  return { path, start, end };
+  return { path, start, end, startAngle, endAngle };
 }
 
 export function buildGalaxyParticleSeeds(count: number): GalaxyParticleSeed[] {
