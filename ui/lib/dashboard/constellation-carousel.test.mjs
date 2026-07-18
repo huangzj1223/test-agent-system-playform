@@ -1,8 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import * as constellationCarousel from "./constellation-carousel.ts";
 
 import {
+  GALAXY_CYCLE_DURATION_MS,
+  GALAXY_CORE,
+  GALAXY_ARTWORK,
+  GALAXY_ORBIT_GEOMETRY,
+  GALAXY_SPATIAL_CONFIG,
   GALAXY_STAGE_KEYS,
+  advanceOrbitRawPhase,
   advanceCarousel,
   buildGalaxyDustSeeds,
   buildGalaxyClusterSeeds,
@@ -13,12 +20,27 @@ import {
   buildOrbitArc,
   clipConnector,
   computeOrbitNode,
+  computeGalaxyObjectPosition,
   easeOrbitPhase,
   getFocusedStageIndex,
+  getFrontStageSafeArea,
   getForwardPhaseTarget,
   getGalaxyRenderBudget,
+  shouldAdvanceOrbit,
   projectAccretionPoint,
 } from "./constellation-carousel.ts";
+
+const getStageVisualLevel = constellationCarousel.getStageVisualLevel;
+const getStageOrbDiameter = constellationCarousel.getStageOrbDiameter;
+
+test("galaxy spatial config locks the shared center and lightweight core values", () => {
+  assert.deepEqual(GALAXY_SPATIAL_CONFIG.core, GALAXY_CORE);
+  assert.equal(GALAXY_SPATIAL_CONFIG.viewBox.width, GALAXY_ORBIT_GEOMETRY.viewBoxWidth);
+  assert.equal(GALAXY_SPATIAL_CONFIG.viewBox.height, GALAXY_ORBIT_GEOMETRY.viewBoxHeight);
+  assert.equal(GALAXY_SPATIAL_CONFIG.projectCoreDiameter, 140);
+  assert.ok(GALAXY_SPATIAL_CONFIG.projectCoreDiameter <= 156 * 0.92);
+  assert.equal(GALAXY_SPATIAL_CONFIG.foregroundAccretionOpacity, 0.14);
+});
 
 const globalStages = [
   { key: "requirements", name: "需求解析", description: "全量需求", status: "ready", task_count: 4, issue_count: 0, href: "/projects", data_available: true },
@@ -135,19 +157,112 @@ test("Phase B：当前焦点位于椭圆下方最近端并具有最强层次", (
   ));
 
   assert.equal(focus.x, 365);
-  assert.equal(focus.y, 295);
+  assert.equal(focus.y, GALAXY_CORE.y + GALAXY_ORBIT_GEOMETRY.radiusY);
   assert.equal(focus.depth, 1);
-  assert.equal(focus.scale, 1.22);
+  assert.ok(Math.abs(focus.scale - 1.16) < 1e-10);
   assert.equal(focus.opacity, 1);
   assert.equal(focus.blur, 0);
-  assert.equal(focus.brightness, 1.08);
+  assert.equal(focus.brightness, 1.05);
 
-  assert.ok(far.y < 90, `最远节点应位于椭圆上方，实际 y=${far.y}`);
-  assert.ok(far.scale < 0.64);
-  assert.ok(far.opacity < 0.42);
-  assert.ok(far.blur > 1.35);
-  assert.ok(far.brightness < 0.72);
+  assert.ok(far.y < 70, `最远节点应位于椭圆上方，实际 y=${far.y}`);
+  assert.ok(far.scale < 0.35);
+  assert.ok(far.opacity >= 0.32 && far.opacity <= 0.48);
+  assert.ok(far.blur <= 0.6);
+  assert.ok(far.brightness >= 0.62);
   assert.ok(focus.zIndex > far.zIndex);
+});
+
+test("阶段视觉级别在 0.32 和 0.68 边界严格切换", () => {
+  assert.equal(typeof getStageVisualLevel, "function");
+  assert.equal(getStageVisualLevel(0), "far");
+  assert.equal(getStageVisualLevel(0.319999), "far");
+  assert.equal(getStageVisualLevel(0.32), "middle");
+  assert.equal(getStageVisualLevel(0.679999), "middle");
+  assert.equal(getStageVisualLevel(0.68), "near");
+  assert.equal(getStageVisualLevel(1), "near");
+});
+
+test("3D 轨道最近节点显著大于最远节点且景深参数受控", () => {
+  const nodes = GALAXY_STAGE_KEYS.map((_, index) => computeOrbitNode(index, 0, 7, "3d"));
+  const near = nodes.reduce((current, candidate) => candidate.depth > current.depth ? candidate : current);
+  const far = nodes.reduce((current, candidate) => candidate.depth < current.depth ? candidate : current);
+
+  assert.ok(far.scale < 0.35, `最远 scale=${far.scale}`);
+  assert.ok(near.scale > 1.1, `最近 scale=${near.scale}`);
+  assert.ok(far.opacity >= 0.28 && far.opacity <= 0.48, `最远 opacity=${far.opacity}`);
+  assert.ok(far.blur <= 0.8, `最远 blur=${far.blur}`);
+  assert.ok(near.zIndex > far.zIndex + 80);
+});
+
+test("三级星核目标直径在各自 LOD 区间保持要求范围", () => {
+  assert.equal(typeof getStageOrbDiameter, "function");
+  assert.equal(getStageOrbDiameter(0), 12);
+  assert.ok(getStageOrbDiameter(0.319999) <= 16);
+  assert.equal(getStageOrbDiameter(0.32), 30);
+  assert.ok(getStageOrbDiameter(0.679999) <= 48);
+  assert.equal(getStageOrbDiameter(0.68), 63);
+  assert.equal(getStageOrbDiameter(1), 79);
+});
+
+test("前景节点在标准银河视口中保留至少 88px 的详情安全区域", () => {
+  assert.deepEqual(GALAXY_CORE, { x: 365, y: 151.2 });
+  assert.equal(GALAXY_ORBIT_GEOMETRY.centerX, GALAXY_CORE.x);
+  assert.equal(GALAXY_ORBIT_GEOMETRY.centerY, GALAXY_CORE.y);
+  assert.equal(GALAXY_ORBIT_GEOMETRY.radiusY, 100);
+  assert.ok(getFrontStageSafeArea(474) >= 88);
+});
+
+test("银河图片在不同宽屏比例下都把固有黑洞焦点映射到统一核心", () => {
+  assert.deepEqual(GALAXY_ARTWORK, {
+    width: 1672,
+    height: 941,
+    focusX: 841,
+    focusY: 316,
+  });
+
+  for (const width of [1164, 1644]) {
+    const height = 474;
+    const position = computeGalaxyObjectPosition(width, height);
+    const scale = Math.max(width / GALAXY_ARTWORK.width, height / GALAXY_ARTWORK.height);
+    const renderedHeight = GALAXY_ARTWORK.height * scale;
+    const overflowY = renderedHeight - height;
+    const mappedFocusY = GALAXY_ARTWORK.focusY * scale - overflowY * (position.y / 100);
+
+    assert.ok(Math.abs(mappedFocusY - height * 0.42) < 0.5);
+  }
+});
+
+test("far、middle、near 的空间尺度严格递增且 near 不超过 1.18", () => {
+  const far = computeOrbitNode(0, 3.5, 7, "3d");
+  const middle = computeOrbitNode(0, 2.15, 7, "3d");
+  const near = computeOrbitNode(0, 0, 7, "3d");
+
+  assert.equal(getStageVisualLevel(far.depth), "far");
+  assert.equal(getStageVisualLevel(middle.depth), "middle");
+  assert.equal(getStageVisualLevel(near.depth), "near");
+  assert.ok(far.scale < middle.scale);
+  assert.ok(middle.scale < near.scale);
+  assert.ok(near.scale <= 1.18);
+  assert.ok(far.opacity >= 0.32);
+  assert.ok(far.brightness >= 0.62);
+  assert.ok(far.blur <= 0.6);
+});
+
+test("暂停与 reduced-motion 都不会推进 RAF phase", () => {
+  const state = {
+    userPaused: false,
+    hovered: false,
+    interactionPaused: false,
+    pageVisible: true,
+    reducedMotion: false,
+  };
+
+  assert.equal(shouldAdvanceOrbit(state), true);
+  assert.equal(shouldAdvanceOrbit({ ...state, userPaused: true }), false);
+  assert.equal(shouldAdvanceOrbit({ ...state, reducedMotion: true }), false);
+  assert.equal(advanceOrbitRawPhase(2.4, 1000, 7, true), 2.4);
+  assert.ok(advanceOrbitRawPhase(2.4, 1000, 7, false) > 2.4);
+  assert.equal(GALAXY_CYCLE_DURATION_MS, 16_000);
 });
 
 test("Phase B：phase 从 0 到 1 时焦点按业务顺序切换到测试设计", () => {
@@ -159,7 +274,7 @@ test("Phase B：phase 从 0 到 1 时焦点按业务顺序切换到测试设计"
   assert.equal(requirementsAtStart.depth, 1);
   assert.ok(requirementsAtStart.depth > designAtStart.depth);
   assert.equal(designAtNext.depth, 1);
-  assert.equal(designAtNext.y, 295);
+  assert.equal(designAtNext.y, GALAXY_CORE.y + GALAXY_ORBIT_GEOMETRY.radiusY);
   assert.ok(designAtNext.depth > requirementsAtNext.depth);
   assert.deepEqual(GALAXY_STAGE_KEYS, [
     "requirements",
@@ -188,8 +303,8 @@ test("Phase B：2D 模式保留统一轨道坐标但取消景深模糊", () => {
 test("Phase B：轨道随 phase 推进让下一阶段沿正向路径进入前景", () => {
   const start = computeOrbitNode(0, 0, 7, "3d");
   const later = computeOrbitNode(0, 0.1, 7, "3d");
-  const startAngle = Math.atan2(start.y - 183, start.x - 365);
-  const laterAngle = Math.atan2(later.y - 183, later.x - 365);
+  const startAngle = Math.atan2(start.y - GALAXY_ORBIT_GEOMETRY.centerY, start.x - GALAXY_ORBIT_GEOMETRY.centerX);
+  const laterAngle = Math.atan2(later.y - GALAXY_ORBIT_GEOMETRY.centerY, later.x - GALAXY_ORBIT_GEOMETRY.centerX);
   const forwardDelta = ((startAngle - laterAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
 
   assert.ok(forwardDelta > 0);
@@ -227,8 +342,8 @@ test("全宽非等比视口下箭头仍按屏幕像素贴近节点边缘", () =>
 
     // 椭圆左右窄边的相邻节点屏幕间距不足 144px，断口必须在中点前止住，
     // 因此允许裁剪函数将 72px 目标安全收敛到约 66px，避免首尾交叉。
-    assert.ok(startGap >= 62 && startGap <= 80);
-    assert.ok(endGap >= 62 && endGap <= 80);
+    assert.ok(startGap >= 56 && startGap <= 80);
+    assert.ok(endGap >= 56 && endGap <= 80);
   }
 });
 
@@ -239,7 +354,7 @@ test("Phase C：每段箭头按两端节点景深尺寸裁剪并沿业务正向�
   const stageHalfHeight = 36;
   const boundaryGap = (node) => {
     const tangentX = -275 * Math.sin(node.angle) * scaleX;
-    const tangentY = 112 * Math.cos(node.angle) * scaleY;
+    const tangentY = GALAXY_ORBIT_GEOMETRY.radiusY * Math.cos(node.angle) * scaleY;
     const tangentLength = Math.hypot(tangentX, tangentY);
     const unitX = tangentX / tangentLength;
     const unitY = tangentY / tangentLength;

@@ -1,91 +1,245 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+import { computeGalaxyObjectPosition } from "@/lib/dashboard/constellation-carousel";
+
 export function GalaxyWebGLLayer({
   paused,
   reducedMotion,
+  debug = false,
 }: {
   paused: boolean;
   reducedMotion: boolean;
+  debug?: boolean;
 }) {
+  const layerRef = useRef<HTMLDivElement | null>(null);
   const motionDisabled = paused || reducedMotion;
+
+  useEffect(() => {
+    const layer = layerRef.current;
+    const host = layer?.parentElement;
+    if (!layer || !host) return;
+
+    let frame = 0;
+    const updateImagePosition = () => {
+      const bounds = host.getBoundingClientRect();
+      const position = computeGalaxyObjectPosition(bounds.width, bounds.height);
+      layer.style.setProperty("--galaxy-bg-position-x", `${position.x.toFixed(3)}%`);
+      layer.style.setProperty("--galaxy-bg-position-y", `${position.y.toFixed(3)}%`);
+      layer.dataset.objectPosition = `${position.x.toFixed(3)}% ${position.y.toFixed(3)}%`;
+    };
+    const resetParallax = () => {
+      layer.style.setProperty("--galaxy-parallax-x", "0");
+      layer.style.setProperty("--galaxy-parallax-y", "0");
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (motionDisabled) return;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const bounds = host.getBoundingClientRect();
+        const x = ((event.clientX - bounds.left) / Math.max(1, bounds.width) - 0.5) * 2;
+        const y = ((event.clientY - bounds.top) / Math.max(1, bounds.height) - 0.5) * 2;
+        layer.style.setProperty("--galaxy-parallax-x", Math.max(-1, Math.min(1, x)).toFixed(3));
+        layer.style.setProperty("--galaxy-parallax-y", Math.max(-1, Math.min(1, y)).toFixed(3));
+      });
+    };
+
+    const observer = new ResizeObserver(updateImagePosition);
+    observer.observe(host);
+    if (!motionDisabled) {
+      host.addEventListener("pointermove", onPointerMove);
+      host.addEventListener("pointerleave", resetParallax);
+    }
+    updateImagePosition();
+    if (motionDisabled) resetParallax();
+
+    return () => {
+      observer.disconnect();
+      if (!motionDisabled) {
+        host.removeEventListener("pointermove", onPointerMove);
+        host.removeEventListener("pointerleave", resetParallax);
+      }
+      cancelAnimationFrame(frame);
+    };
+  }, [motionDisabled]);
 
   return (
     <div
+      ref={layerRef}
       className="galaxy-webgl-layer galaxy-art-layer pointer-events-none absolute inset-0 h-full w-full overflow-hidden"
       data-motion={motionDisabled ? "paused" : "running"}
+      data-debug={debug ? "true" : "false"}
       aria-hidden="true"
     >
-      <div className="galaxy-art-image" />
-      <div className="galaxy-art-bloom galaxy-art-bloom-left" />
-      <div className="galaxy-art-bloom galaxy-art-bloom-right" />
-      <div className="galaxy-art-vignette" />
+      <div className="galaxy-rear-stars" />
+      <div className="galaxy-background-image">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="galaxy-art-image"
+          src="/assets/galaxy-workflow/galaxy-background-main.png"
+          alt=""
+          draggable={false}
+        />
+      </div>
+      <div className="galaxy-art-soft-light" />
+      <div className="galaxy-foreground-nebula" />
+      <div className="galaxy-art-readability-mask" />
+      <div className="galaxy-debug-background-cross" />
 
       <style jsx>{`
         .galaxy-art-layer {
+          --galaxy-bg-position-x: 50%;
+          --galaxy-bg-position-y: 28%;
+          --galaxy-bg-scale: 1.01;
+          --galaxy-parallax-x: 0;
+          --galaxy-parallax-y: 0;
           isolation: isolate;
-          opacity: 0.98;
+          opacity: 1;
           background: #05091f;
         }
 
-        .galaxy-art-image,
-        .galaxy-art-bloom,
-        .galaxy-art-vignette {
+        .galaxy-rear-stars,
+        .galaxy-background-image,
+        .galaxy-art-soft-light,
+        .galaxy-foreground-nebula,
+        .galaxy-art-readability-mask,
+        .galaxy-debug-background-cross {
           position: absolute;
           inset: 0;
         }
 
+        .galaxy-rear-stars {
+          z-index: 0;
+          background-image:
+            radial-gradient(circle at 9% 18%, rgba(170, 220, 255, 0.42) 0 1px, transparent 1.5px),
+            radial-gradient(circle at 24% 76%, rgba(146, 165, 255, 0.34) 0 1px, transparent 1.5px),
+            radial-gradient(circle at 72% 21%, rgba(189, 205, 255, 0.34) 0 1px, transparent 1.5px),
+            radial-gradient(circle at 91% 68%, rgba(158, 135, 255, 0.32) 0 1px, transparent 1.5px);
+          opacity: 0.18;
+          transform: translate3d(
+            calc(var(--galaxy-parallax-x) * 1.5px),
+            calc(var(--galaxy-parallax-y) * 1.5px),
+            0
+          );
+          transition: transform 240ms ease-out;
+        }
+
+        .galaxy-background-image {
+          z-index: 1;
+          overflow: hidden;
+        }
+
         .galaxy-art-image {
-          inset: -3%;
-          background-image: url('/assets/galaxy-workflow/galaxy-workflow-bg.svg');
-          background-position: center;
-          background-repeat: no-repeat;
-          background-size: cover;
-          transform: scale(1.035);
-          animation: galaxy-art-drift 22s ease-in-out infinite alternate;
-          will-change: transform, filter;
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: var(--galaxy-bg-position-x) var(--galaxy-bg-position-y);
+          filter: saturate(1.02) brightness(1.02);
+          transform: translate3d(
+              calc(var(--galaxy-parallax-x) * 0.75px),
+              calc(var(--galaxy-parallax-y) * 0.75px),
+              0
+            )
+            scale(var(--galaxy-bg-scale));
+          transform-origin: var(--galaxy-core-x) var(--galaxy-core-y);
+          transition: transform 260ms ease-out, object-position 180ms ease-out;
+          user-select: none;
         }
 
-        .galaxy-art-bloom {
-          mix-blend-mode: screen;
-          filter: blur(44px);
-          opacity: 0.22;
-          animation: galaxy-art-breathe 8s ease-in-out infinite;
-        }
-
-        .galaxy-art-bloom-left {
-          background: radial-gradient(ellipse at 34% 52%, rgba(70, 190, 255, 0.28), transparent 54%);
-        }
-
-        .galaxy-art-bloom-right {
-          background: radial-gradient(ellipse at 69% 61%, rgba(177, 74, 255, 0.22), transparent 52%);
-          animation-delay: -3.5s;
-        }
-
-        .galaxy-art-vignette {
+        .galaxy-art-soft-light {
+          z-index: 2;
           background:
-            linear-gradient(180deg, rgba(3, 7, 27, 0.12), transparent 20%, transparent 78%, rgba(2, 4, 18, 0.34)),
-            radial-gradient(ellipse at center, transparent 54%, rgba(1, 3, 16, 0.42));
+            radial-gradient(
+              ellipse at var(--galaxy-core-x) var(--galaxy-core-y),
+              rgba(121, 105, 255, 0.14),
+              transparent 36%
+            ),
+            radial-gradient(ellipse at 50% 76%, rgba(49, 116, 255, 0.07), transparent 52%);
+          mix-blend-mode: screen;
+          opacity: 0.62;
         }
 
-        [data-motion='paused'] .galaxy-art-image,
-        [data-motion='paused'] .galaxy-art-bloom {
-          animation-play-state: paused;
+        .galaxy-foreground-nebula {
+          z-index: 3;
+          background:
+            radial-gradient(ellipse at 4% 108%, rgba(91, 61, 255, 0.32), transparent 38%),
+            radial-gradient(ellipse at 98% 108%, rgba(111, 72, 255, 0.3), transparent 37%);
+          filter: blur(12px);
+          opacity: 0.17;
+          transform: translate3d(
+            calc(var(--galaxy-parallax-x) * 3px),
+            calc(var(--galaxy-parallax-y) * 3px),
+            0
+          );
+          transition: transform 220ms ease-out;
         }
 
-        @keyframes galaxy-art-drift {
-          0% { transform: scale(1.035) translate3d(-0.35%, -0.2%, 0); filter: saturate(1.02) brightness(0.98); }
-          100% { transform: scale(1.055) translate3d(0.45%, 0.25%, 0); filter: saturate(1.08) brightness(1.03); }
+        .galaxy-art-readability-mask {
+          z-index: 4;
+          background:
+            radial-gradient(
+              ellipse 43% 31% at var(--galaxy-core-x) var(--galaxy-core-y),
+              transparent 0 34%,
+              rgba(4, 8, 31, 0.07) 58%,
+              rgba(4, 8, 31, 0.09) 71%,
+              transparent 88%
+            ),
+            linear-gradient(90deg, rgba(3, 7, 29, 0.08), transparent 18% 82%, rgba(3, 7, 29, 0.08)),
+            linear-gradient(180deg, transparent 48%, rgba(5, 8, 31, 0.08));
         }
 
-        @keyframes galaxy-art-breathe {
-          0%, 100% { opacity: 0.16; transform: scale(0.98); }
-          50% { opacity: 0.28; transform: scale(1.035); }
+        .galaxy-debug-background-cross {
+          z-index: 6;
+          display: none;
+          inset: auto;
+          left: var(--galaxy-core-x);
+          top: var(--galaxy-core-y);
+          width: 42px;
+          height: 42px;
+          border: 1px solid rgba(54, 226, 255, 0.9);
+          border-radius: 999px;
+          transform: translate(-50%, -50%);
+          box-shadow: 0 0 14px rgba(54, 226, 255, 0.5);
+        }
+
+        .galaxy-debug-background-cross::before,
+        .galaxy-debug-background-cross::after {
+          content: "";
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          background: rgb(54 226 255 / 0.95);
+          transform: translate(-50%, -50%);
+        }
+
+        .galaxy-debug-background-cross::before {
+          width: 54px;
+          height: 1px;
+        }
+
+        .galaxy-debug-background-cross::after {
+          width: 1px;
+          height: 54px;
+        }
+
+        .galaxy-art-layer[data-debug='true'] .galaxy-debug-background-cross {
+          display: block;
+        }
+
+        .galaxy-art-layer[data-debug='true'] .galaxy-art-image,
+        .galaxy-art-layer[data-motion='paused'] .galaxy-art-image,
+        .galaxy-art-layer[data-motion='paused'] .galaxy-rear-stars,
+        .galaxy-art-layer[data-motion='paused'] .galaxy-foreground-nebula {
+          transition: none;
         }
 
         @media (prefers-reduced-motion: reduce) {
           .galaxy-art-image,
-          .galaxy-art-bloom {
-            animation: none;
+          .galaxy-rear-stars,
+          .galaxy-foreground-nebula {
+            transform: scale(var(--galaxy-bg-scale));
+            transition: none;
           }
         }
       `}</style>

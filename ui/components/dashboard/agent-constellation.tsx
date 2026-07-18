@@ -24,22 +24,35 @@ import { cn } from "@/lib/utils";
 import { ProductIcon, StatusIcon } from "@/components/icons";
 import type { ProductIconKey, ProductStatus } from "@/lib/icons/icon-system";
 import {
+  GALAXY_CYCLE_DURATION_MS,
+  GALAXY_CORE,
+  GALAXY_ORBIT_GEOMETRY,
+  GALAXY_SPATIAL_CONFIG,
+  advanceOrbitRawPhase,
   buildConstellationViews,
   buildOrbitArc,
   computeOrbitNode,
   easeOrbitPhase,
   getFocusedStageIndex,
   getForwardPhaseTarget,
+  getStageOrbDiameter,
+  getStageVisualLevel,
+  shouldAdvanceOrbit,
   type GalaxyViewMode,
 } from "@/lib/dashboard/constellation-carousel";
 import { GalaxyParticleLayer } from "@/components/dashboard/galaxy-particle-layer";
 import { GalaxyWebGLLayer } from "@/components/dashboard/galaxy-webgl-layer";
 
-const GALAXY_CYCLE_DURATION_MS = 16_000;
 const STAGE_DURATION_MS = GALAXY_CYCLE_DURATION_MS / 7;
 const INTERACTION_PAUSE_MS = 5000;
-const GALAXY_VIEWBOX = { width: 730, height: 360 };
-const STAGE_BOUNDARY = { halfWidth: 81, halfHeight: 36, margin: 7 };
+const GALAXY_VIEWBOX = GALAXY_SPATIAL_CONFIG.viewBox;
+const GALAXY_CORE_STYLE = {
+  "--galaxy-core-x": `${(GALAXY_CORE.x / GALAXY_VIEWBOX.width) * 100}%`,
+  "--galaxy-core-y": `${(GALAXY_CORE.y / GALAXY_VIEWBOX.height) * 100}%`,
+  "--galaxy-project-core-size": `${GALAXY_SPATIAL_CONFIG.projectCoreDiameter}px`,
+  "--galaxy-foreground-accretion-opacity": `${GALAXY_SPATIAL_CONFIG.foregroundAccretionOpacity}`,
+} as CSSProperties;
+const STAGE_BOUNDARY_MARGIN = 7;
 
 const stageIcons: Record<string, ProductIconKey> = {
   requirements: "testCases",
@@ -113,6 +126,7 @@ export function AgentConstellation({
   const [interactionPaused, setInteractionPaused] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [backgroundDebug, setBackgroundDebug] = useState(false);
 
   const animationFrameRef = useRef<number | null>(null);
   const focusAnimationFrameRef = useRef<number | null>(null);
@@ -140,7 +154,13 @@ export function AgentConstellation({
     ? hoveredStage
     : position.stageIndex;
   const selected = stageViews[selectedIndex] ?? stageViews[0];
-  const playbackPaused = userPaused || hovered || interactionPaused || !pageVisible || reducedMotion;
+  const playbackPaused = !shouldAdvanceOrbit({
+    userPaused,
+    hovered,
+    interactionPaused,
+    pageVisible,
+    reducedMotion,
+  });
 
   const applyOrbitPhase = useCallback((nextPhase: number) => {
     const count = stageViews.length;
@@ -153,14 +173,26 @@ export function AgentConstellation({
     stageNodeRefs.current.forEach((node, index) => {
       if (!node || index >= count) return;
       const orbit = computeOrbitNode(index, normalizedPhase, count, viewModeRef.current);
-      const offsetX = ((orbit.x - 365) / GALAXY_VIEWBOX.width) * width;
-      const offsetY = ((orbit.y - 183) / GALAXY_VIEWBOX.height) * height;
+      const visualLevel = viewModeRef.current === "3d" ? getStageVisualLevel(orbit.depth) : "middle";
+      const targetCoreDiameter = viewModeRef.current === "3d" ? getStageOrbDiameter(orbit.depth) : 40;
+      const offsetX = ((orbit.x - GALAXY_ORBIT_GEOMETRY.centerX) / GALAXY_VIEWBOX.width) * width;
+      const offsetY = ((orbit.y - GALAXY_ORBIT_GEOMETRY.centerY) / GALAXY_VIEWBOX.height) * height;
+      const middleProgress = Math.min(1, Math.max(0, (orbit.depth - 0.32) / 0.16));
+      const nearProgress = Math.min(1, Math.max(0, (orbit.depth - 0.68) / 0.14));
 
       node.style.zIndex = String(orbit.zIndex);
       node.style.opacity = String(orbit.opacity);
-      node.style.filter = `blur(${orbit.blur.toFixed(2)}px) brightness(${orbit.brightness.toFixed(2)})`;
+      node.style.filter = "none";
       node.style.transform = `translate(-50%, -50%) translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, ${Math.round(orbit.depth * 54)}px) scale(${orbit.scale.toFixed(3)})`;
       node.dataset.depth = orbit.depth.toFixed(3);
+      node.dataset.visualLevel = visualLevel;
+      node.style.setProperty("--stage-depth", orbit.depth.toFixed(3));
+      node.style.setProperty("--stage-orb-blur", `${orbit.blur.toFixed(2)}px`);
+      node.style.setProperty("--stage-brightness", orbit.brightness.toFixed(2));
+      node.style.setProperty("--stage-core-size", `${(targetCoreDiameter / Math.max(0.01, orbit.scale)).toFixed(2)}px`);
+      node.style.setProperty("--stage-inverse-scale", (1 / Math.max(0.01, orbit.scale)).toFixed(3));
+      node.style.setProperty("--stage-middle-progress", middleProgress.toFixed(3));
+      node.style.setProperty("--stage-near-progress", nearProgress.toFixed(3));
     });
 
     for (let index = 0; index < count; index += 1) {
@@ -185,6 +217,12 @@ export function AgentConstellation({
     update();
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    const debugEnabled = process.env.NODE_ENV !== "production"
+      && new URLSearchParams(window.location.search).get("galaxyDebug") === "background";
+    setBackgroundDebug(debugEnabled);
   }, []);
 
   useEffect(() => {
@@ -250,7 +288,11 @@ export function AgentConstellation({
   }, []);
 
   useEffect(() => {
-    if (playbackPaused || stageViews.length === 0) {
+    if (
+      playbackPaused
+      || stageViews.length === 0
+      || window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
       lastFrameRef.current = 0;
       return;
     }
@@ -260,9 +302,14 @@ export function AgentConstellation({
       const delta = Math.min(time - lastFrameRef.current, STAGE_DURATION_MS * 0.72);
       lastFrameRef.current = time;
 
-      let rawPhase = rawPhaseRef.current + delta / STAGE_DURATION_MS;
-      if (rawPhase >= stageViews.length) {
-        rawPhase %= stageViews.length;
+      const previousRawPhase = rawPhaseRef.current;
+      const rawPhase = advanceOrbitRawPhase(
+        previousRawPhase,
+        delta,
+        stageViews.length,
+        playbackPaused,
+      );
+      if (rawPhase < previousRawPhase) {
         if (views.length > 1) {
           setPosition((current) => ({
             viewIndex: (current.viewIndex + 1) % views.length,
@@ -383,8 +430,10 @@ export function AgentConstellation({
   return (
     <section
       className="constellation-surface galaxy-constellation relative overflow-hidden rounded-lg md:h-[640px]"
+      style={GALAXY_CORE_STYLE}
       data-paused={playbackPaused ? "true" : "false"}
       data-reduced-motion={reducedMotion ? "true" : "false"}
+      data-background-debug={backgroundDebug ? "true" : "false"}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);
@@ -444,7 +493,7 @@ export function AgentConstellation({
 
       <div ref={viewportRef} className="galaxy-viewport relative z-20 hidden h-[474px] md:block">
         <GalaxyParticleLayer paused={playbackPaused} reducedMotion={reducedMotion} />
-        <GalaxyWebGLLayer paused={playbackPaused} reducedMotion={reducedMotion} />
+        <GalaxyWebGLLayer paused={playbackPaused} reducedMotion={reducedMotion} debug={backgroundDebug} />
         <svg
           viewBox={`0 0 ${GALAXY_VIEWBOX.width} ${GALAXY_VIEWBOX.height}`}
           preserveAspectRatio="none"
@@ -500,11 +549,11 @@ export function AgentConstellation({
             ))}
           </defs>
 
-          <ellipse cx="365" cy="183" rx="324" ry="139" className="galaxy-dust-orbit" />
-          <ellipse cx="365" cy="183" rx="278" ry="113" className="galaxy-main-orbit" />
-          <ellipse cx="365" cy="183" rx="212" ry="82" className="galaxy-energy-orbit" />
-          <ellipse cx="365" cy="183" rx="151" ry="55" className="galaxy-inner-orbit" />
-          <ellipse cx="365" cy="183" rx="126" ry="79" fill="url(#galaxy-core-glow)" className="galaxy-nebula-breath" />
+          <ellipse cx={GALAXY_CORE.x} cy={GALAXY_CORE.y} rx="324" ry="124" className="galaxy-dust-orbit" />
+          <ellipse cx={GALAXY_CORE.x} cy={GALAXY_CORE.y} rx="275" ry="100" className="galaxy-main-orbit" />
+          <ellipse cx={GALAXY_CORE.x} cy={GALAXY_CORE.y} rx="212" ry="72" className="galaxy-energy-orbit" />
+          <ellipse cx={GALAXY_CORE.x} cy={GALAXY_CORE.y} rx="151" ry="49" className="galaxy-inner-orbit" />
+          <ellipse cx={GALAXY_CORE.x} cy={GALAXY_CORE.y} rx="94" ry="59" fill="url(#galaxy-core-glow)" className="galaxy-nebula-breath" />
 
           {stageViews.map((stage, index) => {
             const viewportWidth = viewportSizeRef.current.width || GALAXY_VIEWBOX.width;
@@ -520,7 +569,7 @@ export function AgentConstellation({
             const color = stageColors[stage.key] ?? "#8fe9ff";
             const active = position.stageIndex === index;
             return (
-              <g key={`arc-${stage.key}`}>
+              <g key={`arc-${stage.key}`} data-active={active ? "true" : "false"}>
                 <path
                   ref={(node) => { flowTrackRefs.current[index] = node; }}
                   d={arc.path}
@@ -560,28 +609,42 @@ export function AgentConstellation({
           <span className="galaxy-core-orbit galaxy-core-orbit-inner" />
           <span className="galaxy-core-foreground-lens" aria-hidden="true" />
           <span className="galaxy-event-horizon" aria-hidden="true" />
+          <span className="galaxy-core-foreground-accretion-band" aria-hidden="true" />
           <span className="galaxy-core-content">
             <span className="text-[9px] font-medium tracking-[0.18em] text-cyan-100/80">协作核心</span>
             <strong className="mt-1 max-w-[92px] truncate text-[15px] text-white">{centerTitle}</strong>
             <span className="mt-1 text-[9px] text-indigo-100/70">{centerSub}</span>
           </span>
         </Link>
+        <div className="galaxy-debug-project-cross" aria-hidden="true" />
+        <div className="galaxy-debug-orbit-cross" aria-hidden="true" />
 
         {stageViews.map((stage, index) => {
           const orbit = computeOrbitNode(index, phaseRef.current, stageViews.length, viewMode);
+          const visualLevel = viewMode === "3d" ? getStageVisualLevel(orbit.depth) : "middle";
+          const targetCoreDiameter = viewMode === "3d" ? getStageOrbDiameter(orbit.depth) : 40;
           const color = stageColors[stage.key] ?? "#8fe9ff";
           const focused = position.stageIndex === index;
           const stageName = stageNames[stage.key] ?? stage.name;
           const viewportWidth = viewportSizeRef.current.width || GALAXY_VIEWBOX.width;
           const viewportHeight = viewportSizeRef.current.height || 300;
-          const offsetX = ((orbit.x - 365) / GALAXY_VIEWBOX.width) * viewportWidth;
-          const offsetY = ((orbit.y - 183) / GALAXY_VIEWBOX.height) * viewportHeight;
+          const offsetX = ((orbit.x - GALAXY_ORBIT_GEOMETRY.centerX) / GALAXY_VIEWBOX.width) * viewportWidth;
+          const offsetY = ((orbit.y - GALAXY_ORBIT_GEOMETRY.centerY) / GALAXY_VIEWBOX.height) * viewportHeight;
+          const middleProgress = Math.min(1, Math.max(0, (orbit.depth - 0.32) / 0.16));
+          const nearProgress = Math.min(1, Math.max(0, (orbit.depth - 0.68) / 0.14));
           const style = {
             zIndex: orbit.zIndex,
             opacity: orbit.opacity,
-            filter: `blur(${orbit.blur.toFixed(2)}px) brightness(${orbit.brightness.toFixed(2)})`,
+            filter: "none",
             transform: `translate(-50%, -50%) translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, ${Math.round(orbit.depth * 54)}px) scale(${orbit.scale.toFixed(3)})`,
             "--stage-color": color,
+            "--stage-depth": orbit.depth.toFixed(3),
+            "--stage-orb-blur": `${orbit.blur.toFixed(2)}px`,
+            "--stage-brightness": orbit.brightness.toFixed(2),
+            "--stage-core-size": `${(targetCoreDiameter / Math.max(0.01, orbit.scale)).toFixed(2)}px`,
+            "--stage-inverse-scale": (1 / Math.max(0.01, orbit.scale)).toFixed(3),
+            "--stage-middle-progress": middleProgress.toFixed(3),
+            "--stage-near-progress": nearProgress.toFixed(3),
           } as CSSProperties;
 
           return (
@@ -591,25 +654,32 @@ export function AgentConstellation({
               type="button"
               className={cn("galaxy-stage-node", focused && "galaxy-stage-node-focused")}
               style={style}
+              data-visual-level={visualLevel}
+              data-depth={orbit.depth.toFixed(3)}
               aria-label={`${String(index + 1).padStart(2, "0")} ${stageName}，${stage.status_label}，${stage.value_label}`}
               onMouseEnter={() => setHoveredStage(index)}
               onMouseLeave={() => setHoveredStage(null)}
               onClick={() => selectStage(index)}
             >
-              <span className="galaxy-stage-halo" />
-              <span className="galaxy-stage-glass">
-                <span className="galaxy-stage-number">{String(index + 1).padStart(2, "0")}</span>
-                <span className="galaxy-stage-icon">
+              <span className="galaxy-stage-orb" aria-hidden="true">
+                <span className="galaxy-stage-orb-halo" />
+                <span className="galaxy-stage-orb-ring galaxy-stage-orb-ring-outer" />
+                <span className="galaxy-stage-orb-ring galaxy-stage-orb-ring-inner" />
+                <span className="galaxy-stage-orb-core">
+                  <span className="galaxy-stage-starflare" />
                   <ProductIcon name={stageIcons[stage.key] || "agents"} className="h-4 w-4" />
                 </span>
-                <span className="min-w-0 flex-1 text-left">
-                  <strong className="block whitespace-nowrap text-[11px] font-semibold text-white">{stageName}</strong>
-                  <span className="mt-0.5 flex items-center gap-1.5 text-[8px] text-slate-200/75">
+                <span className="galaxy-stage-orb-caption">
+                  <span className="galaxy-stage-caption-heading">
+                    <span className="galaxy-stage-number">{String(index + 1).padStart(2, "0")}</span>
+                    <strong className="galaxy-stage-name">{stageName}</strong>
+                  </span>
+                  <span className="galaxy-stage-caption-meta">
                     <span className="galaxy-stage-signal" />
-                    {stage.data_available ? stage.status_label : "数据待接入"}
+                    <span>{stage.data_available ? stage.status_label : "待接入"}</span>
+                    <span className="galaxy-stage-value">{stage.value_label}</span>
                   </span>
                 </span>
-                <span className="galaxy-stage-value">{stage.value_label}</span>
               </span>
             </button>
           );
@@ -642,31 +712,31 @@ export function AgentConstellation({
 
       {selected && (
         <div className="galaxy-detail-panel relative z-[130] mx-3 mb-3 grid min-h-[92px] gap-3 px-4 py-3 md:mx-4 md:-mt-1 md:grid-cols-[minmax(190px,0.75fr)_minmax(0,1.6fr)]" data-testid="constellation-stage-detail">
-          <div className="flex min-w-0 items-center gap-3 border-b border-slate-200/80 pb-2 md:border-b-0 md:border-r md:pb-0 md:pr-4">
+          <div className="flex min-w-0 items-center gap-3 border-b border-indigo-200/15 pb-2 md:border-b-0 md:border-r md:pb-0 md:pr-4">
             <span className="galaxy-detail-icon" style={{ "--stage-color": stageColors[selected.key] ?? "#5d8cff" } as CSSProperties}>
               <ProductIcon name={stageIcons[selected.key] || "agents"} className="h-5 w-5" />
             </span>
             <div className="min-w-0">
-              <span className="text-[9px] font-medium tracking-[0.15em] text-slate-400">当前阶段</span>
+              <span className="text-[9px] font-medium tracking-[0.15em] text-indigo-200/60">当前阶段</span>
               <div className="mt-1 flex flex-wrap items-center gap-2">
-                <strong className="text-sm text-slate-950">{String(selectedIndex + 1).padStart(2, "0")} {stageNames[selected.key] ?? selected.name}</strong>
+                <strong className="text-sm text-white">{String(selectedIndex + 1).padStart(2, "0")} {stageNames[selected.key] ?? selected.name}</strong>
                 <StatusIcon status={statusMap[selected.status]} showLabel className="text-[9px]" />
               </div>
-              <p className="mt-1 truncate text-[10px] text-slate-500">阶段 {selectedIndex + 1} / 7 · 负责人：待数据接入</p>
+              <p className="mt-1 truncate text-[10px] text-slate-300/65">阶段 {selectedIndex + 1} / 7 · 负责人：待数据接入</p>
             </div>
           </div>
 
           <div className="flex min-w-0 items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <p className="line-clamp-1 text-[11px] leading-5 text-slate-600">{selected.description}</p>
-              <div className="mt-1.5 grid grid-cols-3 divide-x divide-slate-200 text-[9px] text-slate-400">
-                <span className="pr-2"><b className="mr-1 text-sm text-slate-900">{selected.task_count ?? 0}</b>关联任务</span>
-                <span className="px-2"><b className={cn("mr-1 text-sm", selected.issue_count > 0 ? "text-rose-600" : "text-slate-900")}>{selected.issue_count ?? 0}</b>风险异常</span>
-                <span className="pl-2"><b className="mr-1 text-[11px] text-slate-900">待接入</b>预计完成</span>
+              <p className="line-clamp-1 text-[11px] leading-5 text-slate-200/80">{selected.description}</p>
+              <div className="mt-1.5 grid grid-cols-3 divide-x divide-indigo-200/15 text-[9px] text-slate-300/55">
+                <span className="pr-2"><b className="mr-1 text-sm text-white">{selected.task_count ?? 0}</b>关联任务</span>
+                <span className="px-2"><b className={cn("mr-1 text-sm", selected.issue_count > 0 ? "text-rose-300" : "text-white")}>{selected.issue_count ?? 0}</b>风险异常</span>
+                <span className="pl-2"><b className="mr-1 text-[11px] text-white">待接入</b>预计完成</span>
               </div>
             </div>
             {selected.href && (
-              <Link href={selected.href} className="inline-flex shrink-0 items-center gap-1 text-[10px] font-semibold text-indigo-600 hover:text-indigo-900">
+              <Link href={selected.href} className="inline-flex shrink-0 items-center gap-1 text-[10px] font-semibold text-indigo-200 hover:text-white">
                 阶段详情 <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
             )}
@@ -715,28 +785,17 @@ function buildStageOrbitArc(
   return buildOrbitArc(index, phase, count, {
     scaleX,
     scaleY,
-    startScreenGap: getStageBoundaryGap(from.angle, from.scale, scaleX, scaleY),
-    endScreenGap: getStageBoundaryGap(to.angle, to.scale, scaleX, scaleY),
+    startScreenGap: getStageBoundaryGap(from.depth, from.scale, mode),
+    endScreenGap: getStageBoundaryGap(to.depth, to.scale, mode),
   });
 }
 
 function getStageBoundaryGap(
-  angle: number,
+  depth: number,
   nodeScale: number,
-  scaleX: number,
-  scaleY: number,
+  mode: GalaxyViewMode,
 ): number {
-  const tangentX = -275 * Math.sin(angle) * scaleX;
-  const tangentY = 112 * Math.cos(angle) * scaleY;
-  const tangentLength = Math.max(0.0001, Math.hypot(tangentX, tangentY));
-  const unitX = tangentX / tangentLength;
-  const unitY = tangentY / tangentLength;
-  const horizontalExit = Math.abs(unitX) > 0.0001
-    ? (STAGE_BOUNDARY.halfWidth * nodeScale) / Math.abs(unitX)
-    : Number.POSITIVE_INFINITY;
-  const verticalExit = Math.abs(unitY) > 0.0001
-    ? (STAGE_BOUNDARY.halfHeight * nodeScale) / Math.abs(unitY)
-    : Number.POSITIVE_INFINITY;
-
-  return Math.min(horizontalExit, verticalExit) + STAGE_BOUNDARY.margin;
+  const level = mode === "3d" ? getStageVisualLevel(depth) : "middle";
+  const orbitRadius = level === "far" ? 18 : level === "middle" ? 32 : 52;
+  return orbitRadius * nodeScale + STAGE_BOUNDARY_MARGIN;
 }

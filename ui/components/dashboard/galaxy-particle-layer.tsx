@@ -2,10 +2,10 @@
 
 import { useEffect, useRef } from "react";
 
-const BACKGROUND_STAR_COUNT = 84;
-const MOVING_DUST_COUNT = 24;
-const MAX_STAR_RADIUS = 1.8;
-const MAX_DUST_RADIUS = 1.25;
+const BACKGROUND_STAR_COUNT = 36;
+const MOVING_DUST_COUNT = 10;
+const MAX_STAR_RADIUS = 1.3;
+const MAX_DUST_RADIUS = 0.9;
 
 type Star = {
   x: number;
@@ -76,7 +76,7 @@ export function GalaxyParticleLayer({
 
     const drawStar = (star: Star, x: number, y: number, alpha: number) => {
       context.beginPath();
-      context.fillStyle = `rgba(${star.color}, ${Math.min(0.72, alpha)})`;
+      context.fillStyle = `rgba(${star.color}, ${Math.min(0.38, alpha)})`;
       context.arc(x, y, star.radius, 0, Math.PI * 2);
       context.fill();
     };
@@ -151,8 +151,8 @@ function createStars(count: number, random: () => number, palette: string[]): St
   return Array.from({ length: count }, (_, index) => ({
     x: random(),
     y: random(),
-    radius: Math.min(MAX_STAR_RADIUS, 0.35 + random() * 1.25),
-    alpha: 0.18 + random() * 0.46,
+    radius: Math.min(MAX_STAR_RADIUS, 0.3 + random() * 0.9),
+    alpha: 0.12 + random() * 0.28,
     phase: random() * Math.PI * 2,
     color: palette[index % palette.length],
   }));
@@ -162,8 +162,8 @@ function createDust(count: number, random: () => number, palette: string[]): Dus
   return Array.from({ length: count }, (_, index) => ({
     x: random(),
     y: 0.18 + random() * 0.64,
-    radius: Math.min(MAX_DUST_RADIUS, 0.38 + random() * 0.78),
-    alpha: 0.2 + random() * 0.4,
+    radius: Math.min(MAX_DUST_RADIUS, 0.3 + random() * 0.55),
+    alpha: 0.12 + random() * 0.24,
     phase: random() * Math.PI * 2,
     color: palette[(index + 1) % palette.length],
     speed: 0.003 + random() * 0.005,
