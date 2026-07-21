@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { computeGalaxyObjectPosition } from "@/lib/dashboard/constellation-carousel";
 
 export function GalaxyWebGLLayer({
   paused,
@@ -21,16 +20,9 @@ export function GalaxyWebGLLayer({
     if (!layer || !host) return;
 
     let frame = 0;
-    const updateImagePosition = () => {
-      const bounds = host.getBoundingClientRect();
-      const position = computeGalaxyObjectPosition(bounds.width, bounds.height);
-      layer.style.setProperty("--galaxy-bg-position-x", `${position.x.toFixed(3)}%`);
-      layer.style.setProperty("--galaxy-bg-position-y", `${position.y.toFixed(3)}%`);
-      layer.dataset.objectPosition = `${position.x.toFixed(3)}% ${position.y.toFixed(3)}%`;
-    };
     const resetParallax = () => {
-      layer.style.setProperty("--galaxy-parallax-x", "0");
-      layer.style.setProperty("--galaxy-parallax-y", "0");
+      host.style.setProperty("--galaxy-parallax-x", "0");
+      host.style.setProperty("--galaxy-parallax-y", "0");
     };
     const onPointerMove = (event: PointerEvent) => {
       if (motionDisabled) return;
@@ -39,22 +31,18 @@ export function GalaxyWebGLLayer({
         const bounds = host.getBoundingClientRect();
         const x = ((event.clientX - bounds.left) / Math.max(1, bounds.width) - 0.5) * 2;
         const y = ((event.clientY - bounds.top) / Math.max(1, bounds.height) - 0.5) * 2;
-        layer.style.setProperty("--galaxy-parallax-x", Math.max(-1, Math.min(1, x)).toFixed(3));
-        layer.style.setProperty("--galaxy-parallax-y", Math.max(-1, Math.min(1, y)).toFixed(3));
+        host.style.setProperty("--galaxy-parallax-x", Math.max(-1, Math.min(1, x)).toFixed(3));
+        host.style.setProperty("--galaxy-parallax-y", Math.max(-1, Math.min(1, y)).toFixed(3));
       });
     };
 
-    const observer = new ResizeObserver(updateImagePosition);
-    observer.observe(host);
     if (!motionDisabled) {
       host.addEventListener("pointermove", onPointerMove);
       host.addEventListener("pointerleave", resetParallax);
     }
-    updateImagePosition();
     if (motionDisabled) resetParallax();
 
     return () => {
-      observer.disconnect();
       if (!motionDisabled) {
         host.removeEventListener("pointermove", onPointerMove);
         host.removeEventListener("pointerleave", resetParallax);
@@ -75,7 +63,7 @@ export function GalaxyWebGLLayer({
       <div className="galaxy-background-image">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          className="galaxy-art-image"
+          className="galaxy-shared-art-image galaxy-art-image"
           src="/assets/galaxy-workflow/galaxy-background-main.png"
           alt=""
           draggable={false}
@@ -88,11 +76,6 @@ export function GalaxyWebGLLayer({
 
       <style jsx>{`
         .galaxy-art-layer {
-          --galaxy-bg-position-x: 50%;
-          --galaxy-bg-position-y: 28%;
-          --galaxy-bg-scale: 1.01;
-          --galaxy-parallax-x: 0;
-          --galaxy-parallax-y: 0;
           isolation: isolate;
           opacity: 1;
           background: #05091f;
@@ -136,12 +119,7 @@ export function GalaxyWebGLLayer({
           object-fit: cover;
           object-position: var(--galaxy-bg-position-x) var(--galaxy-bg-position-y);
           filter: saturate(1.02) brightness(1.02);
-          transform: translate3d(
-              calc(var(--galaxy-parallax-x) * 0.75px),
-              calc(var(--galaxy-parallax-y) * 0.75px),
-              0
-            )
-            scale(var(--galaxy-bg-scale));
+          transform: scale(var(--galaxy-bg-scale));
           transform-origin: var(--galaxy-core-x) var(--galaxy-core-y);
           transition: transform 260ms ease-out, object-position 180ms ease-out;
           user-select: none;
@@ -195,12 +173,12 @@ export function GalaxyWebGLLayer({
           inset: auto;
           left: var(--galaxy-core-x);
           top: var(--galaxy-core-y);
-          width: 42px;
-          height: 42px;
-          border: 1px solid rgba(54, 226, 255, 0.9);
+          width: 108px;
+          height: 108px;
+          border: 1px solid rgba(255, 72, 72, 0.95);
           border-radius: 999px;
           transform: translate(-50%, -50%);
-          box-shadow: 0 0 14px rgba(54, 226, 255, 0.5);
+          box-shadow: 0 0 14px rgba(255, 72, 72, 0.56);
         }
 
         .galaxy-debug-background-cross::before,
@@ -209,18 +187,18 @@ export function GalaxyWebGLLayer({
           position: absolute;
           left: 50%;
           top: 50%;
-          background: rgb(54 226 255 / 0.95);
+          background: rgb(255 72 72 / 0.98);
           transform: translate(-50%, -50%);
         }
 
         .galaxy-debug-background-cross::before {
-          width: 54px;
+          width: 240px;
           height: 1px;
         }
 
         .galaxy-debug-background-cross::after {
           width: 1px;
-          height: 54px;
+          height: 240px;
         }
 
         .galaxy-art-layer[data-debug='true'] .galaxy-debug-background-cross {

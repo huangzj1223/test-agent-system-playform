@@ -12,10 +12,11 @@ import { extractProjectIdentifier } from "@/lib/dashboard/global-workspace";
 interface MainLayoutProps {
   children: React.ReactNode;
   title?: string;
+  headerEyebrow?: string | null;
   headerContent?: React.ReactNode;
 }
 
-export function MainLayout({ children, title, headerContent }: MainLayoutProps) {
+export function MainLayout({ children, title, headerEyebrow, headerContent }: MainLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { projects } = useProjectContext();
@@ -54,7 +55,7 @@ export function MainLayout({ children, title, headerContent }: MainLayoutProps) 
         onMobileClose={() => setMobileOpen(false)}
       />
       <div className="min-w-0 flex flex-1 flex-col overflow-hidden">
-        <Header title={title} onMenuClick={() => setMobileOpen(true)}>{headerContent}</Header>
+        <Header title={title} eyebrow={headerEyebrow} onMenuClick={() => setMobileOpen(true)}>{headerContent}</Header>
         <main className="flex-1 overflow-auto px-4 py-5 sm:px-6 sm:py-6">{children}</main>
       </div>
     </div>

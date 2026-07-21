@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:galaxy": "node --experimental-strip-types --test tests/galaxy-workflow-contract.test.mjs lib/dashboard/constellation-carousel.test.mjs",
+    "test:galaxy": "node --experimental-strip-types --test tests/galaxy-workflow-contract.test.mjs lib/dashboard/galaxy-layout.test.mjs lib/dashboard/constellation-carousel.test.mjs",
     "verify:galaxy": "npm run test:galaxy && npm run build"
   },
   "_versionId": "id_My81OmFIVnBZMlhwdTRUbGphRG1zWjg2UjFWMU9RPT06OTU1ZWI0MDc=",

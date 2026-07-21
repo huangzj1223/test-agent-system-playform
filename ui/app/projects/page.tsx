@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { RefreshCw } from "lucide-react";
 import { MainLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +11,6 @@ import {
 import { getDashboardOverview } from "@/lib/api/dashboard";
 import type { DashboardOverview } from "@/lib/api/dashboard";
 import type { ProjectInfo } from "@/lib/api/types";
-import { formatRelativeTime } from "@/lib/dashboard/model";
-import { ProductIcon } from "@/components/icons";
 import { useProjectContext } from "@/lib/context/project-context";
 
 export default function ProjectsPage() {
@@ -42,24 +39,12 @@ export default function ProjectsPage() {
   }, [loadDashboard]);
 
   return (
-    <MainLayout title="系统总览">
+    <MainLayout title="掌握质量全貌，驱动智能闭环。" headerEyebrow={null}>
       <div className="mx-auto max-w-[1720px] space-y-5 pb-8">
         {loading || !overview ? (
           <DashboardSkeleton />
         ) : (
           <>
-            <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
-              <div>
-                <div className="flex items-center gap-2 text-[11px] font-medium tracking-[0.14em] text-[hsl(var(--primary))]">
-                  <ProductIcon name="agents" className="h-3.5 w-3.5" />
-                  智能质量网络
-                </div>
-                <h1 className="mt-2 text-2xl font-semibold tracking-normal text-foreground sm:text-3xl">掌握质量全貌，驱动智能闭环</h1>
-                <p className="mt-2 text-sm text-muted-foreground">预览跨项目质量态势、智能体运行和风险分布 · 最后更新 {formatRelativeTime(overview.updated_at)}</p>
-              </div>
-              <Button variant="outline" size="sm" onClick={loadDashboard}><RefreshCw className="mr-2 h-4 w-4" />刷新数据</Button>
-            </div>
-
             {overviewError && (
               <div className="flex flex-col justify-between gap-3 rounded-lg border border-[hsl(var(--risk-warning)/0.35)] bg-[hsl(var(--risk-warning)/0.08)] px-4 py-3 text-xs sm:flex-row sm:items-center">
                 <span>系统总览接口暂时不可用，当前展示项目接口中的真实资产数据，运行与闭环指标标记为待接入。</span>

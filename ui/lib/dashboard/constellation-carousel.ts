@@ -27,6 +27,7 @@ export interface ConstellationPoint {
 
 export type GalaxyViewMode = "2d" | "3d";
 export type StageVisualLevel = "far" | "middle" | "near";
+export type StaticStageLevel = "deep" | "middle" | "near" | "focus";
 
 export interface OrbitPlaybackState {
   userPaused: boolean;
@@ -133,70 +134,51 @@ export const GALAXY_STAGE_KEYS = [
 ] as const;
 
 export const GALAXY_CYCLE_DURATION_MS = 16_000;
-export const GALAXY_CORE = {
-  x: 365,
-  y: 151.2,
-} as const;
 export const GALAXY_SPATIAL_CONFIG = {
-  core: GALAXY_CORE,
   viewBox: {
     width: 730,
     height: 360,
   },
-  projectCoreDiameter: 140,
+  projectCoreDiameter: 112,
   foregroundAccretionOpacity: 0.14,
-} as const;
-export const GALAXY_ARTWORK = {
-  width: 1672,
-  height: 941,
-  focusX: 841,
-  focusY: 316,
+  backgroundScale: 1.01,
+  foregroundFlowZIndex: 119,
 } as const;
 export const GALAXY_ORBIT_GEOMETRY = {
-  centerX: GALAXY_CORE.x,
-  centerY: GALAXY_CORE.y,
   radiusX: 275,
   radiusY: 100,
   viewBoxWidth: GALAXY_SPATIAL_CONFIG.viewBox.width,
   viewBoxHeight: GALAXY_SPATIAL_CONFIG.viewBox.height,
   foregroundVisualHalfHeight: 50,
 } as const;
+export const GALAXY_STATIC_LAYOUT = {
+  enabled: true,
+  phase: 0,
+  focusIndex: 0,
+  hudHeight: 82,
+  hudBottom: 14,
+  scale: {
+    deep: 0.38,
+    middle: 0.68,
+    near: 0.92,
+    focus: 1.12,
+  },
+  opacity: {
+    deep: 0.4,
+    middle: 0.72,
+    near: 0.94,
+    focus: 1,
+  },
+} as const;
 
 const ORBIT_CENTER = {
-  x: GALAXY_ORBIT_GEOMETRY.centerX,
-  y: GALAXY_ORBIT_GEOMETRY.centerY,
+  x: 0,
+  y: 0,
 };
 const ORBIT_RADIUS_X = GALAXY_ORBIT_GEOMETRY.radiusX;
 const ORBIT_RADIUS_Y = GALAXY_ORBIT_GEOMETRY.radiusY;
 const ORBIT_FRONT_ANGLE = Math.PI / 2;
 const ORBIT_HOLD_RATIO = 0.56;
-
-export function computeGalaxyObjectPosition(
-  containerWidth: number,
-  containerHeight: number,
-): { x: number; y: number } {
-  const safeWidth = Math.max(1, Number.isFinite(containerWidth) ? containerWidth : 1);
-  const safeHeight = Math.max(1, Number.isFinite(containerHeight) ? containerHeight : 1);
-  const scale = Math.max(
-    safeWidth / GALAXY_ARTWORK.width,
-    safeHeight / GALAXY_ARTWORK.height,
-  );
-  const renderedWidth = GALAXY_ARTWORK.width * scale;
-  const renderedHeight = GALAXY_ARTWORK.height * scale;
-  const overflowX = Math.max(0, renderedWidth - safeWidth);
-  const overflowY = Math.max(0, renderedHeight - safeHeight);
-  const targetX = safeWidth * (GALAXY_CORE.x / GALAXY_ORBIT_GEOMETRY.viewBoxWidth);
-  const targetY = safeHeight * (GALAXY_CORE.y / GALAXY_ORBIT_GEOMETRY.viewBoxHeight);
-
-  return {
-    x: overflowX > 0
-      ? clampPercentage(((GALAXY_ARTWORK.focusX * scale - targetX) / overflowX) * 100)
-      : 50,
-    y: overflowY > 0
-      ? clampPercentage(((GALAXY_ARTWORK.focusY * scale - targetY) / overflowY) * 100)
-      : 50,
-  };
-}
 
 export function clipConnector(
   from: ConstellationPoint,
@@ -294,12 +276,11 @@ export function advanceOrbitRawPhase(
   return positiveModulo(safeRawPhase + deltaMs / stageDurationMs, stageCount);
 }
 
-export function getFrontStageSafeArea(viewportHeight: number): number {
+export function getFrontStageSafeArea(viewportHeight: number, focalY: number): number {
   const safeHeight = Math.max(0, Number.isFinite(viewportHeight) ? viewportHeight : 0);
-  const frontCenter = (
-    (GALAXY_ORBIT_GEOMETRY.centerY + GALAXY_ORBIT_GEOMETRY.radiusY)
-    / GALAXY_ORBIT_GEOMETRY.viewBoxHeight
-  ) * safeHeight;
+  const safeFocalY = Math.max(0, Number.isFinite(focalY) ? focalY : 0);
+  const frontCenter = safeFocalY
+    + (GALAXY_ORBIT_GEOMETRY.radiusY / GALAXY_ORBIT_GEOMETRY.viewBoxHeight) * safeHeight;
   return safeHeight - frontCenter - GALAXY_ORBIT_GEOMETRY.foregroundVisualHalfHeight;
 }
 
@@ -352,8 +333,75 @@ export function computeOrbitNode(
     opacity: isThreeDimensional ? 0.32 + depth * 0.68 : 0.86 + depth * 0.14,
     blur: isThreeDimensional ? 0.6 * (1 - depth) : 0,
     brightness: isThreeDimensional ? 0.62 + depth * 0.43 : 0.94 + depth * 0.06,
-    zIndex: 10 + Math.round(depth * 100),
+    zIndex: getOrbitZIndex(depth, mode),
   };
+}
+
+export function getStaticStageLevel(index: number, count: number): StaticStageLevel {
+  if (count <= 0) return "focus";
+  const normalizedIndex = positiveModulo(index, count);
+  if (normalizedIndex === GALAXY_STATIC_LAYOUT.focusIndex) return "focus";
+
+  const depth = computeOrbitNode(
+    normalizedIndex,
+    GALAXY_STATIC_LAYOUT.phase,
+    count,
+    "3d",
+  ).depth;
+  if (depth < 0.32) return "deep";
+  if (depth < 0.68) return "middle";
+  return "near";
+}
+
+export function computeStaticOrbitNode(
+  index: number,
+  count: number,
+  mode: GalaxyViewMode,
+): OrbitNodePresentation {
+  const node = computeOrbitNode(index, GALAXY_STATIC_LAYOUT.phase, count, mode);
+  if (count <= 0 || mode === "2d") return node;
+
+  const level = getStaticStageLevel(index, count);
+  const brightness: Record<StaticStageLevel, number> = {
+    deep: 0.7,
+    middle: 0.88,
+    near: 1.02,
+    focus: 1.08,
+  };
+  const zIndex: Record<StaticStageLevel, number> = {
+    deep: 24,
+    middle: 54,
+    near: 92,
+    focus: 112,
+  };
+
+  return {
+    ...node,
+    scale: GALAXY_STATIC_LAYOUT.scale[level],
+    opacity: GALAXY_STATIC_LAYOUT.opacity[level],
+    blur: level === "deep" ? 0.3 : 0,
+    brightness: brightness[level],
+    zIndex: zIndex[level],
+  };
+}
+
+export function getStaticHudClearance(viewportHeight: number, focalY: number): number {
+  const safeHeight = Math.max(0, Number.isFinite(viewportHeight) ? viewportHeight : 0);
+  const safeFocalY = Math.max(0, Number.isFinite(focalY) ? focalY : 0);
+  const frontCenter = safeFocalY
+    + (GALAXY_ORBIT_GEOMETRY.radiusY / GALAXY_ORBIT_GEOMETRY.viewBoxHeight) * safeHeight;
+  const hudTop = safeHeight - GALAXY_STATIC_LAYOUT.hudBottom - GALAXY_STATIC_LAYOUT.hudHeight;
+  return hudTop - frontCenter - GALAXY_ORBIT_GEOMETRY.foregroundVisualHalfHeight;
+}
+
+export function getOrbitZIndex(depth: number, mode: GalaxyViewMode): number {
+  const normalizedDepth = Math.min(1, Math.max(0, depth));
+  if (mode === "2d") return 90 + Math.round(normalizedDepth * 7);
+
+  const level = getStageVisualLevel(normalizedDepth);
+  if (level === "far") return 16 + Math.round((normalizedDepth / 0.32) * 20);
+  if (level === "middle") return 42 + Math.round(((normalizedDepth - 0.32) / 0.36) * 32);
+  return 90 + Math.round(((normalizedDepth - 0.68) / 0.32) * 28);
 }
 
 export function buildOrbitArc(
@@ -571,10 +619,6 @@ function shortestCyclicDistance(index: number, phase: number, count: number): nu
 
 function positiveModulo(value: number, divisor: number): number {
   return ((value % divisor) + divisor) % divisor;
-}
-
-function clampPercentage(value: number): number {
-  return Math.min(100, Math.max(0, Number.isFinite(value) ? value : 50));
 }
 
 function formatCoordinate(value: number): string {

@@ -15,11 +15,17 @@ import { StatusIcon } from "@/components/icons";
 
 interface HeaderProps {
   title?: string;
+  eyebrow?: string | null;
   children?: React.ReactNode;
   onMenuClick?: () => void;
 }
 
-export function Header({ title, children, onMenuClick }: HeaderProps) {
+export function Header({
+  title,
+  eyebrow = "智能质量控制中心",
+  children,
+  onMenuClick,
+}: HeaderProps) {
   return (
     <header className="z-20 flex h-16 shrink-0 items-center justify-between border-b bg-white/90 px-4 shadow-[0_8px_28px_rgba(32,36,56,0.04)] backdrop-blur-xl sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
@@ -35,7 +41,9 @@ export function Header({ title, children, onMenuClick }: HeaderProps) {
         </Button>
         {title && (
           <div className="min-w-0">
-            <div className="text-[10px] font-medium tracking-[0.14em] text-muted-foreground">智能质量控制中心</div>
+            {eyebrow ? (
+              <div className="text-[10px] font-medium tracking-[0.14em] text-muted-foreground">{eyebrow}</div>
+            ) : null}
             <h1 className="truncate text-base font-semibold text-foreground sm:text-lg">{title}</h1>
           </div>
         )}

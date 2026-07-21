@@ -4,10 +4,9 @@ import * as constellationCarousel from "./constellation-carousel.ts";
 
 import {
   GALAXY_CYCLE_DURATION_MS,
-  GALAXY_CORE,
-  GALAXY_ARTWORK,
   GALAXY_ORBIT_GEOMETRY,
   GALAXY_SPATIAL_CONFIG,
+  GALAXY_STATIC_LAYOUT,
   GALAXY_STAGE_KEYS,
   advanceOrbitRawPhase,
   advanceCarousel,
@@ -20,12 +19,15 @@ import {
   buildOrbitArc,
   clipConnector,
   computeOrbitNode,
-  computeGalaxyObjectPosition,
+  computeStaticOrbitNode,
   easeOrbitPhase,
   getFocusedStageIndex,
   getFrontStageSafeArea,
   getForwardPhaseTarget,
   getGalaxyRenderBudget,
+  getOrbitZIndex,
+  getStaticHudClearance,
+  getStaticStageLevel,
   shouldAdvanceOrbit,
   projectAccretionPoint,
 } from "./constellation-carousel.ts";
@@ -33,13 +35,98 @@ import {
 const getStageVisualLevel = constellationCarousel.getStageVisualLevel;
 const getStageOrbDiameter = constellationCarousel.getStageOrbDiameter;
 
-test("galaxy spatial config locks the shared center and lightweight core values", () => {
-  assert.deepEqual(GALAXY_SPATIAL_CONFIG.core, GALAXY_CORE);
+test("galaxy spatial config keeps orbit geometry centered on the shared runtime focal point", () => {
   assert.equal(GALAXY_SPATIAL_CONFIG.viewBox.width, GALAXY_ORBIT_GEOMETRY.viewBoxWidth);
   assert.equal(GALAXY_SPATIAL_CONFIG.viewBox.height, GALAXY_ORBIT_GEOMETRY.viewBoxHeight);
-  assert.equal(GALAXY_SPATIAL_CONFIG.projectCoreDiameter, 140);
-  assert.ok(GALAXY_SPATIAL_CONFIG.projectCoreDiameter <= 156 * 0.92);
+  assert.equal(GALAXY_SPATIAL_CONFIG.projectCoreDiameter, 112);
+  assert.equal(GALAXY_SPATIAL_CONFIG.projectCoreDiameter / 140, 0.8);
   assert.equal(GALAXY_SPATIAL_CONFIG.foregroundAccretionOpacity, 0.14);
+  assert.equal(GALAXY_SPATIAL_CONFIG.backgroundScale, 1.01);
+  assert.equal(GALAXY_SPATIAL_CONFIG.foregroundFlowZIndex, 119);
+  assert.deepEqual(computeOrbitNode(0, 0, 0, "3d"), {
+    x: 0,
+    y: 0,
+    angle: Math.PI / 2,
+    depth: 1,
+    scale: 1,
+    opacity: 1,
+    blur: 0,
+    brightness: 1,
+    zIndex: 1,
+  });
+});
+
+test("stage depth stays below the dedicated foreground flow layer", () => {
+  const nodes = GALAXY_STAGE_KEYS.map((_, index) => computeOrbitNode(index, 0, 7, "3d"));
+  const far = nodes.reduce((current, candidate) => candidate.depth < current.depth ? candidate : current);
+  const near = nodes.reduce((current, candidate) => candidate.depth > current.depth ? candidate : current);
+
+  assert.ok(far.zIndex < 72);
+  assert.ok(near.zIndex < GALAXY_SPATIAL_CONFIG.foregroundFlowZIndex);
+});
+
+test("3D depth bands keep far nodes well behind the overlay and near nodes well ahead", () => {
+  const samples = [];
+  for (let phaseStep = 0; phaseStep < 280; phaseStep += 1) {
+    const phase = phaseStep / 40;
+    for (let index = 0; index < 7; index += 1) {
+      samples.push(computeOrbitNode(index, phase, 7, "3d"));
+    }
+  }
+
+  const far = samples.filter((node) => getStageVisualLevel(node.depth) === "far");
+  const near = samples.filter((node) => getStageVisualLevel(node.depth) === "near");
+  const farRange = [Math.min(...far.map((node) => node.zIndex)), Math.max(...far.map((node) => node.zIndex))];
+  const nearRange = [Math.min(...near.map((node) => node.zIndex)), Math.max(...near.map((node) => node.zIndex))];
+
+  assert.deepEqual(farRange, [16, 36]);
+  assert.deepEqual(nearRange, [91, 118]);
+  assert.deepEqual(
+    [getOrbitZIndex(0, "3d"), getOrbitZIndex(0.3199, "3d")],
+    [16, 36],
+  );
+  assert.deepEqual(
+    [getOrbitZIndex(0.68, "3d"), getOrbitZIndex(1, "3d")],
+    [90, 118],
+  );
+  assert.ok(farRange[1] < 72);
+  assert.ok(nearRange[1] < GALAXY_SPATIAL_CONFIG.foregroundFlowZIndex);
+});
+
+test("Phase 2 static layout keeps all seven stages on one ordered ellipse", () => {
+  const nodes = GALAXY_STAGE_KEYS.map((_, index) => computeStaticOrbitNode(index, 7, "3d"));
+  const expectedAngles = [90, 141.4286, 192.8571, 244.2857, 295.7143, 347.1429, 398.5714];
+
+  assert.equal(nodes.length, 7);
+  nodes.forEach((node, index) => {
+    assert.ok(Math.abs((node.angle * 180) / Math.PI - expectedAngles[index]) < 0.001);
+    assert.ok(Math.abs((node.x / GALAXY_ORBIT_GEOMETRY.radiusX) ** 2
+      + (node.y / GALAXY_ORBIT_GEOMETRY.radiusY) ** 2 - 1) < 0.000001);
+  });
+  assert.equal(nodes[0].y, GALAXY_ORBIT_GEOMETRY.radiusY);
+  assert.ok(nodes[3].y < 0);
+  assert.ok(nodes[4].y < 0);
+});
+
+test("Phase 2 static depth levels are ordered and focus never exceeds 1.14", () => {
+  const nodes = GALAXY_STAGE_KEYS.map((_, index) => computeStaticOrbitNode(index, 7, "3d"));
+  const scales = Object.fromEntries(nodes.map((node, index) => [getStaticStageLevel(index, 7), node.scale]));
+
+  assert.equal(GALAXY_STATIC_LAYOUT.enabled, true);
+  assert.equal(GALAXY_STATIC_LAYOUT.phase, 0);
+  assert.equal(getStaticStageLevel(0, 7), "focus");
+  assert.equal(getStaticStageLevel(3, 7), "deep");
+  assert.equal(getStaticStageLevel(2, 7), "middle");
+  assert.equal(getStaticStageLevel(1, 7), "near");
+  assert.ok(scales.deep < scales.middle);
+  assert.ok(scales.middle < scales.near);
+  assert.ok(scales.near <= scales.focus);
+  assert.ok(scales.focus <= 1.14);
+});
+
+test("Phase 2 static focus keeps at least 18px above the frozen HUD at both desktop targets", () => {
+  assert.ok(getStaticHudClearance(640, 218.2) >= 18);
+  assert.ok(getStaticHudClearance(640, 268.41) >= 18);
 });
 
 const globalStages = [
@@ -156,8 +243,8 @@ test("Phase B：当前焦点位于椭圆下方最近端并具有最强层次", (
     candidate.depth < current.depth ? candidate : current
   ));
 
-  assert.equal(focus.x, 365);
-  assert.equal(focus.y, GALAXY_CORE.y + GALAXY_ORBIT_GEOMETRY.radiusY);
+  assert.ok(Math.abs(focus.x) < 1e-10);
+  assert.equal(focus.y, GALAXY_ORBIT_GEOMETRY.radiusY);
   assert.equal(focus.depth, 1);
   assert.ok(Math.abs(focus.scale - 1.16) < 1e-10);
   assert.equal(focus.opacity, 1);
@@ -205,31 +292,14 @@ test("三级星核目标直径在各自 LOD 区间保持要求范围", () => {
 });
 
 test("前景节点在标准银河视口中保留至少 88px 的详情安全区域", () => {
-  assert.deepEqual(GALAXY_CORE, { x: 365, y: 151.2 });
-  assert.equal(GALAXY_ORBIT_GEOMETRY.centerX, GALAXY_CORE.x);
-  assert.equal(GALAXY_ORBIT_GEOMETRY.centerY, GALAXY_CORE.y);
   assert.equal(GALAXY_ORBIT_GEOMETRY.radiusY, 100);
-  assert.ok(getFrontStageSafeArea(474) >= 88);
+  assert.ok(getFrontStageSafeArea(474, 130) >= 88);
 });
 
 test("银河图片在不同宽屏比例下都把固有黑洞焦点映射到统一核心", () => {
-  assert.deepEqual(GALAXY_ARTWORK, {
-    width: 1672,
-    height: 941,
-    focusX: 841,
-    focusY: 316,
-  });
-
-  for (const width of [1164, 1644]) {
-    const height = 474;
-    const position = computeGalaxyObjectPosition(width, height);
-    const scale = Math.max(width / GALAXY_ARTWORK.width, height / GALAXY_ARTWORK.height);
-    const renderedHeight = GALAXY_ARTWORK.height * scale;
-    const overflowY = renderedHeight - height;
-    const mappedFocusY = GALAXY_ARTWORK.focusY * scale - overflowY * (position.y / 100);
-
-    assert.ok(Math.abs(mappedFocusY - height * 0.42) < 0.5);
-  }
+  assert.equal("GALAXY_CORE" in constellationCarousel, false);
+  assert.equal("GALAXY_ARTWORK" in constellationCarousel, false);
+  assert.equal("computeGalaxyObjectPosition" in constellationCarousel, false);
 });
 
 test("far、middle、near 的空间尺度严格递增且 near 不超过 1.18", () => {
@@ -274,7 +344,7 @@ test("Phase B：phase 从 0 到 1 时焦点按业务顺序切换到测试设计"
   assert.equal(requirementsAtStart.depth, 1);
   assert.ok(requirementsAtStart.depth > designAtStart.depth);
   assert.equal(designAtNext.depth, 1);
-  assert.equal(designAtNext.y, GALAXY_CORE.y + GALAXY_ORBIT_GEOMETRY.radiusY);
+  assert.equal(designAtNext.y, GALAXY_ORBIT_GEOMETRY.radiusY);
   assert.ok(designAtNext.depth > requirementsAtNext.depth);
   assert.deepEqual(GALAXY_STAGE_KEYS, [
     "requirements",
@@ -303,8 +373,8 @@ test("Phase B：2D 模式保留统一轨道坐标但取消景深模糊", () => {
 test("Phase B：轨道随 phase 推进让下一阶段沿正向路径进入前景", () => {
   const start = computeOrbitNode(0, 0, 7, "3d");
   const later = computeOrbitNode(0, 0.1, 7, "3d");
-  const startAngle = Math.atan2(start.y - GALAXY_ORBIT_GEOMETRY.centerY, start.x - GALAXY_ORBIT_GEOMETRY.centerX);
-  const laterAngle = Math.atan2(later.y - GALAXY_ORBIT_GEOMETRY.centerY, later.x - GALAXY_ORBIT_GEOMETRY.centerX);
+  const startAngle = Math.atan2(start.y, start.x);
+  const laterAngle = Math.atan2(later.y, later.x);
   const forwardDelta = ((startAngle - laterAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
 
   assert.ok(forwardDelta > 0);
@@ -314,7 +384,7 @@ test("Phase B：轨道随 phase 推进让下一阶段沿正向路径进入前景
 test("阶段箭头沿椭圆轨道连接相邻节点而不经过中心", () => {
   const arc = buildOrbitArc(0, 0, 7);
 
-  assert.match(arc.path, /^M \d+(?:\.\d+)? \d+(?:\.\d+)? A /);
+  assert.match(arc.path, /^M -?\d+(?:\.\d+)? -?\d+(?:\.\d+)? A /);
   assert.ok(arc.start.x !== arc.end.x);
   assert.ok(arc.start.y !== 183 || arc.end.y !== 183);
 });
