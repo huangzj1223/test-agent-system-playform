@@ -848,6 +848,29 @@
     filter: drop-shadow(0 0 7px var(--stage-color));
   }
 
+  .galaxy-hologram-icon {
+    overflow: visible;
+    transform: rotate(0deg);
+    transform-origin: center;
+  }
+
+  .galaxy-hologram-icon-primary {
+    stroke: rgb(232 251 255 / 0.96);
+    filter: drop-shadow(0 0 2px rgb(182 242 255 / 0.72));
+  }
+
+  .galaxy-hologram-icon-accent {
+    stroke: color-mix(in srgb, var(--stage-color) 82%, white 18%);
+    filter: drop-shadow(0 0 3px var(--stage-color));
+  }
+
+  .galaxy-hologram-icon-core {
+    fill: color-mix(in srgb, var(--stage-color) 78%, white 22%);
+    stroke: rgb(238 253 255 / 0.9);
+    stroke-width: 0.8;
+    filter: drop-shadow(0 0 4px var(--stage-color));
+  }
+
   .galaxy-stage-orb-caption {
     position: absolute;
     left: 50%;
@@ -915,17 +938,24 @@
     animation: galaxy-stage-twinkle 5.8s ease-in-out infinite;
   }
 
-  .galaxy-stage-node[data-visual-level="far"] .galaxy-stage-orb-core > svg,
   .galaxy-stage-node[data-visual-level="far"] .galaxy-stage-orb-halo,
   .galaxy-stage-node[data-visual-level="far"] .galaxy-stage-orb-ring {
     opacity: 0;
+  }
+
+  .galaxy-stage-node[data-visual-level="far"] .galaxy-stage-orb-core > svg {
+    width: 10px;
+    height: 10px;
+    opacity: 0.94;
+    filter: drop-shadow(0 0 4px var(--stage-color));
+    transform: rotate(0deg) scale(1);
   }
 
   .galaxy-stage-node[data-visual-level="far"] .galaxy-stage-orb-caption {
     left: 50%;
     top: 50%;
     width: 44px;
-    opacity: 1;
+    opacity: 0;
     transform: translate(-50%, 11px) scale(var(--stage-inverse-scale));
     transform-origin: top center;
   }
@@ -950,6 +980,7 @@
     border-radius: 6px;
     background: rgb(7 14 45 / 0.92);
     box-shadow: 0 7px 22px rgb(1 4 24 / 0.7), 0 0 16px color-mix(in srgb, var(--stage-color) 24%, transparent);
+    opacity: 1;
   }
 
   .galaxy-stage-node[data-visual-level="far"]:hover .galaxy-stage-name,
@@ -1002,24 +1033,35 @@
     opacity: 0;
   }
 
-  .galaxy-stage-node[data-static-level="middle"] .galaxy-stage-orb-caption {
+  .galaxy-stage-node[data-depth-level="middle"] .galaxy-stage-orb-caption {
     opacity: 1;
     transform: translateX(-50%) scale(var(--stage-inverse-scale));
     transform-origin: top center;
   }
 
-  .galaxy-stage-node[data-static-level="middle"] .galaxy-stage-orb-core > svg {
+  .galaxy-stage-node[data-depth-level="middle"] .galaxy-stage-orb-core > svg {
     opacity: 0.9;
     transform: scale(0.92);
   }
 
-  .galaxy-stage-node[data-static-level="middle"] .galaxy-stage-orb-ring-outer {
+  .galaxy-stage-node[data-depth-level="middle"] .galaxy-stage-orb-ring-outer {
     opacity: 0.48;
   }
 
   .galaxy-stage-node[data-visual-level="near"] .galaxy-stage-orb-core {
     width: var(--stage-core-size);
     height: var(--stage-core-size);
+  }
+
+  .galaxy-stage-node[data-visual-level="near"] .galaxy-stage-orb-core > svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .galaxy-stage-node-focused[data-visual-level="near"] .galaxy-stage-orb-core > svg {
+    width: 30px;
+    height: 30px;
+    filter: drop-shadow(0 0 9px var(--stage-color));
   }
 
   .galaxy-stage-node[data-visual-level="near"] .galaxy-stage-orb-caption {
@@ -1123,6 +1165,38 @@
 
   .galaxy-layout-debug-panel strong {
     color: rgb(103 232 249);
+  }
+
+  .galaxy-motion-debug-panel {
+    position: absolute;
+    left: 16px;
+    top: 16px;
+    z-index: 172;
+    display: grid;
+    gap: 3px;
+    min-width: 270px;
+    padding: 9px 11px;
+    border: 1px solid rgb(96 165 250 / 0.52);
+    border-radius: 6px;
+    background: rgb(3 8 28 / 0.84);
+    color: rgb(219 234 254);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10px;
+    line-height: 1.45;
+    pointer-events: none;
+  }
+
+  .galaxy-motion-debug-panel strong {
+    color: rgb(125 211 252);
+  }
+
+  .galaxy-motion-debug-angles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px 10px;
+    margin-top: 3px;
+    color: rgb(191 219 254 / 0.84);
+    font-size: 8px;
   }
 
   .galaxy-layout-debug-anchors {
@@ -1403,8 +1477,11 @@
   .galaxy-constellation[data-paused="true"] .galaxy-core-accretion-disk,
   .galaxy-constellation[data-paused="true"] .galaxy-core-foreground-accretion-band,
   .galaxy-constellation[data-paused="true"] .galaxy-gravity-well,
-  .galaxy-constellation[data-paused="true"] .galaxy-lensing-ring,
-  .galaxy-constellation[data-paused="true"] .galaxy-stage-orb-core {
+  .galaxy-constellation[data-paused="true"] .galaxy-lensing-ring {
+    animation-play-state: paused !important;
+  }
+
+  .galaxy-constellation[data-motion-paused="true"] .galaxy-stage-orb-core {
     animation-play-state: paused !important;
   }
 

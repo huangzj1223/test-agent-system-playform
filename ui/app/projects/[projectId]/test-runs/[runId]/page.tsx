@@ -830,14 +830,14 @@ export default function TestRunDetailPage() {
             </div>
             <div className="rounded-lg border p-4">
               <div className="text-sm text-muted-foreground">通过</div>
-              <div className="mt-1 flex items-center gap-2 text-2xl font-bold text-green-600">
+              <div className="mt-1 flex items-center gap-2 text-2xl font-bold text-[hsl(var(--success))]">
                 <CheckCircle2 className="h-5 w-5" />
                 {p.passed}
               </div>
             </div>
             <div className="rounded-lg border p-4">
               <div className="text-sm text-muted-foreground">失败</div>
-              <div className="mt-1 flex items-center gap-2 text-2xl font-bold text-red-600">
+              <div className="mt-1 flex items-center gap-2 text-2xl font-bold text-[hsl(var(--destructive))]">
                 <XCircle className="h-5 w-5" />
                 {p.failed}
               </div>
@@ -973,7 +973,7 @@ export default function TestRunDetailPage() {
                           <div key={phase} className="rounded-md border bg-background p-3">
                             <div className="flex items-center gap-2">
                               {step ? (
-                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))]" />
                               ) : (
                                 <Clock className="h-4 w-4 text-muted-foreground" />
                               )}
@@ -1293,8 +1293,8 @@ export default function TestRunDetailPage() {
                                 </span>
                               </div>
                               <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
-                                <div className="bg-green-500 transition-all" style={{ width: `${passedPct}%` }} />
-                                <div className="bg-red-500 transition-all" style={{ width: `${failedPct}%` }} />
+                                <div className="bg-[hsl(var(--success))] transition-all" style={{ width: `${passedPct}%` }} />
+                                <div className="bg-[hsl(var(--destructive))] transition-all" style={{ width: `${failedPct}%` }} />
                                 <div className="bg-amber-400 transition-all" style={{ width: `${skippedPct}%` }} />
                               </div>
                             </div>
@@ -1475,11 +1475,11 @@ export default function TestRunDetailPage() {
                     <div className="text-xs text-muted-foreground">成功率</div>
                   </div>
                   <div className="rounded-lg border p-3 text-center">
-                    <div className="text-2xl font-bold text-green-600">{(historyDialogData as any).passed}</div>
+                    <div className="text-2xl font-bold text-[hsl(var(--success))]">{(historyDialogData as any).passed}</div>
                     <div className="text-xs text-muted-foreground">通过</div>
                   </div>
                   <div className="rounded-lg border p-3 text-center">
-                    <div className="text-2xl font-bold text-red-600">{(historyDialogData as any).failed}</div>
+                    <div className="text-2xl font-bold text-[hsl(var(--destructive))]">{(historyDialogData as any).failed}</div>
                     <div className="text-xs text-muted-foreground">失败</div>
                   </div>
                   <div className="rounded-lg border p-3 text-center">
@@ -1535,11 +1535,11 @@ export default function TestRunDetailPage() {
                     <div className="text-xs text-muted-foreground">平均耗时</div>
                   </div>
                   <div className="rounded-lg border p-3 text-center">
-                    <div className="text-2xl font-bold text-green-600">{formatDuration((benchmarkDialogData as any).min_duration_ms)}</div>
+                    <div className="text-2xl font-bold text-[hsl(var(--success))]">{formatDuration((benchmarkDialogData as any).min_duration_ms)}</div>
                     <div className="text-xs text-muted-foreground">最快</div>
                   </div>
                   <div className="rounded-lg border p-3 text-center">
-                    <div className="text-2xl font-bold text-red-600">{formatDuration((benchmarkDialogData as any).max_duration_ms)}</div>
+                    <div className="text-2xl font-bold text-[hsl(var(--destructive))]">{formatDuration((benchmarkDialogData as any).max_duration_ms)}</div>
                     <div className="text-xs text-muted-foreground">最慢</div>
                   </div>
                   <div className="rounded-lg border p-3 text-center">

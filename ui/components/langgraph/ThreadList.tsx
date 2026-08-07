@@ -34,14 +34,14 @@ const GROUP_LABELS = {
 } as const;
 
 const STATUS_COLORS: Record<ThreadItem["status"], string> = {
-  idle: "bg-green-500",
-  busy: "bg-blue-500",
-  interrupted: "bg-orange-500",
-  error: "bg-red-600",
+  idle: "bg-[hsl(var(--success))]",
+  busy: "bg-[hsl(var(--chart-5))]",
+  interrupted: "bg-[hsl(var(--chart-3))]",
+  error: "bg-[hsl(var(--destructive))]",
 };
 
 function getThreadColor(status: ThreadItem["status"]): string {
-  return STATUS_COLORS[status] ?? "bg-gray-400";
+  return STATUS_COLORS[status] ?? "bg-[hsl(var(--muted-foreground))]";
 }
 // TODO  MS80OmFIVnBZMlhwdTRUbGphRG1zWjg2TkU1clpnPT06ZTI1ODFjZmM=
 
@@ -74,7 +74,7 @@ function StatusFilterItem({
       />
       {label}
       {badge !== undefined && badge > 0 && (
-        <span className="ml-1 inline-flex items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-bold leading-none text-white">
+        <span className="ml-1 inline-flex items-center justify-center rounded-full bg-[hsl(var(--destructive))] px-1.5 py-0.5 text-xs font-bold leading-none text-[hsl(var(--destructive-foreground))]">
           {badge}
         </span>
       )}
@@ -86,7 +86,7 @@ function StatusFilterItem({
 function ErrorState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center p-8 text-center">
-      <p className="text-sm text-red-600">加载对话列表失败</p>
+      <p className="text-sm text-[hsl(var(--destructive))]">加载对话列表失败</p>
       <p className="mt-1 text-xs text-muted-foreground">{message}</p>
     </div>
   );
@@ -108,7 +108,7 @@ function LoadingState() {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center p-8 text-center">
-      <MessageSquare className="mb-2 h-12 w-12 text-gray-300" />
+      <MessageSquare className="mb-2 h-12 w-12 text-[hsl(var(--muted-foreground))]" />
       <p className="text-sm text-muted-foreground">暂无对话</p>
     </div>
   );

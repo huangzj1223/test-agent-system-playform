@@ -18,7 +18,11 @@ from app.middleware.rate_limiter import RateLimiterMiddleware
 from app.middleware.error_handler import setup_exception_handlers
 from app.models.base import Base
 from app.models.user import User
+from app.models.role import Role, UserRole, RoleMenu
+from app.models.menu import Menu
+from app.models.department import Department, Position
 from app.services.scheduler_service import get_scheduler_service
+from app.services.rbac_seed_service import init_rbac
 
 # Import all models DIRECTLY from their modules (not through __init__.py)
 # This ensures correct initialization order for SQLAlchemy foreign key resolution
@@ -116,6 +120,10 @@ async def lifespan(app: FastAPI):
 
     # 确保默认用户存在
     await ensure_default_user()
+
+    # 初始化 RBAC 基础数据（内置菜单、超管角色、默认管理员）
+    async with async_session_factory() as session:
+        await init_rbac(session)
 
     # 启动定时调度器
     scheduler = get_scheduler_service()

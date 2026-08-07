@@ -12,11 +12,10 @@ from langchain_core.tools import tool
 # noqa  MC80OmFIVnBZMlhwdTRUbGphRG1zWjg2VEVZNGJ3PT06ZjUyYTVkYjM=
 
 from app.config.settings import settings
-from app.agents.tools.testcase.pdf_processor import PDFProcessor
+from app.core.llms import get_default_image_model
+from app.processors.pdf import PDFProcessor
 
 logger = logging.getLogger(__name__)
-
-_pdf_processor = PDFProcessor(enable_cache=True)
 
 @tool
 async def parse_document_from_url(
@@ -57,7 +56,11 @@ async def parse_document_from_url(
 # noqa  Mi80OmFIVnBZMlhwdTRUbGphRG1zWjg2VEVZNGJ3PT06ZjUyYTVkYjM=
 
         if detected_type == "application/pdf" or url.lower().endswith(".pdf"):
-            text_content = _pdf_processor.extract_text(content_data, filename="document.pdf")
+            image_model = await get_default_image_model()
+            text_content = PDFProcessor(enable_cache=True, image_model=image_model).extract_text(
+                content_data,
+                filename="document.pdf",
+            )
             return {
                 "success": True,
                 "content": text_content,

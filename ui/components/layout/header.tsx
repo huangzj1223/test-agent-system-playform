@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, CircleHelp, LogOut, Menu, Settings, UserRound } from "lucide-react";
+import { Bell, CircleHelp, LogOut, Menu, UserCog, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StatusIcon } from "@/components/icons";
+import { useAuth } from "@/providers/AuthProvider";
 
 interface HeaderProps {
   title?: string;
@@ -26,6 +28,15 @@ export function Header({
   children,
   onMenuClick,
 }: HeaderProps) {
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const displayName = user?.nick_name || user?.name || user?.username || "当前用户";
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace("/login");
+  };
+
   return (
     <header className="z-20 flex h-16 shrink-0 items-center justify-between border-b bg-white/90 px-4 shadow-[0_8px_28px_rgba(32,36,56,0.04)] backdrop-blur-xl sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
@@ -55,8 +66,8 @@ export function Header({
           <StatusIcon status="running" />
           智能体链路在线
         </div>
-        <IconButton label="通知"><Bell className="h-4 w-4" /></IconButton>
-        <IconButton label="帮助"><CircleHelp className="h-4 w-4" /></IconButton>
+        <IconButton label="通知" onClick={() => router.push("/projects/agent-tasks")}><Bell className="h-4 w-4" /></IconButton>
+        <IconButton label="帮助" onClick={() => router.push("/chat")}><CircleHelp className="h-4 w-4" /></IconButton>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
@@ -68,15 +79,17 @@ export function Header({
           <DropdownMenuContent className="w-56" align="end">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">测试用户</p>
-                <p className="text-xs text-muted-foreground">test@example.com</p>
+                <p className="text-sm font-medium">{displayName}</p>
+                <p className="text-xs text-muted-foreground">{user?.email || user?.username || "已登录"}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem><UserRound className="mr-2 h-4 w-4" />个人资料</DropdownMenuItem>
-            <DropdownMenuItem><Settings className="mr-2 h-4 w-4" />系统设置</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive focus:text-destructive"><LogOut className="mr-2 h-4 w-4" />退出登录</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/settings")}>
+              <UserCog className="mr-2 h-4 w-4" />个人设置
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => void handleLogout()}>
+              <LogOut className="mr-2 h-4 w-4" />退出登录
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -84,9 +97,9 @@ export function Header({
   );
 }
 
-function IconButton({ label, children }: { label: string; children: React.ReactNode }) {
+function IconButton({ label, children, onClick }: { label: string; children: React.ReactNode; onClick: () => void }) {
   return (
-    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" aria-label={label} title={label}>
+    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" aria-label={label} title={label} onClick={onClick}>
       {children}
     </Button>
   );

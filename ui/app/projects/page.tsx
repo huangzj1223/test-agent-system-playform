@@ -40,7 +40,7 @@ export default function ProjectsPage() {
 
   return (
     <MainLayout title="掌握质量全貌，驱动智能闭环。" headerEyebrow={null}>
-      <div className="mx-auto max-w-[1720px] space-y-5 pb-8">
+      <div className="mx-auto max-w-[1720px] space-y-4 pb-2">
         {loading || !overview ? (
           <DashboardSkeleton />
         ) : (

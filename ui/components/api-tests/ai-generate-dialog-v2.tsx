@@ -1,4 +1,4 @@
-﻿
+
 /**
  * API 测试生成对话框（重构版）
  *
@@ -111,7 +111,8 @@ ${schemaSource === "url" ? `Schema URL: ${schemaUrl}` : `已上传文件: ${sche
       let fileContent: any = null;
       if (schemaSource === "file" && schemaFile) {
         const text = await schemaFile.text();
-        fileContent = JSON.parse(text);
+        const fileName = schemaFile.name.toLowerCase();
+        fileContent = fileName.endsWith(".json") ? JSON.parse(text) : text;
       }
 
       // 调用 upload-openapi API
@@ -129,8 +130,9 @@ ${schemaSource === "url" ? `Schema URL: ${schemaUrl}` : `已上传文件: ${sche
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || '解析失败');
+        const error = await response.json().catch(() => ({}));
+        const detail = Array.isArray(error.detail) ? error.detail.map((item: any) => item.msg || JSON.stringify(item)).join('; ') : error.detail;
+        throw new Error(detail || '解析失败');
       }
 
       const result = await response.json();
@@ -164,7 +166,7 @@ ${schemaSource === "url" ? `Schema URL: ${schemaUrl}` : `已上传文件: ${sche
           </DialogDescription>
 
           {/* 安全提示 */}
-          <div className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700 mt-3">
+          <div className="flex items-center gap-2 rounded-lg banner-success mt-3">
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
@@ -194,7 +196,7 @@ ${schemaSource === "url" ? `Schema URL: ${schemaUrl}` : `已上传文件: ${sche
                   className="flex-1"
                 >
                   <Upload className="mr-2 h-4 w-4" />
-                  上传 JSON 文件
+                  上传文档文件
                 </Button>
               </div>
             </div>
@@ -212,7 +214,7 @@ ${schemaSource === "url" ? `Schema URL: ${schemaUrl}` : `已上传文件: ${sche
                   placeholder="https://api.example.com/openapi.json"
                 />
                 <p className="text-xs text-muted-foreground">
-                  支持公开的 OpenAPI/Swagger JSON URL
+                  支持公开的 OpenAPI/Swagger JSON、YAML 或 Markdown URL
                 </p>
               </div>
             )}
@@ -221,17 +223,27 @@ ${schemaSource === "url" ? `Schema URL: ${schemaUrl}` : `已上传文件: ${sche
             {schemaSource === "file" && (
               <div className="space-y-2">
                 <Label>
-                  JSON 文件 <span className="text-destructive">*</span>
+                  API 文档文件 <span className="text-destructive">*</span>
                 </Label>
                 <div className="border-2 border-dashed rounded-lg p-8 text-center">
                   <input
                     type="file"
                     id="schemaFile"
-                    accept=".json"
+                    accept=".json,.yaml,.yml,.md"
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
+                        const fileName = file.name.toLowerCase();
+                        const supported = ['.json', '.yaml', '.yml', '.md'].some((ext) => fileName.endsWith(ext));
+                        if (!supported) {
+                          toast.error("请选择 JSON、YAML 或 Markdown 格式的文件");
+                          return;
+                        }
+                        if (file.size > 10 * 1024 * 1024) {
+                          toast.error("文件大小不能超过 10MB");
+                          return;
+                        }
                         setSchemaFile(file);
                       }
                     }}
@@ -241,10 +253,10 @@ ${schemaSource === "url" ? `Schema URL: ${schemaUrl}` : `已上传文件: ${sche
                       <FileCode className="h-10 w-10 text-muted-foreground" />
                       <div>
                         <p className="text-sm font-medium">
-                          {schemaFile?.name || "点击选择 JSON 文件"}
+                          {schemaFile?.name || "点击选择 API 文档文件"}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          支持 JSON 格式，最大 10MB
+                          支持 JSON、YAML、Markdown 格式，最大 10MB
                         </p>
                       </div>
                     </div>
@@ -254,7 +266,7 @@ ${schemaSource === "url" ? `Schema URL: ${schemaUrl}` : `已上传文件: ${sche
             )}
 
             {/* 说明 */}
-            <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
+            <div className="rounded-lg banner-info">
               <div className="flex items-start gap-2">
                 <FolderOpen className="h-5 w-5 shrink-0 mt-0.5" />
                 <div>
@@ -275,8 +287,8 @@ ${schemaSource === "url" ? `Schema URL: ${schemaUrl}` : `已上传文件: ${sche
           <div className="space-y-6 py-4">
             {/* 成功图标 */}
             <div className="flex justify-center">
-              <div className="rounded-full bg-green-100 p-4">
-                <CheckCircle2 className="h-12 w-12 text-green-600" />
+              <div className="rounded-full bg-[hsl(var(--success)/0.1)] p-4">
+                <CheckCircle2 className="h-12 w-12 text-[hsl(var(--success))]" />
               </div>
             </div>
 
@@ -299,7 +311,7 @@ ${schemaSource === "url" ? `Schema URL: ${schemaUrl}` : `已上传文件: ${sche
                 <div className="text-xs text-muted-foreground mt-1">接口总数</div>
               </div>
               <div className="rounded-lg border p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">{parseResult.tag_folders?.length || 0}</div>
+                <div className="text-2xl font-bold text-[hsl(var(--success))]">{parseResult.tag_folders?.length || 0}</div>
                 <div className="text-xs text-muted-foreground mt-1">已创建文件夹</div>
               </div>
             </div>
@@ -321,7 +333,7 @@ ${schemaSource === "url" ? `Schema URL: ${schemaUrl}` : `已上传文件: ${sche
             )}
 
             {/* 下一步提示 */}
-            <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
+            <div className="rounded-lg banner-info">
               <div className="flex items-start gap-2">
                 <Sparkles className="h-5 w-5 shrink-0 mt-0.5" />
                 <div>

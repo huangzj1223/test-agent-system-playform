@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="draw.io">
+  <diagram name="智能体调用链路" id="agent-chain-1">
+    <mxGraphModel dx="1100" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="智能体调用链路 — 分层架构图" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;fontColor=#1a237e;" vertex="1" parent="1">
+          <mxGeometry x="20" y="15" width="1000" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="L1_label" value="前端·浏览器" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1565c0;strokeColor=none;fontSize=11;fontStyle=1;fontColor=#ffffff;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="20" y="83" width="80" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="L1_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#90caf9;arcSize=3;" vertex="1" parent="1">
+          <mxGeometry x="115" y="64" width="900" height="66" as="geometry"/>
+        </mxCell>
+        <mxCell id="N_chat" value="&lt;b&gt;AG-UI 聊天面板&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666&quot;&gt;(art-agent-chat)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64b5f6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="140" y="76" width="240" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="N_registry" value="&lt;b&gt;操作注册中心&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666&quot;&gt;(frontend-action-registry)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64b5f6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="405" y="76" width="280" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="N_executor" value="&lt;b&gt;通用执行器&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666&quot;&gt;(skill-tools)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64b5f6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="76" width="195" height="42" as="geometry"/>
+        </mxCell>
+        <mxCell id="L2_label" value="前端编排" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4527a0;strokeColor=none;fontSize=11;fontStyle=1;fontColor=#ffffff;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="20" y="236" width="80" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="L2_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede7f6;strokeColor=#b39ddb;arcSize=3;" vertex="1" parent="1">
+          <mxGeometry x="115" y="205" width="900" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="N_pagectx" value="&lt;b&gt;页面上下文快照&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666&quot;&gt;(page-context)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9575cd;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="140" y="217" width="200" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="N_orch" value="&lt;b&gt;编排循环 useAgUiAgent&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666&quot;&gt;工具执行循环，最多5轮&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9575cd;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="217" width="390" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="L3_label" value="后端·NestJS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e65100;strokeColor=none;fontSize=11;fontStyle=1;fontColor=#ffffff;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="20" y="385" width="80" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="L3_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#ffe082;arcSize=3;" vertex="1" parent="1">
+          <mxGeometry x="115" y="367" width="900" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="N_controller" value="&lt;b&gt;AG-UI 控制器&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666&quot;&gt;POST /api/ag-ui (SSE)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffb300;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="350" y="379" width="260" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="N_agservice" value="&lt;b&gt;AgUiService&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666&quot;&gt;透传 tools，转 AG-UI 事件&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffb300;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="625" y="379" width="170" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="N_bizapi" value="&lt;b&gt;业务接口&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666&quot;&gt;/admin/* (带 @Perms 鉴权)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffb300;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="810" y="379" width="200" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="L4_label" value="外部" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e7d32;strokeColor=none;fontSize=11;fontStyle=1;fontColor=#ffffff;arcSize=50;" vertex="1" parent="1">
+          <mxGeometry x="20" y="503" width="80" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="L4_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#a5d6a7;arcSize=3;" vertex="1" parent="1">
+          <mxGeometry x="115" y="485" width="900" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="N_llm" value="&lt;b&gt;LLM&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#666&quot;&gt;OpenAI 兼容，function calling&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#66bb6a;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="497" width="220" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="发送消息" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#333333;strokeColor=#555555;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.05;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_chat" target="N_orch">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="提供已授权工具定义" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#333333;strokeColor=#555555;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_registry" target="N_orch">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="RunAgentInput (messages+tools+pageContext)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#333333;strokeColor=#555555;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_orch" target="N_controller">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="当前页面数据" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#333333;strokeColor=#555555;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_pagectx" target="N_orch">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="处理" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#333333;strokeColor=#555555;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_controller" target="N_agservice">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="chat/completions (stream, tools)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#333333;strokeColor=#555555;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.4;exitY=1;exitDx=0;exitDy=0;entryX=0.4;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_agservice" target="N_llm">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" value="执行工具调用" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#333333;strokeColor=#555555;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.95;exitY=0;exitDx=0;exitDy=0;entryX=0.3;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_orch" target="N_executor">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e11" value="request 调用 (带 Bearer)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#333333;strokeColor=#555555;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_executor" target="N_bizapi">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e13" value="结果回传模型续跑" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#333333;strokeColor=#555555;strokeWidth=1.5;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.1;exitY=1;exitDx=0;exitDy=0;entryX=0.85;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_executor" target="N_orch">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="tool_calls 事件" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#777777;strokeColor=#9e9e9e;strokeWidth=1.5;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.6;exitY=0;exitDx=0;exitDy=0;entryX=0.6;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_llm" target="N_agservice">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="SSE: TOOL_CALL 事件" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#777777;strokeColor=#9e9e9e;strokeWidth=1.5;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_agservice" target="N_controller">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" value="SSE: TOOL_CALL 事件" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#777777;strokeColor=#9e9e9e;strokeWidth=1.5;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.7;exitY=0;exitDx=0;exitDy=0;entryX=0.7;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_controller" target="N_orch">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e12" value="返回数据" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;fontColor=#777777;strokeColor=#9e9e9e;strokeWidth=1.5;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.3;exitY=0;exitDx=0;exitDy=0;entryX=0.7;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="N_bizapi" target="N_executor">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg5_txt" value="—— 正向调用（实线）    ~~~ 结果回传（虚线）" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#555555;" vertex="1" parent="1">
+          <mxGeometry x="140" y="565" width="400" height="22" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

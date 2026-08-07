@@ -237,14 +237,14 @@ export const translations = {
     priorityLow: "低",
 
     // 状态标签
-    statusNew: "🆕 新建",
-    statusReviewPending: "⏳ 待评审",
-    statusReviewed: "✅ 已评审",
-    statusNotRun: "⚪ 未执行",
-    statusPassed: "✅ 通过",
-    statusFailed: "❌ 失败",
-    statusBlocked: "🚫 阻塞",
-    statusSkipped: "⏭️ 跳过",
+    statusNew: "新建",
+    statusReviewPending: "待评审",
+    statusReviewed: "已评审",
+    statusNotRun: "未执行",
+    statusPassed: "通过",
+    statusFailed: "失败",
+    statusBlocked: "阻塞",
+    statusSkipped: "跳过",
 
     // 其他 UI 文本
     searchPlaceholder: "搜索测试用例...",
@@ -265,6 +265,14 @@ export const translations = {
     recentTestCases: "最近测试用例",
     orderUpdated: "测试用例顺序已更新",
     pleaseEnterTitle: "请输入测试用例标题",
+
+    // 表格列标题
+    colId: "ID",
+    colTitle: "标题",
+    colPriority: "优先级",
+    colStatus: "状态",
+    colOwner: "负责人",
+    colTags: "标签",
   },
 
   // API 测试
@@ -413,10 +421,10 @@ export const translations = {
     loadEndpointDetailsFailed: "加载接口详情失败",
     // 工具职责说明
     toolResponsibilities: {
-      planner: "📋 api_planner - 生成测试计划",
-      generator: "💻 api_generator - 生成测试代码",
-      healer: "🔧 api_healer - 修复测试",
-      executor: "🏃 run_tests - 执行测试"
+      planner: "api_planner - 生成测试计划",
+      generator: "api_generator - 生成测试代码",
+      healer: "api_healer - 修复测试",
+      executor: "run_tests - 执行测试"
     },
 
     // AI 生成提示词
@@ -448,42 +456,42 @@ export const translations = {
       tools: [
         {
           tool: "api_planner",
-          purpose: "📋 生成测试计划",
+          purpose: "生成测试计划",
           input: "API 文档路径",
           output: "测试计划文档（Markdown/JSON）",
           scenario: "上传 API 文档后制定测试策略"
         },
         {
           tool: "api_generator",
-          purpose: "💻 生成测试代码",
+          purpose: "生成测试代码",
           input: "API 文档路径",
           output: "测试脚本（TypeScript/JavaScript）",
           scenario: "需要可执行的测试代码"
         },
         {
           tool: "save_test_plan",
-          purpose: "💾 保存测试计划",
+          purpose: "保存测试计划",
           input: "测试计划文件路径",
           output: "MinIO 存储",
           scenario: "生成测试计划后必须保存"
         },
         {
           tool: "save_test_script",
-          purpose: "💾 保存测试脚本",
+          purpose: "保存测试脚本",
           input: "测试脚本文件路径",
           output: "MinIO 存储",
           scenario: "生成测试脚本后必须保存"
         },
         {
           tool: "api_healer",
-          purpose: "🔧 修复测试",
+          purpose: "修复测试",
           input: "失败的脚本和错误日志",
           output: "修复后的脚本",
           scenario: "测试失败时诊断和修复"
         },
         {
           tool: "run_tests",
-          purpose: "🏃 执行测试",
+          purpose: "执行测试",
           input: "测试脚本",
           output: "测试结果",
           scenario: "验证测试脚本是否正常工作"
@@ -644,10 +652,10 @@ export const translations = {
     loadFunctionDetailsFailed: "加载功能详情失败",
     // 工具职责说明
     toolResponsibilities: {
-      planner: "📋 web_planner - 生成测试计划",
-      generator: "💻 web_generator - 生成测试代码",
-      healer: "🔧 web_healer - 修复测试",
-      executor: "🏃 run_tests - 执行测试"
+      planner: "web_planner - 生成测试计划",
+      generator: "web_generator - 生成测试代码",
+      healer: "web_healer - 修复测试",
+      executor: "run_tests - 执行测试"
     },
 
     // AI 生成提示词
@@ -679,42 +687,42 @@ export const translations = {
       tools: [
         {
           tool: "web_planner",
-          purpose: "📋 生成测试计划",
+          purpose: "生成测试计划",
           input: "页面信息路径",
           output: "测试计划文档（Markdown/JSON）",
           scenario: "上传页面信息后制定测试策略"
         },
         {
           tool: "web_generator",
-          purpose: "💻 生成测试代码",
+          purpose: "生成测试代码",
           input: "页面信息路径",
           output: "测试脚本（TypeScript/JavaScript）",
           scenario: "需要可执行的测试代码"
         },
         {
           tool: "save_test_plan",
-          purpose: "💾 保存测试计划",
+          purpose: "保存测试计划",
           input: "测试计划文件路径",
           output: "MinIO 存储",
           scenario: "生成测试计划后必须保存"
         },
         {
           tool: "save_test_script",
-          purpose: "💾 保存测试脚本",
+          purpose: "保存测试脚本",
           input: "测试脚本文件路径",
           output: "MinIO 存储",
           scenario: "生成测试脚本后必须保存"
         },
         {
           tool: "web_healer",
-          purpose: "🔧 修复测试",
+          purpose: "修复测试",
           input: "失败的脚本和错误日志",
           output: "修复后的脚本",
           scenario: "测试失败时诊断和修复"
         },
         {
           tool: "run_tests",
-          purpose: "🏃 执行测试",
+          purpose: "执行测试",
           input: "测试脚本",
           output: "测试结果",
           scenario: "验证测试脚本是否正常工作"
@@ -763,7 +771,7 @@ export const translations = {
     scenarioDescriptionLabel: "场景描述",
     scenarioNamePlaceholder: "例如：用户下单完整流程",
     scenarioDescriptionPlaceholder: "描述场景的目的和测试的业务流程...",
-    scenarioCreateHint: "💡 提示：创建场景后，可以在「场景编排」视图中添加步骤、配置数据依赖和断言。",
+    scenarioCreateHint: "创建场景后，可以在「场景编排」视图中添加步骤、配置数据依赖和断言。",
     scenarioCreating: "创建中...",
   },
 

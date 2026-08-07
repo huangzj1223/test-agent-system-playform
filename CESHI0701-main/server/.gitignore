@@ -1,0 +1,13 @@
+node_modules
+dist
+uploads
+data
+.env
+.env.development
+.env.production
+docker/.env
+docker/data
+docker/nginx/ssl/*.pem
+docker/nginx/ssl/*.key
+*.log
+.DS_Store

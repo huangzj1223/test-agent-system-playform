@@ -1043,7 +1043,7 @@ export const FolderTree = React.forwardRef<FolderTreeRef, FolderTreeProps>(funct
 
                 {/* 4. 端点图标 + 名称 */}
                 <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
-                  <FileCode className="h-4 w-4 shrink-0 text-blue-500" />
+                  <FileCode className="h-4 w-4 shrink-0 text-[hsl(var(--chart-1))]" />
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="truncate text-xs">{endpoint.display_name}</span>

@@ -34,6 +34,7 @@ from app.agents.tools.web.execution_tools import (
     execute_web_script,
     get_test_execution_status,
 )
+from app.agents.tools.web.browser_tools import inspect_web_page
 
 # 按业务域分类的工具列表，供注册表使用
 FUNCTION_TOOLS = [
@@ -63,6 +64,7 @@ SCRIPT_TOOLS = [
 ]
 
 EXECUTION_TOOLS = [
+    inspect_web_page,
     execute_web_script,
     get_test_execution_status,
 ]
@@ -102,6 +104,7 @@ __all__ = [
     # 执行
     "execute_web_script",
     "get_test_execution_status",
+    "inspect_web_page",
     # 分类列表
     "FUNCTION_TOOLS",
     "ARTIFACT_TOOLS",

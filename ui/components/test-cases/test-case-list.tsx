@@ -68,6 +68,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { PriorityIndicator, TestCaseStateIndicator } from "@/components/icons";
 
 interface TestCaseListProps {
   testCases: TestCaseInfo[];
@@ -104,14 +105,6 @@ interface TestCaseListProps {
 }
 // TODO  Mi80OmFIVnBZMlhwdTRUbGphRG1zWjg2YjA5RmVRPT06MTNmZWNjYTM=
 
-const priorityColors: Record<Priority, string> = {
-  critical: "bg-red-500",
-  high: "bg-orange-500",
-  medium: "bg-yellow-500",
-  low: "bg-green-500",
-};
-// FIXME  My80OmFIVnBZMlhwdTRUbGphRG1zWjg2YjA5RmVRPT06MTNmZWNjYTM=
-
 export function TestCaseList({
   testCases,
   loading,
@@ -146,26 +139,6 @@ export function TestCaseList({
   const [filters, setFilters] = React.useState<TestCaseFilters>({ search: "" });
   const [showQuickCreate, setShowQuickCreate] = React.useState(false);
   const [showFilterBar, setShowFilterBar] = React.useState(false);
-
-  // 优先级标签
-  const priorityLabels: Record<Priority, string> = {
-    critical: t("testCases.priorityCritical"),
-    high: t("testCases.priorityHigh"),
-    medium: t("testCases.priorityMedium"),
-    low: t("testCases.priorityLow"),
-  };
-
-  // 状态标签
-  const statusLabels: Record<TestCaseState, string> = {
-    new: t("testCases.statusNew"),
-    review_pending: t("testCases.statusReviewPending"),
-    reviewed: t("testCases.statusReviewed"),
-    not_run: t("testCases.statusNotRun"),
-    passed: t("testCases.statusPassed"),
-    failed: t("testCases.statusFailed"),
-    blocked: t("testCases.statusBlocked"),
-    skipped: t("testCases.statusSkipped"),
-  };
 
   // 初始化：将搜索值同步到筛选状态
   React.useEffect(() => {
@@ -353,13 +326,8 @@ export function TestCaseList({
           </button>
         </td>
         <td className="p-3 overflow-hidden">
-          <Badge
-            className={cn(
-              "truncate text-white border-0",
-              priorityColors[testCase.priority]
-            )}
-          >
-            {priorityLabels[testCase.priority]}
+          <Badge variant="outline" className="truncate bg-background">
+            <PriorityIndicator priority={testCase.priority} />
           </Badge>
         </td>
         <td className="p-3 overflow-hidden">
@@ -367,7 +335,7 @@ export function TestCaseList({
             variant="outline"
             className="truncate"
           >
-            {statusLabels[testCase.status]}
+            <TestCaseStateIndicator state={testCase.status} />
           </Badge>
         </td>
         <td className="p-3 overflow-hidden">
@@ -483,7 +451,7 @@ export function TestCaseList({
             <Button
               size="sm"
               onClick={onAIGenerate}
-              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-md hover:shadow-lg transition-all"
+              className="bg-gradient-to-r text-white border-0 shadow-md hover:shadow-lg transition-all btn-ai"
             >
               <Sparkles className="mr-2 h-4 w-4" />
               AI 生成
@@ -509,7 +477,7 @@ export function TestCaseList({
             <Button
               size="sm"
               onClick={onOpenAIChat}
-              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-md hover:shadow-lg transition-all"
+              className="bg-gradient-to-r text-white border-0 shadow-md hover:shadow-lg transition-all btn-ai"
             >
               <MessageSquare className="mr-2 h-4 w-4" />
               AI 助手
@@ -548,15 +516,15 @@ export function TestCaseList({
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
                 {/* 设计阶段 */}
-                <SelectItem value="new">🆕 新建</SelectItem>
-                <SelectItem value="review_pending">⏳ 待评审</SelectItem>
-                <SelectItem value="reviewed">✅ 已评审</SelectItem>
+                <SelectItem value="new"><TestCaseStateIndicator state="new" /></SelectItem>
+                <SelectItem value="review_pending"><TestCaseStateIndicator state="review_pending" /></SelectItem>
+                <SelectItem value="reviewed"><TestCaseStateIndicator state="reviewed" /></SelectItem>
                 {/* 执行阶段 */}
-                <SelectItem value="not_run">⚪ 未执行</SelectItem>
-                <SelectItem value="passed">✅ 通过</SelectItem>
-                <SelectItem value="failed">❌ 失败</SelectItem>
-                <SelectItem value="blocked">🚫 阻塞</SelectItem>
-                <SelectItem value="skipped">⏭️ 跳过</SelectItem>
+                <SelectItem value="not_run"><TestCaseStateIndicator state="not_run" /></SelectItem>
+                <SelectItem value="passed"><TestCaseStateIndicator state="passed" /></SelectItem>
+                <SelectItem value="failed"><TestCaseStateIndicator state="failed" /></SelectItem>
+                <SelectItem value="blocked"><TestCaseStateIndicator state="blocked" /></SelectItem>
+                <SelectItem value="skipped"><TestCaseStateIndicator state="skipped" /></SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -581,26 +549,22 @@ export function TestCaseList({
                 <SelectItem value="all">全部优先级</SelectItem>
                 <SelectItem value="critical">
                   <div className="flex items-center gap-2">
-                    <span>🔴</span>
-                    <span>紧急</span>
+                    <PriorityIndicator priority="critical" />
                   </div>
                 </SelectItem>
                 <SelectItem value="high">
                   <div className="flex items-center gap-2">
-                    <span>🟠</span>
-                    <span>高</span>
+                    <PriorityIndicator priority="high" />
                   </div>
                 </SelectItem>
                 <SelectItem value="medium">
                   <div className="flex items-center gap-2">
-                    <span>🟡</span>
-                    <span>中</span>
+                    <PriorityIndicator priority="medium" />
                   </div>
                 </SelectItem>
                 <SelectItem value="low">
                   <div className="flex items-center gap-2">
-                    <span>🟢</span>
-                    <span>低</span>
+                    <PriorityIndicator priority="low" />
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -668,11 +632,12 @@ export function TestCaseList({
               <thead className="sticky top-0 bg-card">
                 <tr className="border-b text-left text-xs font-medium uppercase text-muted-foreground">
                   <th className="w-16 p-3"></th>
-                  <th className="w-28 p-3">ID</th>
-                  <th className="p-3">TITLE</th>
-                  <th className="w-28 p-3">PRIORITY</th>
-                  <th className="w-36 p-3">OWNER</th>
-                  <th className="w-44 p-3">TAGS</th>
+                  <th className="w-28 p-3">{t("testCases.colId")}</th>
+                  <th className="p-3">{t("testCases.colTitle")}</th>
+                  <th className="w-28 p-3">{t("testCases.colPriority")}</th>
+                  <th className="w-36 p-3">{t("testCases.colStatus")}</th>
+                  <th className="w-36 p-3">{t("testCases.colOwner")}</th>
+                  <th className="w-44 p-3">{t("testCases.colTags")}</th>
                   <th className="w-16 p-3"></th>
                 </tr>
               </thead>
@@ -769,12 +734,12 @@ export function TestCaseList({
                       aria-label="全选"
                     />
                   </th>
-                  <th className="w-28 p-3">ID</th>
-                  <th className="p-3">TITLE</th>
-                  <th className="w-28 p-3">PRIORITY</th>
-                  <th className="w-28 p-3">STATUS</th>
-                  <th className="w-36 p-3">OWNER</th>
-                  <th className="w-44 p-3">TAGS</th>
+                  <th className="w-28 p-3">{t("testCases.colId")}</th>
+                  <th className="p-3">{t("testCases.colTitle")}</th>
+                  <th className="w-28 p-3">{t("testCases.colPriority")}</th>
+                  <th className="w-28 p-3">{t("testCases.colStatus")}</th>
+                  <th className="w-36 p-3">{t("testCases.colOwner")}</th>
+                  <th className="w-44 p-3">{t("testCases.colTags")}</th>
                   <th className="w-16 p-3"></th>
                 </tr>
               </thead>

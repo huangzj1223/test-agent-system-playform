@@ -938,7 +938,7 @@ export const WebFunctionFolderTree = React.forwardRef<WebFunctionFolderTreeRef, 
 
                 {/* 4. 功能图标 + 名称 */}
                 <div className="flex items-center gap-1.5 min-w-0 overflow-hidden">
-                  <FileCode className="h-4 w-4 shrink-0 text-blue-500" />
+                  <FileCode className="h-4 w-4 shrink-0 text-[hsl(var(--chart-5))]" />
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="truncate text-xs">{func.display_name}</span>

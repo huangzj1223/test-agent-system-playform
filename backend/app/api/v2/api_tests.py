@@ -99,6 +99,48 @@ async def list_api_tests(
 
     return SuccessResponse(data=result)
 
+
+@router.get(
+    "/exports/test-cases",
+    response_class=Response,
+    summary="Export API test cases to Excel",
+    description="Export all API test case artifacts in the project as an Excel file",
+)
+async def export_api_test_cases(
+    project_identifier: str,
+    db: DbSessionDep,
+):
+    """Export test cases to Excel."""
+    from app.services.test_artifact_export_service import TestArtifactExportService
+
+    content, filename, content_type = await TestArtifactExportService(db).export_api_test_cases_excel(project_identifier)
+    return Response(
+        content=content,
+        media_type=content_type,
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get(
+    "/exports/scripts",
+    response_class=Response,
+    summary="Export API test scripts as ZIP",
+    description="Package all API test scripts in the project as a ZIP file",
+)
+async def export_api_test_scripts(
+    project_identifier: str,
+    db: DbSessionDep,
+):
+    """Export test scripts to zip."""
+    from app.services.test_artifact_export_service import TestArtifactExportService
+
+    content, filename, content_type = await TestArtifactExportService(db).export_api_test_scripts_zip(project_identifier)
+    return Response(
+        content=content,
+        media_type=content_type,
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
 @router.get(
     "/{api_test_id}",
     response_model=SuccessResponse,
@@ -217,7 +259,7 @@ async def generate_from_schema(
     3. 返回生成的计划和脚本
     """
     import asyncio
-    from app.agents.api.agent import agent
+    from app.agents.api.agent import make_agent
 
     # 准备参数
     params = {
@@ -244,9 +286,10 @@ async def generate_from_schema(
 
     try:
         # 调用 agent 生成测试计划
-        planner_result = await agent.ainvoke({
-            "messages": [user_message]
-        })
+        async with make_agent() as agent:
+            planner_result = await agent.ainvoke({
+                "messages": [user_message]
+            })
 
         # 提取生成的测试计划内容
         # 注意: 实际实现需要解析 agent 的返回结果

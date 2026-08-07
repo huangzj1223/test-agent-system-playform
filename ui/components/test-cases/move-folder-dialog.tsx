@@ -334,7 +334,7 @@ export function MoveFolderDialog({
           )}
 
           {/* 提示信息 */}
-          <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-md text-sm text-blue-700 dark:text-blue-300">
+          <div className="flex items-start gap-2 p-3 banner-info rounded-md text-sm">
             <Info className="h-4 w-4 shrink-0 mt-0.5" />
             <span>
               选中的文件夹将从当前位置移动到{moveType === "root" ? "根目录" : "上方选中的文件夹"}下。

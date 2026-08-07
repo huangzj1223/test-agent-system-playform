@@ -86,5 +86,5 @@ class OpenAPIUploadRequest(BaseModel):
     """上传 OpenAPI 文件请求 Schema"""
     project_identifier: str = Field(..., description="项目标识符")
     parent_folder_id: UUID | None = Field(None, description="父文件夹 ID（可选）")
-    file_content: dict = Field(..., description="OpenAPI JSON 内容")
+    file_content: Any = Field(..., description="OpenAPI JSON/YAML/Markdown 内容")
     create_structure: bool = Field(True, description="是否自动创建文件夹结构")

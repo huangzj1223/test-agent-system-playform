@@ -1,0 +1,155 @@
+- generic [active] [ref=f1e1]:
+  - alert [ref=f1e2]
+  - generic [ref=f1e3]:
+    - complementary [ref=f1e4]:
+      - generic [ref=f1e5]:
+        - link "智能体测试系统 智能体测试系统 质量智能网络" [ref=f1e7] [cursor=pointer]:
+          - /url: /projects
+          - img "智能体测试系统" [ref=f1e9]
+          - generic [ref=f1e17]:
+            - generic [ref=f1e18]: 智能体测试系统
+            - generic [ref=f1e19]: 质量智能网络
+        - navigation [ref=f1e23]:
+          - generic [ref=f1e24]:
+            - generic [ref=f1e25]: 工作台
+            - link "系统总览" [ref=f1e26] [cursor=pointer]:
+              - /url: /projects
+            - link "项目空间" [ref=f1e35] [cursor=pointer]:
+              - /url: /projects/spaces
+            - link "全局任务" [ref=f1e48] [cursor=pointer]:
+              - /url: /projects/agent-tasks
+            - link "智能测试" [ref=f1e54] [cursor=pointer]:
+              - /url: /chat
+          - generic [ref=f1e69]:
+            - generic [ref=f1e70]:
+              - generic [ref=f1e71]: 项目入口
+              - generic [ref=f1e72]: "0"
+            - generic [ref=f1e73]: 暂无项目
+    - generic [ref=f1e74]:
+      - banner [ref=f1e75]:
+        - generic [ref=f1e77]:
+          - generic [ref=f1e78]: 智能质量控制中心
+          - heading "系统总览" [level=1] [ref=f1e79]
+        - generic [ref=f1e80]:
+          - generic [ref=f1e81]:
+            - generic "运行中" [ref=f1e82]
+            - text: 智能体链路在线
+          - button "通知" [ref=f1e85] [cursor=pointer]
+          - button "帮助" [ref=f1e86] [cursor=pointer]
+          - button [ref=f1e87] [cursor=pointer]
+      - main [ref=f1e90]:
+        - generic [ref=f1e91]:
+          - generic [ref=f1e92]:
+            - generic [ref=f1e93]:
+              - generic [ref=f1e94]: 智能质量网络
+              - heading "掌握质量全貌，驱动智能闭环" [level=1] [ref=f1e107]
+              - paragraph [ref=f1e108]: 预览跨项目质量态势、智能体运行和风险分布 · 最后更新 刚刚
+            - button "刷新数据" [ref=f1e109] [cursor=pointer]
+          - generic [ref=f1e110]:
+            - generic [ref=f1e111]: 系统总览接口暂时不可用，当前展示项目接口中的真实资产数据，运行与闭环指标标记为待接入。
+            - button "重新加载" [ref=f1e112] [cursor=pointer]
+          - generic [ref=f1e113]:
+            - generic [ref=f1e114]:
+              - generic [ref=f1e115]: 活跃项目
+              - generic [ref=f1e128]:
+                - generic [ref=f1e129]: "0"
+                - generic [ref=f1e130]: / 0
+            - generic [ref=f1e131]:
+              - generic [ref=f1e132]: 测试资产
+              - generic [ref=f1e138]: "0"
+            - generic [ref=f1e140]:
+              - generic [ref=f1e141]: 运行任务
+              - generic [ref=f1e147]: "0"
+            - generic [ref=f1e149]:
+              - generic [ref=f1e150]: 待人工处置
+              - generic [ref=f1e165]: "0"
+            - generic [ref=f1e167]:
+              - generic [ref=f1e168]: 执行通过率
+              - generic [ref=f1e173]: 待接入
+          - generic [ref=f1e176]:
+            - generic [ref=f1e177]:
+              - generic [ref=f1e178]:
+                - generic [ref=f1e179]: 智能体协作星图
+                - paragraph [ref=f1e193]: 全部项目 · 7 阶段自动流转 · 1/1
+              - generic [ref=f1e195]:
+                - button "暂停星图动画" [ref=f1e196] [cursor=pointer]
+                - button "切换为 2D 视图" [ref=f1e200] [cursor=pointer]:
+                  - generic [ref=f1e204]: 3D
+            - generic [ref=f1e205]:
+              - img "全部项目 银河质量闭环"
+              - link "进入全部项目" [ref=f1e206] [cursor=pointer]:
+                - /url: /projects/spaces
+                - generic [ref=f1e207]:
+                  - generic [ref=f1e208]: 协作核心
+                  - strong [ref=f1e209]: 全部项目
+                  - generic [ref=f1e210]: 7 个阶段流转中
+              - button "01 需求分析，待接入，待接入" [ref=f1e211] [cursor=pointer]:
+                - generic [ref=f1e221]:
+                  - generic [ref=f1e222]:
+                    - generic [ref=f1e223]: "01"
+                    - strong [ref=f1e224]: 需求分析
+                  - generic [ref=f1e225]:
+                    - generic [ref=f1e227]: 待接入
+                    - generic [ref=f1e228]: 待接入
+              - button "02 测试设计，空闲，0" [ref=f1e229] [cursor=pointer]:
+                - generic [ref=f1e243]:
+                  - generic [ref=f1e244]:
+                    - generic [ref=f1e245]: "02"
+                    - strong [ref=f1e246]: 测试设计
+                  - generic [ref=f1e247]:
+                    - generic [ref=f1e249]: 空闲
+                    - generic [ref=f1e250]: "0"
+              - button "03 脚本生成，待接入，待接入" [ref=f1e251] [cursor=pointer]:
+                - generic [ref=f1e261]:
+                  - generic [ref=f1e262]:
+                    - generic [ref=f1e263]: "03"
+                    - strong [ref=f1e264]: 脚本生成
+                  - generic [ref=f1e265]:
+                    - generic [ref=f1e267]: 待接入
+                    - generic [ref=f1e268]: 待接入
+              - button "04 自动执行，待接入，待接入" [ref=f1e269] [cursor=pointer]:
+                - generic [ref=f1e279]:
+                  - generic [ref=f1e280]:
+                    - generic [ref=f1e281]: "04"
+                    - strong [ref=f1e282]: 自动执行
+                  - generic [ref=f1e283]:
+                    - generic [ref=f1e285]: 待接入
+                    - generic [ref=f1e286]: 待接入
+              - button "05 结果分析，待接入，待接入" [ref=f1e287] [cursor=pointer]:
+                - generic [ref=f1e301]:
+                  - generic [ref=f1e302]:
+                    - generic [ref=f1e303]: "05"
+                    - strong [ref=f1e304]: 结果分析
+                  - generic [ref=f1e305]:
+                    - generic [ref=f1e307]: 待接入
+                    - generic [ref=f1e308]: 待接入
+              - button "06 失败修复，待接入，待接入" [ref=f1e309] [cursor=pointer]:
+                - generic [ref=f1e328]:
+                  - generic [ref=f1e329]:
+                    - generic [ref=f1e330]: "06"
+                    - strong [ref=f1e331]: 失败修复
+                  - generic [ref=f1e332]:
+                    - generic [ref=f1e334]: 待接入
+                    - generic [ref=f1e335]: 待接入
+              - button "07 回归验证，待接入，待接入" [ref=f1e336] [cursor=pointer]:
+                - generic [ref=f1e345]:
+                  - generic [ref=f1e346]:
+                    - generic [ref=f1e347]: "07"
+                    - strong [ref=f1e348]: 回归验证
+                  - generic [ref=f1e349]:
+                    - generic [ref=f1e351]: 待接入
+                    - generic [ref=f1e352]: 待接入
+            - generic [ref=f1e353]:
+              - generic [ref=f1e359]:
+                - text: 当前阶段
+                - generic [ref=f1e360]:
+                  - strong [ref=f1e361]: 01 需求分析
+                  - generic "待接入" [ref=f1e362]
+                - paragraph [ref=f1e371]: 阶段 1 / 7 · 负责人：待数据接入
+              - generic [ref=f1e373]:
+                - paragraph [ref=f1e374]: 统一任务数据待接入
+                - generic [ref=f1e375]:
+                  - generic [ref=f1e376]: 0关联任务
+                  - generic [ref=f1e377]: 0风险异常
+                  - generic [ref=f1e378]: 待接入预计完成
+  - region "Notifications alt+T"

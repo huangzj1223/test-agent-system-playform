@@ -1,0 +1,171 @@
+- generic [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link "智能体测试系统 智能体测试系统 质量智能网络" [ref=e7] [cursor=pointer]:
+          - /url: /projects
+          - img "智能体测试系统" [ref=e9]
+          - generic [ref=e17]:
+            - generic [ref=e18]: 智能体测试系统
+            - generic [ref=e19]: 质量智能网络
+        - navigation [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]: 工作台
+            - link "系统总览" [ref=e26] [cursor=pointer]:
+              - /url: /projects
+            - link "项目空间" [ref=e35] [cursor=pointer]:
+              - /url: /projects/spaces
+            - link "全局任务" [ref=e48] [cursor=pointer]:
+              - /url: /projects/agent-tasks
+            - link "智能测试" [ref=e54] [cursor=pointer]:
+              - /url: /chat
+          - generic [ref=e69]:
+            - generic [ref=e70]:
+              - generic [ref=e71]: 项目入口
+              - generic [ref=e72]: "3"
+            - link "模型工厂 PR-3" [ref=e73] [cursor=pointer]:
+              - /url: /projects/PR-3
+              - generic [ref=e85]:
+                - generic [ref=e86]: 模型工厂
+                - generic [ref=e87]: PR-3
+            - link "企业知识助手 PR-2" [ref=e88] [cursor=pointer]:
+              - /url: /projects/PR-2
+              - generic [ref=e100]:
+                - generic [ref=e101]: 企业知识助手
+                - generic [ref=e102]: PR-2
+            - link "数据工厂 PR-1" [ref=e103] [cursor=pointer]:
+              - /url: /projects/PR-1
+              - generic [ref=e115]:
+                - generic [ref=e116]: 数据工厂
+                - generic [ref=e117]: PR-1
+    - generic [ref=e118]:
+      - banner [ref=e119]:
+        - generic [ref=e121]:
+          - generic [ref=e122]: 智能质量控制中心
+          - heading "系统总览" [level=1] [ref=e123]
+        - generic [ref=e124]:
+          - generic [ref=e125]:
+            - generic "运行中" [ref=e126]
+            - text: 智能体链路在线
+          - button "通知" [ref=e129] [cursor=pointer]
+          - button "帮助" [ref=e130] [cursor=pointer]
+          - button [ref=e131] [cursor=pointer]
+      - main [ref=e134]:
+        - generic [ref=e135]:
+          - generic [ref=e136]:
+            - generic [ref=e137]:
+              - generic [ref=e138]: 智能质量网络
+              - heading "掌握质量全貌，驱动智能闭环" [level=1] [ref=e151]
+              - paragraph [ref=e152]: 预览跨项目质量态势、智能体运行和风险分布 · 最后更新 刚刚
+            - button "刷新数据" [ref=e153] [cursor=pointer]
+          - generic [ref=e154]:
+            - generic [ref=e155]:
+              - generic [ref=e156]: 活跃项目
+              - generic [ref=e169]:
+                - generic [ref=e170]: "1"
+                - generic [ref=e171]: / 3
+            - generic [ref=e172]:
+              - generic [ref=e173]: 测试资产
+              - generic [ref=e179]: "23"
+            - generic [ref=e181]:
+              - generic [ref=e182]: 运行任务
+              - generic [ref=e188]: "0"
+            - generic [ref=e190]:
+              - generic [ref=e191]: 待人工处置
+              - generic [ref=e206]: "10"
+            - generic [ref=e209]:
+              - generic [ref=e210]: 执行通过率
+              - generic [ref=e215]: 38%
+          - generic [ref=e218]:
+            - generic [ref=e219]:
+              - generic [ref=e220]:
+                - generic [ref=e221]: 智能体协作星图
+                - paragraph [ref=e235]: 数据工厂 · 7 阶段自动流转 · 2/4
+              - generic [ref=e236]:
+                - generic [ref=e407]: 2 关注
+                - generic [ref=e237]:
+                  - button "上一个星图" [ref=e238] [cursor=pointer]
+                  - button "暂停星图动画" [ref=e241] [cursor=pointer]
+                  - button "切换为 2D 视图" [ref=e245] [cursor=pointer]:
+                    - generic [ref=e249]: 3D
+                  - button "下一个星图" [ref=e250] [cursor=pointer]
+            - generic [ref=e253]:
+              - img "数据工厂 银河质量闭环"
+              - link "进入数据工厂" [ref=e409] [cursor=pointer]:
+                - /url: /projects/PR-1
+                - generic [ref=e255]:
+                  - generic [ref=e256]: 协作核心
+                  - strong [ref=e257]: 数据工厂
+                  - generic [ref=e258]: 注意 · 13 用例 · 8 次运行
+              - button "01 需求分析，已就绪，13" [ref=e410] [cursor=pointer]:
+                - generic [ref=e261]:
+                  - generic [ref=e262]: "01"
+                  - generic [ref=e267]:
+                    - strong [ref=e268]: 需求分析
+                    - generic [ref=e269]: 已就绪
+                  - generic [ref=e271]: "13"
+              - button "02 测试设计，已就绪，13" [ref=e411] [cursor=pointer]:
+                - generic [ref=e274]:
+                  - generic [ref=e275]: "02"
+                  - generic [ref=e284]:
+                    - strong [ref=e285]: 测试设计
+                    - generic [ref=e286]: 已就绪
+                  - generic [ref=e288]: "13"
+              - button "03 脚本生成，已就绪，10" [ref=e412] [cursor=pointer]:
+                - generic [ref=e291]:
+                  - generic [ref=e292]: "03"
+                  - generic [ref=e297]:
+                    - strong [ref=e298]: 脚本生成
+                    - generic [ref=e299]: 已就绪
+                  - generic [ref=e301]: "10"
+              - button "04 自动执行，空闲，0" [ref=e413] [cursor=pointer]:
+                - generic [ref=e304]:
+                  - generic [ref=e305]: "04"
+                  - generic [ref=e310]:
+                    - strong [ref=e311]: 自动执行
+                    - generic [ref=e312]: 空闲
+                  - generic [ref=e314]: "0"
+              - button "05 结果分析，需关注，5" [active] [ref=e414] [cursor=pointer]:
+                - generic [ref=e317]:
+                  - generic [ref=e318]: "05"
+                  - generic [ref=e327]:
+                    - strong [ref=e328]: 结果分析
+                    - generic [ref=e329]: 需关注
+                  - generic [ref=e331]: "5"
+              - button "06 失败修复，需关注，5" [ref=e415] [cursor=pointer]:
+                - generic [ref=e334]:
+                  - generic [ref=e335]: "06"
+                  - generic [ref=e349]:
+                    - strong [ref=e350]: 失败修复
+                    - generic [ref=e351]: 需关注
+                  - generic [ref=e353]: "5"
+              - button "07 回归验证，空闲，3" [ref=e416] [cursor=pointer]:
+                - generic [ref=e356]:
+                  - generic [ref=e357]: "07"
+                  - generic [ref=e361]:
+                    - strong [ref=e362]: 回归验证
+                    - generic [ref=e363]: 空闲
+                  - generic [ref=e365]: "3"
+            - generic [ref=e366]:
+              - generic [ref=e376]:
+                - text: 当前阶段
+                - generic [ref=e377]:
+                  - strong [ref=e378]: 04 自动执行
+                  - generic "空闲" [ref=e379]
+                - paragraph [ref=e390]: 阶段 4 / 7 · 负责人：待数据接入
+              - generic [ref=e391]:
+                - generic [ref=e392]:
+                  - paragraph [ref=e393]: 正在运行的测试作业
+                  - generic [ref=e394]:
+                    - generic [ref=e395]: 0关联任务
+                    - generic [ref=e396]: 5风险异常
+                    - generic [ref=e397]: 待接入预计完成
+                - link "阶段详情" [ref=e429] [cursor=pointer]:
+                  - /url: /projects/PR-1/test-runs
+            - generic [ref=e402]:
+              - button "切换到 全部项目" [ref=e403] [cursor=pointer]
+              - button "切换到 数据工厂" [ref=e404] [cursor=pointer]
+              - button "切换到 企业知识助手" [ref=e405] [cursor=pointer]
+              - button "切换到 模型工厂" [ref=e406] [cursor=pointer]
+  - region "Notifications alt+T"

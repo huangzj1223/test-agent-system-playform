@@ -1,0 +1,41 @@
+name: Galaxy UI Check
+
+on:
+  push:
+    branches: [galaxy]
+    paths:
+      - "ui/**"
+      - ".github/workflows/galaxy-ui-check.yml"
+  pull_request:
+    branches: [galaxy]
+    paths:
+      - "ui/**"
+      - ".github/workflows/galaxy-ui-check.yml"
+
+jobs:
+  verify-galaxy-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ui
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install UI dependencies
+        run: npm ci
+
+      - name: Run galaxy visual contracts
+        run: npm run test:galaxy
+
+      - name: Build production UI
+        run: npm run build

@@ -1,0 +1,231 @@
+@use '@/assets/styles/variables' as *;
+
+.app-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--art-bg-color);
+
+  .app-sidebar {
+    flex-shrink: 0;
+  }
+
+  #app-main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    height: 100vh;
+    overflow: hidden;
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      flex-shrink: 0;
+      width: 100%;
+    }
+
+    .app-scrollbar {
+      flex: 1;
+      min-height: 0;
+
+      // 滚动条贴右内边缘
+      :deep(.el-scrollbar__bar.is-vertical) {
+        right: 2px;
+        width: 6px;
+      }
+      :deep(.el-scrollbar__thumb) {
+        background: rgba(144, 147, 153, 0.45);
+        &:hover { background: rgba(144, 147, 153, 0.7); }
+      }
+
+      // 让 view 用 flex 占满 wrap 高度，配合页面 flex 撑开内部表格
+      :deep(.el-scrollbar__view) {
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+      }
+    }
+
+    .app-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      :deep(.layout-content) {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        padding: 0 20px 0;
+
+        // 子页面默认 style
+        .page-content {
+          position: relative;
+          box-sizing: border-box;
+          padding: 20px;
+          overflow: hidden;
+          background: var(--art-main-bg-color);
+          border-radius: calc(var(--custom-radius) / 2 + 2px) !important;
+        }
+
+        .art-page-view {
+          flex: 1;
+          box-sizing: border-box;
+          padding-bottom: 20px;
+        }
+      }
+    }
+  }
+}
+
+@media only screen and (max-width: $device-ipad-pro) {
+  .app-layout {
+    #app-main {
+      height: 100dvh;
+    }
+  }
+}
+
+@media only screen and (max-width: $device-ipad) {
+  .app-layout {
+    position: relative;
+
+    .app-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 300;
+      height: 100vh;
+    }
+
+    #app-main {
+      width: 100%;
+      height: auto;
+      overflow: visible;
+
+      .app-content {
+        :deep(.layout-content) {
+          width: calc(100% - 40px);
+        }
+      }
+    }
+  }
+}
+
+@media only screen and (max-width: $device-phone) {
+  .app-layout {
+    #app-main {
+      .app-content {
+        :deep(.layout-content) {
+          width: calc(100% - 30px);
+        }
+      }
+    }
+  }
+}
+
+// 框架二特定样式（顶部 ArtTopHeader + 左侧 sidebar + 主区）
+// 使用 flex column 替代 absolute 定位，让浏览器自动计算高度
+.app-layout.framework-two {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden; // 防止整个页面滚动
+  display: flex;
+  flex-direction: column;
+
+  .app-top-header {
+    position: relative;
+    flex-shrink: 0;
+    z-index: 1000;
+    height: 60px;
+  }
+
+  // 顶栏下方的 row（侧栏 + main）
+  .app-sidebar {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: var(--sidebar-width, 200px);
+    height: calc(100vh - 60px);
+    overflow: hidden;
+
+    .layout-sidebar {
+      height: 100%;
+
+      .menu-left {
+        height: 100%;
+      }
+    }
+  }
+
+  #app-main.framework-two-main {
+    flex: 1;
+    min-height: 0;
+    margin-left: var(--sidebar-width, 200px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .app-header {
+      flex-shrink: 0;
+    }
+
+    .app-scrollbar {
+      flex: 1;
+      min-height: 0;
+
+      :deep(.el-scrollbar__bar.is-vertical) {
+        right: 2px;
+        width: 6px;
+      }
+      :deep(.el-scrollbar__thumb) {
+        background: rgba(144, 147, 153, 0.45);
+        &:hover { background: rgba(144, 147, 153, 0.7); }
+      }
+
+      :deep(.el-scrollbar__view) {
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+      }
+    }
+
+    .app-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      :deep(.layout-content) {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        padding: 0 20px 0;
+
+        .art-page-view {
+          flex: 1;
+          box-sizing: border-box;
+          padding-bottom: 20px;
+        }
+      }
+    }
+  }
+
+  .app-global {
+    position: fixed;
+    z-index: 9999;
+  }
+}
+
+// 智能体对话侧边栏：框架二下主区为面板让位（平滑过渡，不遮挡）
+.app-layout.framework-two {
+  #app-main.framework-two-main {
+    margin-right: var(--agent-panel-space, 0px);
+    transition: margin-left 0.24s ease, margin-right 0.24s ease;
+  }
+}

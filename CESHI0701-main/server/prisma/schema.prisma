@@ -1,0 +1,1228 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== 基础系统模块 ====================
+
+/// 系统用户
+model SysUser {
+  id           Int      @id @default(autoincrement())
+  /// 所属部门 ID
+  departmentId Int?
+  /// 岗位 ID
+  positionId   Int?
+  /// 用户名（登录账号）
+  username     String   @unique @db.VarChar(100)
+  /// 工号
+  workId       String?  @unique @db.VarChar(30)
+  /// 密码（bcrypt 哈希，不对外返回）
+  password     String
+  /// 密码版本号（改密后旧 token 失效）
+  passwordV    Int      @default(1)
+  /// 姓名
+  name         String?
+  /// 昵称
+  nickName     String?
+  /// 头像 URL
+  headImg      String?
+  /// 手机号
+  phone        String?  @db.VarChar(20)
+  /// 邮箱
+  email        String?
+  /// 备注
+  remark       String?
+  /// 状态 1=启用 0=禁用
+  status       Int      @default(1)
+  /// 在线 socket 连接 ID（内部用，不对外返回）
+  socketId     String?
+  /// 租户 ID
+  tenantId     Int?
+  /// 创建时间
+  createTime   DateTime @default(now())
+  /// 更新时间
+  updateTime   DateTime @updatedAt
+
+  department SysDepartment? @relation(fields: [departmentId], references: [id])
+  position   SysPosition?   @relation(fields: [positionId], references: [id])
+  userRoles  SysUserRole[]
+
+  @@index([departmentId])
+  @@index([positionId])
+  @@index([phone])
+  @@index([tenantId])
+  @@map("base_sys_user")
+}
+
+/// 系统角色
+model SysRole {
+  id         Int      @id @default(autoincrement())
+  /// 角色名称
+  name       String
+  /// 角色标识（唯一）
+  label      String?  @unique
+  /// 备注
+  remark     String?
+  /// 数据权限范围标记
+  relevance  Int      @default(1)
+  /// 状态 1=启用 0=禁用
+  status     Int      @default(1)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  userRoles       SysUserRole[]
+  roleMenus       SysRoleMenu[]
+  roleDepartments SysRoleDepartment[]
+
+  @@index([tenantId])
+  @@map("base_sys_role")
+}
+
+/// 系统菜单
+model SysMenu {
+  id         Int      @id @default(autoincrement())
+  /// 父级菜单 ID
+  parentId   Int?
+  /// 菜单名称
+  name       String
+  /// 前端路由路径
+  router     String?
+  /// 权限标识
+  perms      String?
+  /// 类型 0=目录 1=菜单 2=按钮
+  type       Int      @default(0)
+  /// 图标
+  icon       String?
+  /// 排序号
+  orderNum   Int      @default(0)
+  /// 视图组件路径
+  viewPath   String?
+  /// 是否缓存 1=是 0=否
+  keepAlive  Int      @default(1)
+  /// 是否显示 1=是 0=否
+  isShow     Int      @default(1)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  roleMenus SysRoleMenu[]
+
+  @@index([parentId])
+  @@index([tenantId])
+  @@map("base_sys_menu")
+}
+
+/// 系统部门
+model SysDepartment {
+  id         Int      @id @default(autoincrement())
+  /// 部门名称
+  name       String
+  /// 父级部门 ID
+  parentId   Int?
+  /// 部门类型
+  type       String?  @db.VarChar(20)
+  /// 负责人
+  leader     String?  @db.VarChar(50)
+  /// 联系电话
+  phone      String?  @db.VarChar(20)
+  /// 排序号
+  orderNum   Int      @default(0)
+  /// 状态 1=启用 0=禁用
+  status     Int      @default(1)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  users           SysUser[]
+  roleDepartments SysRoleDepartment[]
+
+  @@index([parentId])
+  @@index([tenantId])
+  @@map("base_sys_department")
+}
+
+/// 用户-角色关联
+model SysUserRole {
+  id     Int @id @default(autoincrement())
+  /// 用户 ID
+  userId Int
+  /// 角色 ID
+  roleId Int
+
+  user SysUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role SysRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("base_sys_user_role")
+}
+
+/// 角色-菜单关联
+model SysRoleMenu {
+  id     Int @id @default(autoincrement())
+  /// 角色 ID
+  roleId Int
+  /// 菜单 ID
+  menuId Int
+
+  role SysRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  menu SysMenu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, menuId])
+  @@map("base_sys_role_menu")
+}
+
+/// 角色-部门关联（数据权限）
+model SysRoleDepartment {
+  id           Int @id @default(autoincrement())
+  /// 角色 ID
+  roleId       Int
+  /// 部门 ID
+  departmentId Int
+
+  role       SysRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  department SysDepartment @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, departmentId])
+  @@map("base_sys_role_department")
+}
+
+/// 系统操作日志
+model SysLog {
+  id         Int      @id @default(autoincrement())
+  /// 操作用户 ID
+  userId     Int?
+  /// 操作动作
+  action     String?
+  /// 请求 IP
+  ip         String?  @db.VarChar(50)
+  /// IP 归属地
+  ipAddr     String?
+  /// 请求参数
+  params     String?  @db.Text
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([userId])
+  @@index([tenantId])
+  @@map("base_sys_log")
+}
+
+/// 系统岗位
+model SysPosition {
+  id          Int      @id @default(autoincrement())
+  /// 岗位名称
+  name        String   @unique @db.VarChar(50)
+  /// 岗位描述
+  description String?  @db.VarChar(200)
+  /// 排序号（升序）
+  orderNum    Int      @default(0)
+  /// 状态 1=启用 0=禁用
+  status      Int      @default(1)
+  /// 租户 ID
+  tenantId    Int?
+  /// 创建时间
+  createTime  DateTime @default(now())
+  /// 更新时间
+  updateTime  DateTime @updatedAt
+
+  users SysUser[]
+
+  @@index([tenantId])
+  @@map("base_sys_position")
+}
+
+/// 系统参数（键值对配置）
+model SysParam {
+  id         Int      @id @default(autoincrement())
+  /// 参数键（唯一）
+  keyName    String   @unique
+  /// 参数名称
+  name       String
+  /// 参数值
+  data       String?  @db.Text
+  /// 备注
+  remark     String?
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("base_sys_param")
+}
+
+// ==================== 字典模块 ====================
+
+/// 字典类型
+model DictType {
+  id         Int      @id @default(autoincrement())
+  /// 类型名称
+  name       String
+  /// 类型键（唯一）
+  key        String   @unique
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  items DictInfo[]
+
+  @@index([tenantId])
+  @@map("dict_type")
+}
+
+/// 字典项
+model DictInfo {
+  id         Int      @id @default(autoincrement())
+  /// 所属字典类型 ID
+  typeId     Int
+  /// 字典项名称
+  name       String
+  /// 字典项值
+  value      String
+  /// 排序号
+  orderNum   Int      @default(0)
+  /// 备注
+  remark     String?
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  type DictType @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  @@index([typeId])
+  @@index([tenantId])
+  @@map("dict_info")
+}
+
+// ==================== 任务模块 ====================
+
+/// 定时任务
+model TaskInfo {
+  id              Int       @id @default(autoincrement())
+  /// 任务名称
+  name            String
+  /// cron 表达式
+  cron            String?
+  /// 固定间隔秒数
+  every           Int?
+  /// 执行次数限制
+  limit           Int?
+  /// 处理器标识
+  service         String?
+  /// 任务携带数据（JSON）
+  data            String?
+  /// 备注
+  remark          String?
+  /// 状态 1=运行 0=停止
+  status          Int       @default(1)
+  /// 类型
+  type            Int       @default(0)
+  /// 任务类型 0=cron 1=固定间隔
+  taskType        Int       @default(0)
+  /// 开始时间
+  startDate       DateTime?
+  /// 结束时间
+  endDate         DateTime?
+  /// 下次执行时间
+  nextRunTime     DateTime?
+  /// 上次执行时间
+  lastExecuteTime DateTime?
+  /// 租户 ID
+  tenantId        Int?
+  /// 创建时间
+  createTime      DateTime  @default(now())
+  /// 更新时间
+  updateTime      DateTime  @updatedAt
+
+  logs TaskLog[]
+
+  @@index([tenantId])
+  @@map("task_info")
+}
+
+/// 任务执行日志
+model TaskLog {
+  id         Int      @id @default(autoincrement())
+  /// 所属任务 ID
+  taskId     Int
+  /// 执行状态 1=成功 0=失败
+  status     Int      @default(0)
+  /// 执行详情
+  detail     String?  @db.Text
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  task TaskInfo @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([tenantId])
+  @@map("task_log")
+}
+
+// ==================== 文件模块 ====================
+
+/// 文件信息
+model SpaceInfo {
+  id         Int      @id @default(autoincrement())
+  /// 文件 URL
+  url        String
+  /// 文件类型（MIME）
+  type       String?
+  /// 分类 ID
+  classifyId Int?
+  /// 文件名
+  name       String?
+  /// 文件大小（字节）
+  size       Int?
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([classifyId])
+  @@index([tenantId])
+  @@map("space_info")
+}
+
+/// 文件分类
+model SpaceType {
+  id         Int      @id @default(autoincrement())
+  /// 分类名称
+  name       String
+  /// 父分类 ID
+  parentId   Int?
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("space_type")
+}
+
+// ==================== 插件模块 ====================
+
+/// 插件信息
+model PluginInfo {
+  id          Int      @id @default(autoincrement())
+  /// 插件名称
+  name        String
+  /// 插件键（唯一）
+  keyName     String   @unique
+  /// 钩子标识
+  hook        String?
+  /// 版本号
+  version     String?
+  /// 描述
+  description String?
+  /// 说明文档
+  readme      String?  @db.Text
+  /// Logo（base64 或 URL）
+  logo        String?  @db.Text
+  /// 作者
+  author      String?
+  /// 状态 1=启用 0=禁用
+  status      Int      @default(0)
+  /// 运行配置（JSON）
+  config      Json?
+  /// 插件元信息（JSON）
+  pluginJson  Json?
+  /// 租户 ID
+  tenantId    Int?
+  /// 创建时间
+  createTime  DateTime @default(now())
+  /// 更新时间
+  updateTime  DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("plugin_info")
+}
+
+// ==================== 回收站模块 ====================
+
+/// 回收站数据（软删快照）
+model RecycleData {
+  id         Int      @id @default(autoincrement())
+  /// 实体名称
+  entityName String
+  /// 原记录 ID
+  entityId   Int
+  /// 原记录数据快照（JSON）
+  data       Json
+  /// 操作人 ID
+  userId     Int?
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([entityName, entityId])
+  @@index([tenantId])
+  @@map("recycle_data")
+}
+
+// ==================== AI 模型配置模块 ====================
+
+/// AI 模型供应商配置
+model ModelProviderConfig {
+  id           Int      @id @default(autoincrement())
+  /// 配置名称（如 Claude、DeepSeek、公司内部模型）
+  name         String   @db.VarChar(100)
+  /// 供应商类型：openai / anthropic / deepseek / openrouter / azure-openai / openai-compatible
+  provider     String   @db.VarChar(50)
+  /// API Endpoint（baseURL，如 https://api.openai.com）
+  apiEndpoint  String   @db.VarChar(500)
+  /// API Key 密文（AES-256-GCM 加密后存储，绝不明文返回；未配置时为 null）
+  apiKeyCipher String?  @db.Text
+  /// 协议类型：openai-compatible / anthropic / azure-openai / custom
+  protocolType String   @db.VarChar(50)
+  /// API 版本（可空，如 2023-06-01）
+  apiVersion   String?  @db.VarChar(50)
+  /// 备注（可空）
+  remark       String?  @db.VarChar(500)
+  /// 是否启用
+  enabled      Boolean  @default(true)
+  /// 排序值（升序）
+  sort         Int      @default(0)
+  /// 租户 ID
+  tenantId     Int?
+  /// 创建时间
+  createTime   DateTime @default(now())
+  /// 更新时间
+  updateTime   DateTime @updatedAt
+
+  /// 该供应商下的模型列表（删除供应商时级联删除）
+  models ModelConfig[]
+
+  @@index([tenantId])
+  @@map("model_provider_config")
+}
+
+/// AI 模型（隶属于某个供应商配置）
+model ModelConfig {
+  id                 Int      @id @default(autoincrement())
+  /// 所属供应商配置 ID
+  providerConfigId   Int
+  /// 模型显示名称（如 Claude Opus 4.8）
+  name               String   @db.VarChar(100)
+  /// 模型 ID（供应商侧标识，如 claude-opus-4-8）
+  modelId            String   @db.VarChar(100)
+  /// 上下文窗口 token 数（可空）
+  contextWindow      Int?
+  /// 最大输出长度 token 数（可空）
+  maxOutputTokens    Int?
+  /// 模型池分组（如"通用大模型"，可空）
+  poolGroup          String?  @db.VarChar(50)
+  /// 默认采样温度（0-2，可空表示走模型默认）
+  defaultTemperature Float?
+  /// 默认 Top P（0-1，可空表示走模型默认）
+  defaultTopP        Float?
+  /// 请求超时（秒，可空表示走全局默认）
+  timeoutSec         Int?
+  /// 失败重试次数（可空表示走全局默认）
+  retryCount         Int?
+  /// 是否支持文本输入
+  supportText        Boolean  @default(true)
+  /// 是否支持图片输入
+  supportImageInput  Boolean  @default(false)
+  /// 是否支持图片输出
+  supportImageOutput Boolean  @default(false)
+  /// 是否支持工具调用（默认 true：多数模型支持；仅对确知不支持工具的模型显式关闭，
+  /// 避免新建模型因默认 false 被静默剥夺工具能力）
+  supportTools       Boolean  @default(true)
+  /// 是否支持流式输出
+  supportStream      Boolean  @default(true)
+  /// 是否支持代码生成
+  supportCode        Boolean  @default(false)
+  /// 是否支持长文本处理
+  supportLongText    Boolean  @default(false)
+  /// 是否启用
+  enabled            Boolean  @default(true)
+  /// 排序值（升序）
+  sort               Int      @default(0)
+  /// 创建时间
+  createTime         DateTime @default(now())
+  /// 更新时间
+  updateTime         DateTime @updatedAt
+
+  /// 所属供应商配置（级联删除）
+  provider ModelProviderConfig @relation(fields: [providerConfigId], references: [id], onDelete: Cascade)
+
+  @@index([providerConfigId])
+  @@map("model_config")
+}
+
+// ==================== 智能体技能模块 ====================
+
+/// 智能体技能：一组暴露给聊天智能体的可调用能力打包
+/// 技能本身是数据（可增删改+开关），引用的能力来自后端硬编码的"能力目录"（vetted，防 SSRF）
+model SysAgentSkill {
+  id               Int      @id @default(autoincrement())
+  /// 技能唯一键（英文标识，如 backend-codegen）
+  skillKey         String   @unique @db.VarChar(64)
+  /// 技能显示名称
+  name             String   @db.VarChar(100)
+  /// 技能描述（说明这组能力用途）
+  description      String?  @db.VarChar(500)
+  /// 引用的能力目录 key 列表（JSON 数组，如 ["codegen.listTables","codegen.preview"]）
+  capabilities     Json
+  /// 类型/分类（固定枚举：query/generate/operation/cli/decision/workflow）
+  category         String   @default("operation") @db.VarChar(32)
+  /// 风险等级（固定枚举：L1/L2/L3/L4，与安全策略统一）
+  riskLevel        String   @default("L1") @db.VarChar(8)
+  /// 版本号（如 v1.0.0，更新时自动递增修订号）
+  version          String   @default("v1.0.0") @db.VarChar(20)
+  /// CLI 绑定命令（可空，如 npm run generate:backend -- --module {{moduleName}}）
+  cliCommand       String?  @db.VarChar(500)
+  /// 触发关键词（JSON 数组，如 ["生成后端","创建模块"]）
+  triggerKeywords  Json?
+  /// 适用智能体（JSON 数组，如 ["AG-UI 智能体","开发助手智能体"]）
+  applicableAgents Json?
+  /// 创建者（用户名/姓名快照）
+  creator          String?  @db.VarChar(100)
+  /// 是否启用（启用后其工具才会暴露给智能体）
+  enabled          Boolean  @default(true)
+  /// 是否内置（内置技能由种子写入，不允许删除）
+  builtin          Boolean  @default(false)
+  /// 排序值（升序）
+  sort             Int      @default(0)
+  /// 租户 ID
+  tenantId         Int?
+  /// 创建时间
+  createTime       DateTime @default(now())
+  /// 更新时间
+  updateTime       DateTime @updatedAt
+
+  runLogs  SysAgentSkillRunLog[]
+  versions SysAgentSkillVersion[]
+
+  @@index([tenantId])
+  @@index([category])
+  @@index([riskLevel])
+  @@map("sys_agent_skill")
+}
+
+/// 智能体技能版本历史（每次变更留全字段快照，支撑版本历史展示与回滚）
+model SysAgentSkillVersion {
+  id            Int      @id @default(autoincrement())
+  /// 所属技能 ID
+  skillId       Int
+  /// 该快照对应的版本号（如 v1.0.3）
+  version       String   @db.VarChar(20)
+  /// 技能全字段快照（JSON：name/description/capabilities/category/riskLevel/cliCommand/triggerKeywords/applicableAgents/enabled/sort）
+  snapshot      Json
+  /// 变更类型（固定枚举：create/update/rollback）
+  changeType    String   @db.VarChar(20)
+  /// 变更摘要（如"更新 name、riskLevel"或"回滚自 v1.0.2"，可空）
+  changeSummary String?  @db.VarChar(300)
+  /// 操作者（用户名/姓名快照，可空）
+  operator      String?  @db.VarChar(100)
+  /// 租户 ID
+  tenantId      Int?
+  /// 创建时间（快照生成时刻）
+  createTime    DateTime @default(now())
+
+  skill SysAgentSkill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@index([skillId])
+  @@index([createTime])
+  @@index([tenantId])
+  @@map("sys_agent_skill_version")
+}
+
+/// 智能体技能运行日志（真实记录每次技能能力被调用的结果，支撑统计与运行日志展示）
+model SysAgentSkillRunLog {
+  id            Int      @id @default(autoincrement())
+  /// 所属技能 ID
+  skillId       Int
+  /// 被调用的能力 key（capability key，如 codegen.listTables）
+  capabilityKey String   @db.VarChar(64)
+  /// 是否成功
+  success       Boolean
+  /// 耗时（毫秒）
+  durationMs    Int      @default(0)
+  /// 失败时的脱敏错误信息（可空）
+  errorMsg      String?  @db.VarChar(500)
+  /// 调用用户 ID
+  userId        Int?
+  /// 租户 ID
+  tenantId      Int?
+  /// 创建时间（调用发生时刻）
+  createTime    DateTime @default(now())
+
+  skill SysAgentSkill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@index([skillId])
+  @@index([createTime])
+  @@index([tenantId])
+  @@map("sys_agent_skill_run_log")
+}
+
+/// 智能体聊天个人设置（按用户隔离，一人一行，settings 聚合存 JSON）
+/// 聚合存储对话参数（温度/最大输出/系统提示词）、界面偏好（字号/密度/显隐）与快捷提示词模板，
+/// 这些设置总是整体读写、无跨行查询需求，故单表 JSON 而非多表拆分。
+model SysAgentChatSetting {
+  id         Int      @id @default(autoincrement())
+  /// 所属用户 ID（唯一，upsert 依据，天然实现用户级隔离）
+  userId     Int      @unique
+  /// 设置聚合体（JSON）：{ chatParams, uiPrefs, promptTemplates }
+  settings   Json
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("sys_agent_chat_setting")
+}
+
+/// 智能体全局配置（全局单行，settings 聚合存 JSON）
+/// 存放业务限制值（maxTokens 上限、系统提示词长度、模板数量/长度、运行超时）与默认界面偏好，
+/// 供后端 service 层校验与前端 UI 限制读取，避免散落硬编码。启动时幂等 seed 默认值。
+model SysAgentConfig {
+  id         Int      @id @default(autoincrement())
+  /// 配置键（唯一，固定为 agent.chat.config，预留多套配置扩展）
+  configKey  String   @unique @db.VarChar(64)
+  /// 配置聚合体（JSON）：{ limits, defaultUiPrefs }
+  settings   Json
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@map("sys_agent_config")
+}
+
+/// 安全策略·风险等级策略（L1-L4，跨模块单一事实来源；Skills/工具权限/记忆写入的风险判定都引用此定义）
+model SysAgentRiskPolicy {
+  id                  Int      @id @default(autoincrement())
+  /// 风险等级（唯一：L1 只读 / L2 低风险写入 / L3 写入修改 / L4 高风险执行）
+  level               String   @unique @db.VarChar(8)
+  /// 等级名称（如 只读查询）
+  name                String   @db.VarChar(50)
+  /// 说明
+  description         String?  @db.VarChar(500)
+  /// 示例操作（JSON 数组）
+  examples            Json
+  /// 审批要求文案（如 需人工审批）
+  approvalRequirement String?  @db.VarChar(200)
+  /// 默认行为（allow 直接允许 / require_approval 等待审批 / deny 拒绝执行）
+  defaultAction       String   @default("allow") @db.VarChar(20)
+  /// 是否启用
+  enabled             Boolean  @default(true)
+  /// 排序值（升序）
+  sort                Int      @default(0)
+  /// 租户 ID
+  tenantId            Int?
+  /// 创建时间
+  createTime          DateTime @default(now())
+  /// 更新时间
+  updateTime          DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("sys_agent_risk_policy")
+}
+
+/// 安全策略·审批规则（定义不同风险操作是否需审批、审批方式、审批人与超时处理）
+model SysAgentApprovalRule {
+  id             Int      @id @default(autoincrement())
+  /// 规则名称
+  name           String   @db.VarChar(100)
+  /// 适用范围（如 CLI 工具 / 数据库 / 记忆写入）
+  scope          String   @db.VarChar(50)
+  /// 适用风险等级（JSON 数组，如 ["L3","L4"]）
+  riskLevels     Json
+  /// 审批方式（none 无需审批 / confirm 二次确认 / manual 人工审批 / multi_person 多人审批）
+  approvalMode   String   @default("manual") @db.VarChar(20)
+  /// 审批人 / 角色
+  approverRole   String   @db.VarChar(100)
+  /// 审批超时时间（分钟）
+  timeoutMinutes Int      @default(30)
+  /// 超时处理（approve 自动通过 / deny 自动拒绝 / cancel 自动取消 / wait 保持等待）
+  timeoutAction  String   @default("deny") @db.VarChar(20)
+  /// 是否启用
+  enabled        Boolean  @default(true)
+  /// 排序值（升序）
+  sort           Int      @default(0)
+  /// 租户 ID
+  tenantId       Int?
+  /// 创建时间
+  createTime     DateTime @default(now())
+  /// 更新时间
+  updateTime     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("sys_agent_approval_rule")
+}
+
+/// 安全策略·黑白名单（四区合一，命令/目录/API·表名单的唯一权威源；沙箱策略只读引用此表）
+model SysAgentSecurityList {
+  id          Int      @id @default(autoincrement())
+  /// 名单类型（command_white 命令白名单 / command_black 命令黑名单 / dir_white 目录白名单 / api_db_black API·数据库黑名单）
+  listType    String   @db.VarChar(20)
+  /// 内容（命令模板 / 目录 / API 路径 / 表字段）
+  value       String   @db.VarChar(300)
+  /// 说明
+  description String?  @db.VarChar(300)
+  /// 风险等级（命令类适用，可空：L1-L4）
+  riskLevel   String?  @db.VarChar(8)
+  /// 是否启用
+  enabled     Boolean  @default(true)
+  /// 排序值（升序）
+  sort        Int      @default(0)
+  /// 租户 ID
+  tenantId    Int?
+  /// 创建时间
+  createTime  DateTime @default(now())
+  /// 更新时间
+  updateTime  DateTime @updatedAt
+
+  @@index([listType])
+  @@index([tenantId])
+  @@map("sys_agent_security_list")
+}
+
+/// 安全策略·敏感词规则（对话/工具调用/CLI/记忆写入/日志中的敏感信息识别与处理）
+model SysAgentSensitiveRule {
+  id         Int      @id @default(autoincrement())
+  /// 敏感类型（如 密码字段 / Token）
+  type       String   @db.VarChar(50)
+  /// 匹配规则（如 password / passwd / pwd，多个用 / 分隔）
+  pattern    String   @db.VarChar(300)
+  /// 处理方式（allow 允许 / mask 脱敏展示 / block 阻止执行 / deny_memory 禁止写入记忆 / confirm 需人工确认 / audit 记录审计）
+  action     String   @default("mask") @db.VarChar(20)
+  /// 适用范围（JSON 数组，如 ["日志","记忆","工具参数"]）
+  scopes     Json
+  /// 是否启用
+  enabled    Boolean  @default(true)
+  /// 排序值（升序）
+  sort       Int      @default(0)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("sys_agent_sensitive_rule")
+}
+
+/// 安全策略·聚合配置（configKey 区分三行：security.global 全局 / security.sandbox 沙箱 / security.audit 审计）
+/// 这些配置整体读写、无跨行查询，故单表 JSON。启动时幂等 seed 默认值。
+model SysAgentSecurityConfig {
+  id         Int      @id @default(autoincrement())
+  /// 配置键（唯一：security.global / security.sandbox / security.audit）
+  configKey  String   @unique @db.VarChar(64)
+  /// 配置聚合体（JSON）
+  settings   Json
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+  /// 更新时间
+  updateTime DateTime @updatedAt
+
+  @@map("sys_agent_security_config")
+}
+
+/// 安全策略·审批工单（安全校验命中"需人工审批"时创建的审批实例，支撑发起→待审→通过/拒绝/超时流转）
+model SysAgentApprovalRequest {
+  id            Int       @id @default(autoincrement())
+  /// 命中的审批规则 ID（可空，规则删除后保留工单）
+  ruleId        Int?
+  /// 操作类型（cli/api/database/file/page/memory/skill）
+  actionType    String    @db.VarChar(20)
+  /// 操作目标描述（如 执行命令 rm -rf / 写入 soul.md）
+  targetDesc    String    @db.VarChar(300)
+  /// 风险等级（L1-L4）
+  riskLevel     String    @db.VarChar(8)
+  /// 操作载荷快照（JSON，已脱敏）
+  payload       Json?
+  /// 工单状态（pending 待审 / approved 通过 / rejected 拒绝 / timeout 超时 / cancelled 取消）
+  status        String    @default("pending") @db.VarChar(20)
+  /// 发起人用户 ID
+  requesterId   Int?
+  /// 审批人用户 ID
+  approverId    Int?
+  /// 审批意见
+  approveRemark String?   @db.VarChar(500)
+  /// 超时截止时间
+  expireAt      DateTime?
+  /// 决策时间（通过/拒绝时刻）
+  decidedAt     DateTime?
+  /// 租户 ID
+  tenantId      Int?
+  /// 创建时间
+  createTime    DateTime  @default(now())
+  /// 更新时间
+  updateTime    DateTime  @updatedAt
+
+  @@index([status])
+  @@index([tenantId])
+  @@map("sys_agent_approval_request")
+}
+
+/// 安全策略·审计日志（记录智能体操作的安全校验结果，是"运行日志"页签的数据源）
+model SysAgentAuditLog {
+  id              Int      @id @default(autoincrement())
+  /// 操作类型（cli/api/database/file/page/memory/skill）
+  actionType      String   @db.VarChar(20)
+  /// 操作描述
+  actionDesc      String   @db.VarChar(300)
+  /// 风险等级（L1-L4）
+  riskLevel       String   @db.VarChar(8)
+  /// 是否允许执行
+  allowed         Boolean
+  /// 是否需要审批
+  requireApproval Boolean  @default(false)
+  /// 命中的策略列表（JSON 数组）
+  matchedPolicies Json?
+  /// 拦截原因（被拒时）
+  blockedReason   String?  @db.VarChar(300)
+  /// 操作用户 ID
+  userId          Int?
+  /// 关联技能 key（可空）
+  skillKey        String?  @db.VarChar(64)
+  /// 关联工具 key（可空）
+  toolKey         String?  @db.VarChar(64)
+  /// 脱敏后的操作载荷（JSON）
+  maskedPayload   Json?
+  /// 租户 ID
+  tenantId        Int?
+  /// 创建时间（操作发生时刻）
+  createTime      DateTime @default(now())
+
+  @@index([actionType])
+  @@index([createTime])
+  @@index([tenantId])
+  @@map("sys_agent_audit_log")
+}
+
+/// 工具权限·工具定义（管理智能体可调用的工具：CLI/API/数据库/文件/页面/浏览器/外部服务）
+model SysAgentTool {
+  id               Int      @id @default(autoincrement())
+  /// 工具唯一键（英文标识，如 backend-generator）
+  toolKey          String   @unique @db.VarChar(64)
+  /// 工具名称
+  name             String   @db.VarChar(100)
+  /// 工具类型（cli/api/database/filesystem/page/browser/external）
+  type             String   @db.VarChar(20)
+  /// 工具描述
+  description      String?  @db.VarChar(500)
+  /// 风险等级（L1-L4）
+  riskLevel        String   @default("L1") @db.VarChar(8)
+  /// 是否启用
+  enabled          Boolean  @default(true)
+  /// 是否需要人工确认
+  requireConfirm   Boolean  @default(false)
+  /// 适用智能体（JSON 数组）
+  applicableAgents Json?
+  /// 按类型不同的专属配置（JSON）
+  config           Json
+  /// 来源：manual=手动新建 / registry=前端注册表同步（区分真实运行时工具与手动配置项）
+  source           String   @default("manual") @db.VarChar(16)
+  /// 排序值（升序）
+  sort             Int      @default(0)
+  /// 租户 ID
+  tenantId         Int?
+  /// 创建时间
+  createTime       DateTime @default(now())
+  /// 更新时间
+  updateTime       DateTime @updatedAt
+
+  callLogs SysAgentToolCallLog[]
+
+  @@index([type])
+  @@index([tenantId])
+  @@map("sys_agent_tool")
+}
+
+/// 工具权限·工具调用日志（记录每次工具被调用的入参、结果、耗时）
+model SysAgentToolCallLog {
+  id         Int      @id @default(autoincrement())
+  /// 所属工具 ID
+  toolId     Int
+  /// 工具 key（冗余，便于按 key 查询）
+  toolKey    String   @db.VarChar(64)
+  /// 调用智能体
+  agent      String?  @db.VarChar(100)
+  /// 关联 Skill
+  skill      String?  @db.VarChar(100)
+  /// 输入参数（JSON）
+  params     Json?
+  /// 是否成功
+  success    Boolean
+  /// 耗时（毫秒）
+  durationMs Int      @default(0)
+  /// 操作人用户 ID
+  operatorId Int?
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime @default(now())
+
+  tool SysAgentTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@index([toolId])
+  @@index([createTime])
+  @@index([tenantId])
+  @@map("sys_agent_tool_call_log")
+}
+
+// ==================== 记忆中心模块 ====================
+
+/// 智能体记忆文件（长期记忆：身份/画像/项目记忆/技能经验/工具经验等，含内容/权限/风险分级/关联）
+model SysAgentMemoryFile {
+  id           Int      @id @default(autoincrement())
+  /// 记忆文件键（=文件名，如 soul.md）。不再单列唯一：按 (memoryKey, userId) 复合唯一，实现每用户各一份
+  memoryKey    String   @db.VarChar(64)
+  /// 归属用户 ID：null=出厂模板（各用户首次访问时据此克隆），非空=某用户的个人副本
+  userId       Int?
+  /// 文件名（=memoryKey，冗余便于展示）
+  name         String   @db.VarChar(100)
+  /// 简短描述（列表用，如"智能体身份定义"）
+  description  String?  @db.VarChar(200)
+  /// 详情副标题（如"内部记忆 · 智能体身份定义文件"）
+  subtitle     String?  @db.VarChar(200)
+  /// Markdown 正文内容
+  content      String   @db.Text
+  /// 记忆分类（internal 内部记忆；预留 project/custom）
+  category     String   @default("internal") @db.VarChar(32)
+  /// 风险等级（L1-L4，与安全策略统一；soul/user 默认 L3）
+  riskLevel    String   @default("L1") @db.VarChar(8)
+  /// 当前版本号（如 v1.3.0，写入时递增修订号）
+  version      String   @default("v1.0.0") @db.VarChar(20)
+  /// 是否启用（=permission.enabled，关闭后不参与对话）
+  enabled      Boolean  @default(true)
+  /// 权限：允许模型读取（对话时可引用）
+  canRead      Boolean  @default(true)
+  /// 权限：允许模型建议修改
+  canSuggest   Boolean  @default(true)
+  /// 权限：允许低风险自动写入
+  canAutoWrite Boolean  @default(false)
+  /// 权限：高风险写入需人工确认
+  needConfirm  Boolean  @default(true)
+  /// 权限：记录审计日志
+  auditLog     Boolean  @default(true)
+  /// 关联记忆文件 memoryKey 数组（JSON，如 ["user.md","memory.md"]）
+  relatedIds   Json?
+  /// 是否内置（内置不可删除、不可改 memoryKey）
+  builtin      Boolean  @default(false)
+  /// 排序值（升序）
+  sort         Int      @default(0)
+  /// 创建者（用户名快照）
+  creator      String?  @db.VarChar(100)
+  /// 最后更新人快照
+  updater      String?  @db.VarChar(100)
+  /// 租户 ID
+  tenantId     Int?
+  /// 创建时间
+  createTime   DateTime @default(now())
+  /// 更新时间
+  updateTime   DateTime @updatedAt
+
+  versions    SysAgentMemoryVersion[]
+  suggestions SysAgentMemorySuggestion[]
+  readLogs    SysAgentMemoryReadLog[]
+
+  @@unique([memoryKey, userId])
+  @@index([userId])
+  @@index([tenantId])
+  @@index([riskLevel])
+  @@index([enabled])
+  @@map("sys_agent_memory_file")
+}
+
+/// 智能体记忆版本历史（每次写入留内容快照，支撑版本历史展示与回滚）
+model SysAgentMemoryVersion {
+  id         Int      @id @default(autoincrement())
+  /// 所属记忆文件 ID
+  memoryId   Int
+  /// 该快照对应的版本号（如 v1.3.0）
+  version    String   @db.VarChar(20)
+  /// 该版本内容快照（回滚时恢复此内容）
+  content    String   @db.Text
+  /// 变更类型（固定枚举：create/update/rollback/confirm/suggestion）
+  changeType String   @db.VarChar(20)
+  /// 变更说明（如"优化行为边界""回滚自 v1.2.0"，可空）
+  note       String?  @db.VarChar(300)
+  /// 更新人快照（可空）
+  updater    String?  @db.VarChar(100)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间（快照生成时刻）
+  createTime DateTime @default(now())
+
+  file SysAgentMemoryFile @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+
+  @@index([memoryId])
+  @@index([createTime])
+  @@index([tenantId])
+  @@map("sys_agent_memory_version")
+}
+
+/// 待确认记忆候选（智能体从对话提炼的写入建议，待人工确认写入目标文件）
+model SysAgentMemoryPending {
+  id         Int       @id @default(autoincrement())
+  /// 建议记忆内容
+  text       String    @db.VarChar(1000)
+  /// 建议写入的目标文件 memoryKey
+  targetKey  String    @db.VarChar(64)
+  /// 来源说明（如"来自 3 次页面设计对话的偏好归纳"，可空）
+  source     String?   @db.VarChar(300)
+  /// 状态（固定枚举：pending/confirmed/ignored，保留处理痕迹不物理删）
+  status     String    @default("pending") @db.VarChar(20)
+  /// 归属用户 ID
+  userId     Int?
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime  @default(now())
+  /// 处理时间（确认/忽略时写入）
+  handleTime DateTime?
+
+  @@index([status])
+  @@index([tenantId])
+  // createPending 的去重/配额查询按 userId+status 过滤；无此索引时 Serializable 事务内的
+  // 加锁读会退化为全表扫描，把锁范围从"同用户"放大到"任意并发请求"，随队列增长恶化。
+  @@index([userId, status])
+  @@map("sys_agent_memory_pending")
+}
+
+/// 模型对记忆文件的写入建议（待人工应用到该文件内容末尾）
+model SysAgentMemorySuggestion {
+  id         Int       @id @default(autoincrement())
+  /// 所属记忆文件 ID
+  memoryId   Int
+  /// 建议内容
+  text       String    @db.VarChar(1000)
+  /// 状态（固定枚举：pending/applied/ignored）
+  status     String    @default("pending") @db.VarChar(20)
+  /// 来源说明（可空）
+  source     String?   @db.VarChar(300)
+  /// 租户 ID
+  tenantId   Int?
+  /// 创建时间
+  createTime DateTime  @default(now())
+  /// 处理时间（应用/忽略时写入）
+  handleTime DateTime?
+
+  file SysAgentMemoryFile @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+
+  @@index([memoryId])
+  @@index([status])
+  @@map("sys_agent_memory_suggestion")
+}
+
+/// 记忆读取/注入日志（对话时记忆被注入即记一条，支撑命中率统计）
+model SysAgentMemoryReadLog {
+  id         Int      @id @default(autoincrement())
+  /// 被读取的记忆文件 ID（可空，未命中时记 null）
+  memoryId   Int?
+  /// 被读取记忆 key 快照（可空）
+  memoryKey  String?  @db.VarChar(64)
+  /// 对话会话标识（用于按对话去重统计，可空）
+  sessionId  String?  @db.VarChar(64)
+  /// 本次读取是否命中（记忆被实际注入=true）
+  hit        Boolean  @default(true)
+  /// 用户 ID
+  userId     Int?
+  /// 租户 ID
+  tenantId   Int?
+  /// 读取时刻
+  createTime DateTime @default(now())
+
+  file SysAgentMemoryFile? @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+
+  @@index([memoryId])
+  @@index([createTime])
+  @@index([tenantId])
+  @@map("sys_agent_memory_read_log")
+}
+
+/// 智能体运行日志（统一观测层，方案C混合）
+/// 仅存无独立源表的三类：conversation(对话)/system(系统事件)/error(错误)；
+/// skill/tool/memory 三类不入本表，由查询层聚合 skill_run_log/tool_call_log/memory_read_log 归一化输出。
+model SysAgentRunLog {
+  id          Int       @id @default(autoincrement())
+  /// 会话 ID（对话线程标识，可空）
+  sessionId   String?   @db.VarChar(64)
+  /// 请求 ID（单次运行标识，可空）
+  requestId   String?   @db.VarChar(64)
+  /// 智能体名称
+  agentName   String?   @db.VarChar(100)
+  /// 日志类型：conversation/system/error（本表仅存这三类）
+  type        String    @db.VarChar(20)
+  /// 执行状态：success/failed/running/cancelled/blocked
+  status      String    @db.VarChar(20)
+  /// 内容摘要
+  summary     String    @db.VarChar(500)
+  /// 开始时间
+  startedAt   DateTime  @default(now())
+  /// 结束时间（running 时为空）
+  endedAt     DateTime?
+  /// 总耗时（毫秒）
+  durationMs  Int       @default(0)
+  /// 操作用户 ID
+  userId      Int?
+  /// 操作用户名快照
+  userName    String?   @db.VarChar(100)
+  /// 来源页面
+  sourcePage  String?   @db.VarChar(100)
+  /// 风险等级 L1-L4（与安全策略统一，可空）
+  riskLevel   String?   @db.VarChar(8)
+  /// 是否已处理（错误类日志可标记）
+  processed   Boolean   @default(false)
+  /// 按类型不同的专属详情（对话/系统/错误结构各异）
+  detail      Json?
+  /// 租户 ID
+  tenantId    Int?
+  /// 创建时间
+  createTime  DateTime  @default(now())
+
+  @@index([type])
+  @@index([status])
+  @@index([sessionId])
+  @@index([startedAt])
+  @@index([tenantId])
+  @@map("sys_agent_run_log")
+}

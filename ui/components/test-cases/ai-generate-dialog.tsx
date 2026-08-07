@@ -3,7 +3,7 @@
 "use client";
 
 import * as React from "react";
-import { Sparkles, Loader2, X } from "lucide-react";
+import { Sparkles, Loader2, X, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -88,7 +88,7 @@ ${folderId ? `目标文件夹ID：${folderId}` : ""}
           </DialogDescription>
 
           {/* 安全提示 */}
-          <div className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700 mt-3">
+          <div className="flex items-center gap-2 rounded-lg banner-success mt-3">
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
@@ -137,7 +137,7 @@ ${folderId ? `目标文件夹ID：${folderId}` : ""}
               className="resize-none"
             />
             <p className="text-xs text-muted-foreground flex items-start gap-1">
-              <span className="text-primary">💡</span>
+              <Info className="h-4 w-4 shrink-0 text-primary" />
               <span>描述越详细，生成的测试用例越准确。可以包含功能描述、业务场景、边界条件等信息。</span>
             </p>
           </div>

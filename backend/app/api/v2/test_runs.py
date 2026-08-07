@@ -424,7 +424,7 @@ async def cancel_test_run(
     summary="实时执行状态推送 (SSE)",
     description="Server-Sent Events 推送测试运行执行状态变更",
 )
-async def test_run_events(
+async def stream_test_run_events(
     project_identifier: str,
     test_run_identifier: str,
     service: TestRunServiceDep,

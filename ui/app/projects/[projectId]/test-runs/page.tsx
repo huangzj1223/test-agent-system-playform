@@ -651,15 +651,15 @@ export default function TestRunsPage() {
                       </div>
                       <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
                         <div className="flex flex-wrap items-center gap-4 text-sm">
-                          <span className="flex items-center gap-1 text-green-600">
+                          <span className="flex items-center gap-1 text-[hsl(var(--success))]">
                             <CheckCircle2 className="h-4 w-4" />
                             {p.passed} 通过
                           </span>
-                          <span className="flex items-center gap-1 text-red-600">
+                          <span className="flex items-center gap-1 text-[hsl(var(--destructive))]">
                             <XCircle className="h-4 w-4" />
                             {p.failed} 失败
                           </span>
-                          <span className="flex items-center gap-1 text-amber-600">
+                          <span className="flex items-center gap-1 text-[hsl(var(--warning))]">
                             <Clock className="h-4 w-4" />
                             {p.in_progress} 进行中
                           </span>
@@ -850,7 +850,7 @@ export default function TestRunsPage() {
                 <Label className="text-base font-medium">选择执行脚本</Label>
                 <div className="flex items-center gap-3 text-sm">
                   {selectedCountByType["api_test"] ? (
-                    <span className="flex items-center gap-1 text-blue-600">
+                    <span className="flex items-center gap-1 text-[hsl(var(--info))]">
                       <Code className="h-3.5 w-3.5" />
                       API {selectedCountByType["api_test"]}
                     </span>
@@ -862,7 +862,7 @@ export default function TestRunsPage() {
                     </span>
                   ) : null}
                   {selectedCountByType["web_test"] ? (
-                    <span className="flex items-center gap-1 text-green-600">
+                    <span className="flex items-center gap-1 text-[hsl(var(--success))]">
                       <Globe className="h-3.5 w-3.5" />
                       Web {selectedCountByType["web_test"]}
                     </span>

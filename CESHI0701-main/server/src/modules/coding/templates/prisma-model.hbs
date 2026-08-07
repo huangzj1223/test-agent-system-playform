@@ -1,0 +1,12 @@
+model {{name}} {
+  id         Int       @id @default(autoincrement())
+{{#each businessFields}}
+  {{name}} {{prismaType}}{{#if nullable}}?{{/if}}{{#if dbAttr}} {{dbAttr}}{{/if}}{{#if comment}} // {{comment}}{{/if}}
+{{/each}}
+  tenantId   Int?
+  createTime DateTime  @default(now())
+  updateTime DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@map("{{tableName}}")
+}

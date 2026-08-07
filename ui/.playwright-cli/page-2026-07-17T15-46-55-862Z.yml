@@ -1,0 +1,41 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link "智能体测试系统 智能体测试系统 质量智能网络" [ref=e7] [cursor=pointer]:
+          - /url: /projects
+          - img "智能体测试系统" [ref=e9]
+          - generic [ref=e17]:
+            - generic [ref=e18]: 智能体测试系统
+            - generic [ref=e19]: 质量智能网络
+        - navigation [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]: 工作台
+            - link "系统总览" [ref=e26] [cursor=pointer]:
+              - /url: /projects
+            - link "项目空间" [ref=e35] [cursor=pointer]:
+              - /url: /projects/spaces
+            - link "全局任务" [ref=e48] [cursor=pointer]:
+              - /url: /projects/agent-tasks
+            - link "智能测试" [ref=e54] [cursor=pointer]:
+              - /url: /chat
+          - generic [ref=e69]:
+            - generic [ref=e70]:
+              - generic [ref=e71]: 项目入口
+              - generic [ref=e72]: "0"
+            - generic [ref=e73]: 暂无项目
+    - generic [ref=e74]:
+      - banner [ref=e75]:
+        - generic [ref=e77]:
+          - generic [ref=e78]: 智能质量控制中心
+          - heading "系统总览" [level=1] [ref=e79]
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - generic "运行中" [ref=e82]
+            - text: 智能体链路在线
+          - button "通知" [ref=e85] [cursor=pointer]
+          - button "帮助" [ref=e86] [cursor=pointer]
+          - button [ref=e87] [cursor=pointer]
+      - main [ref=e90]
+  - region "Notifications alt+T"

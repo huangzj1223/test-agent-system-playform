@@ -3,10 +3,11 @@
 "use client";
 
 import * as React from "react";
-import { Globe, Play, Trash2, Edit } from "lucide-react";
+import { Link2, Play, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/providers/LanguageProvider";
 import type { WebPage } from "@/lib/api/web-tests";
+import { IconFrame, ProductIcon, StatusIcon } from "@/components/icons";
 // TODO  Mi80OmFIVnBZMlhwdTRUbGphRG1zWjg2WW1selpBPT06NDA5MGY0MGE=
 
 interface WebPageListProps {
@@ -30,7 +31,7 @@ export function WebPageList({
     <div className="space-y-2">
       {pages.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          <Globe className="mx-auto h-12 w-12 mb-4 opacity-50" />
+          <IconFrame variant="feature" className="mx-auto mb-4 h-12 w-12"><ProductIcon name="webTests" className="h-6 w-6" /></IconFrame>
           <p className="text-sm">{t("webTests.noPageData")}</p>
         </div>
       ) : (
@@ -51,7 +52,7 @@ export function WebPageList({
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 truncate">
-                  🌐 {page.url}
+                  <Link2 className="mr-1 inline h-3 w-3" />{page.url}
                 </p>
                 {page.description && (
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
@@ -59,16 +60,15 @@ export function WebPageList({
                   </p>
                 )}
                 <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
-                  <span>📋 {page.total_test_cases} {t("webTests.testCases")}</span>
-                  <span>▶️ {page.total_test_runs} {t("webTests.testRuns")}</span>
+                  <span className="inline-flex items-center gap-1"><ProductIcon name="testCases" className="h-3 w-3" />{page.total_test_cases} {t("webTests.testCases")}</span>
+                  <span className="inline-flex items-center gap-1"><ProductIcon name="testRuns" className="h-3 w-3" />{page.total_test_runs} {t("webTests.testRuns")}</span>
                   {page.last_run_status && (
                     <span className={
-                      page.last_run_status === "passed" ? "text-green-600" :
-                      page.last_run_status === "failed" ? "text-red-600" :
-                      "text-yellow-600"
+                      page.last_run_status === "passed" ? "text-[hsl(var(--success))]" :
+                      page.last_run_status === "failed" ? "text-[hsl(var(--destructive))]" :
+                      "text-[hsl(var(--warning))]"
                     }>
-                      {page.last_run_status === "passed" ? "✅" :
-                       page.last_run_status === "failed" ? "❌" : "⏳"}
+                      <StatusIcon status={page.last_run_status === "passed" ? "completed" : page.last_run_status === "failed" ? "blocked" : "running"} />
                     </span>
                   )}
                 </div>

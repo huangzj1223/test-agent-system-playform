@@ -19,7 +19,6 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.typing import ContextT
 
 from app.processors.pdf import PDFProcessor, PDF_PROCESSOR_VERSION
-from app.core.llms import image_model as image_llm_model
 
 logger = logging.getLogger(__name__)
 
@@ -45,12 +44,17 @@ def _decode_base64(data: str) -> bytes:
     return base64.b64decode(data)
 
 
-def _extract_image_text(file_data: bytes, mime_type: str, enable_multimodal: bool = False) -> str:
+def _extract_image_text(
+    file_data: bytes,
+    mime_type: str,
+    enable_multimodal: bool = False,
+    image_model=None,
+) -> str:
     """使用多模态大模型解析图片（仅在 enable_multimodal=True 时调用豆包）"""
     if not enable_multimodal:
         return "[图片文件：请开启多模态解析开关以提取图片内容]"
     try:
-        if not image_llm_model:
+        if not image_model:
             return "图片解析模型未初始化，无法处理图片"
         
         encoded_image = base64.b64encode(file_data).decode("utf-8")
@@ -64,7 +68,7 @@ def _extract_image_text(file_data: bytes, mime_type: str, enable_multimodal: boo
             }
         ]
         msg = HumanMessage(content=content)
-        response = image_llm_model.invoke([msg])
+        response = image_model.invoke([msg])
         if hasattr(response, 'content'):
             return str(response.content)
         return str(response)
@@ -120,8 +124,10 @@ class FileContextMiddleware(AgentMiddleware):
             original_system_prompt: str | list | None = None,
             enable_cache: bool = True,
             max_content_length: int = 80_000,
+            image_model=None,
     ):
-        self._pdf_processor = PDFProcessor(enable_cache=enable_cache)
+        self._image_model = image_model
+        self._pdf_processor = PDFProcessor(enable_cache=enable_cache, image_model=image_model)
         self._max_content_length = max_content_length
         self._original_system_content: str | list | None = original_system_prompt
         self._session_docs: dict[str, str] = {}
@@ -163,7 +169,12 @@ class FileContextMiddleware(AgentMiddleware):
                     if mime_type == "application/pdf" or filename_lower.endswith(".pdf"):
                         text = self._pdf_processor.extract_text(file_data, file_name, enable_multimodal=enable_multimodal)
                     elif mime_type.startswith("image/") or filename_lower.endswith((".jpg", ".jpeg", ".png", ".gif", ".webp")):
-                        text = _extract_image_text(file_data, mime_type, enable_multimodal=enable_multimodal)
+                        text = _extract_image_text(
+                            file_data,
+                            mime_type,
+                            enable_multimodal=enable_multimodal,
+                            image_model=self._image_model,
+                        )
                     elif mime_type in [
                         "application/vnd.ms-excel",
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

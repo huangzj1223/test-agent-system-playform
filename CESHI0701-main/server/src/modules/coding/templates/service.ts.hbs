@@ -1,0 +1,13 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '@/common/prisma.service';
+import { BaseService } from '@/common/crud';
+
+/**
+ * {{comment}}服务
+ */
+@Injectable()
+export class {{name}}Service extends BaseService {
+  constructor(protected prisma: PrismaService) {
+    super(prisma, '{{modelName}}');
+  }
+}

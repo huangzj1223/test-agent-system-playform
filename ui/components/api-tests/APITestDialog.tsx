@@ -281,7 +281,7 @@ export function APITestDialog({
                         <input
                           type="checkbox"
                           id="includeAuth"
-                          className="h-4 w-4 rounded border-gray-300"
+                          className="h-4 w-4 rounded border-input"
                           defaultChecked={true}
                         />
                         <Label htmlFor="includeAuth" className="text-xs font-normal">
@@ -292,7 +292,7 @@ export function APITestDialog({
                         <input
                           type="checkbox"
                           id="includeSecurity"
-                          className="h-4 w-4 rounded border-gray-300"
+                          className="h-4 w-4 rounded border-input"
                         />
                         <Label htmlFor="includeSecurity" className="text-xs font-normal">
                           包含安全测试
@@ -302,7 +302,7 @@ export function APITestDialog({
                         <input
                           type="checkbox"
                           id="includeErrorHandling"
-                          className="h-4 w-4 rounded border-gray-300"
+                          className="h-4 w-4 rounded border-input"
                           defaultChecked={true}
                         />
                         <Label htmlFor="includeErrorHandling" className="text-xs font-normal">
@@ -323,7 +323,7 @@ export function APITestDialog({
             <input
               type="checkbox"
               id="createAnother"
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-input"
               checked={createAnother}
               onChange={(e) => setCreateAnother(e.target.checked)}
             />

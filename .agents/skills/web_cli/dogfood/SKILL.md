@@ -33,7 +33,7 @@ These capabilities enable a deeper, more evidence-rich QA process than simple sn
 
 | Command | Purpose |
 |---------|---------|
-| `playwright-cli open --browser=chromium URL` | Start browser session (always use `--browser=chromium`) |
+| `playwright-cli open --browser=chrome URL` | Start browser session (use the verified system Chrome) |
 | `playwright-cli snapshot` | Get accessibility tree with element refs (eN) |
 | `playwright-cli snapshot --depth=N` | Limit snapshot depth for efficiency |
 | `playwright-cli click eN` / `fill eN "text"` | Interact with elements by ref |
@@ -86,7 +86,7 @@ Follow this systematic 6-phase workflow. Each phase builds on the previous one.
 
 3. **Start browser and navigate to target:**
    ```bash
-   playwright-cli open --browser=chromium {target_url}
+   playwright-cli open --browser=chrome {target_url}
    ```
 
 4. **Capture initial console state (clear buffer):**
@@ -353,14 +353,14 @@ If the app has multiple user roles, test each in a named session:
 
 ```bash
 # Admin session
-playwright-cli -s=admin open --browser=chromium {login_url}
+playwright-cli -s=admin open --browser=chrome {login_url}
 playwright-cli -s=admin fill e1 "admin@example.com"
 playwright-cli -s=admin fill e2 "adminpass"
 playwright-cli -s=admin click e3
 playwright-cli -s=admin state-save {output_dir}/storage/admin-auth.json
 
 # Guest session (different browser instance!)
-playwright-cli -s=guest open --browser=chromium {target_url}
+playwright-cli -s=guest open --browser=chrome {target_url}
 playwright-cli -s=guest snapshot
 # Test what guest can/cannot access
 
@@ -485,7 +485,7 @@ Before writing the report, perform cleanup:
 
 ### Critical Rules
 
-- **Always use `--browser=chromium`** when opening browser sessions — no Chrome binary exists in this environment.
+- **Always use `--browser=chrome`** when opening browser sessions; this environment has a verified system Chrome.
 - **Always check `playwright-cli console` after navigation and after significant interactions.** Silent JS errors are among the most valuable findings.
 - **Refs (eN) are transient** — they change after every snapshot. When you discover an issue, record the ref AND extract a stable locator immediately (`eval "el => el.getAttribute('data-testid')" e5` or `eval "el => el.className" e5`). Never expect refs to survive a page transition or reload.
 - **Start tracing BEFORE the problematic action**, not after. Traces capture the full sequence leading to the issue.

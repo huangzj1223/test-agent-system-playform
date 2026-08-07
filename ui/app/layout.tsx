@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Toaster } from "sonner";
 import { LanguageProvider } from "@/providers/LanguageProvider";
+import { AuthProvider } from "@/providers/AuthProvider";
 import { ProjectProvider } from "@/lib/context/project-context";
 import "./globals.css";
 
@@ -30,8 +31,10 @@ export default function RootLayout({
       <body className={inter.className} suppressHydrationWarning>
         <ProjectProvider>
           <LanguageProvider>
-            <NuqsAdapter>{children}</NuqsAdapter>
-            <Toaster />
+            <AuthProvider>
+              <NuqsAdapter>{children}</NuqsAdapter>
+              <Toaster />
+            </AuthProvider>
           </LanguageProvider>
         </ProjectProvider>
       </body>

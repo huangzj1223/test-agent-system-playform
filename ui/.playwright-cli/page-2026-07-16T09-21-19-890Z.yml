@@ -1,0 +1,55 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link "智能体测试系统 智能体测试系统 质量智能网络" [ref=e7] [cursor=pointer]:
+          - /url: /projects
+          - img "智能体测试系统" [ref=e9]
+          - generic [ref=e17]:
+            - generic [ref=e18]: 智能体测试系统
+            - generic [ref=e19]: 质量智能网络
+        - navigation [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]: 工作台
+            - link "系统总览" [ref=e26] [cursor=pointer]:
+              - /url: /projects
+            - link "项目空间" [ref=e35] [cursor=pointer]:
+              - /url: /projects/spaces
+            - link "全局任务" [ref=e48] [cursor=pointer]:
+              - /url: /projects/agent-tasks
+            - link "智能测试" [ref=e54] [cursor=pointer]:
+              - /url: /chat
+          - generic [ref=e69]:
+            - generic [ref=e70]:
+              - generic [ref=e71]: 项目入口
+              - generic [ref=e72]: "3"
+            - link "模型工厂 PR-3" [ref=e73] [cursor=pointer]:
+              - /url: /projects/PR-3
+              - generic [ref=e85]:
+                - generic [ref=e86]: 模型工厂
+                - generic [ref=e87]: PR-3
+            - link "企业知识助手 PR-2" [ref=e88] [cursor=pointer]:
+              - /url: /projects/PR-2
+              - generic [ref=e100]:
+                - generic [ref=e101]: 企业知识助手
+                - generic [ref=e102]: PR-2
+            - link "数据工厂 PR-1" [ref=e103] [cursor=pointer]:
+              - /url: /projects/PR-1
+              - generic [ref=e115]:
+                - generic [ref=e116]: 数据工厂
+                - generic [ref=e117]: PR-1
+    - generic [ref=e118]:
+      - banner [ref=e119]:
+        - generic [ref=e121]:
+          - generic [ref=e122]: 智能质量控制中心
+          - heading "系统总览" [level=1] [ref=e123]
+        - generic [ref=e124]:
+          - generic [ref=e125]:
+            - generic "运行中" [ref=e126]
+            - text: 智能体链路在线
+          - button "通知" [ref=e129] [cursor=pointer]
+          - button "帮助" [ref=e130] [cursor=pointer]
+          - button [ref=e131] [cursor=pointer]
+      - main [ref=e134]
+  - region "Notifications alt+T"

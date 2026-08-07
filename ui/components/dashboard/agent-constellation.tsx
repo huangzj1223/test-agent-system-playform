@@ -24,13 +24,20 @@ import { cn } from "@/lib/utils";
 import { ProductIcon, StatusIcon } from "@/components/icons";
 import type { ProductIconKey, ProductStatus } from "@/lib/icons/icon-system";
 import {
+  STAGE_HOLOGRAM_ICON_IDS,
+  StageHologramIcon,
+} from "@/components/dashboard/stage-hologram-icon";
+import {
+  GALAXY_MOTION_DIRECTION,
   GALAXY_ORBIT_GEOMETRY,
   GALAXY_SPATIAL_CONFIG,
-  GALAXY_STATIC_LAYOUT,
+  advanceOrbitRawPhase,
   buildConstellationViews,
-  computeStaticOrbitNode,
+  computeOrbitNode,
+  easeOrbitPhase,
+  getClockwiseRotationOffset,
+  getFocusedStageIndex,
   getStaticHudClearance,
-  getStaticStageLevel,
   getStageOrbDiameter,
   getStageVisualLevel,
   type GalaxyViewMode,
@@ -152,6 +159,9 @@ export function AgentConstellation({
   const [layerDebug, setLayerDebug] = useState(false);
   const [layoutDebug, setLayoutDebug] = useState(false);
   const [occlusionDebug, setOcclusionDebug] = useState(false);
+  const [motionDebug, setMotionDebug] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [pageVisible, setPageVisible] = useState(true);
   const [layerDebugView, setLayerDebugView] = useState<GalaxyLayerDebugView>("all");
   const [galaxyLayout, setGalaxyLayout] = useState<GalaxyCoverTransform>(GALAXY_FALLBACK_LAYOUT);
   const [debugBackgroundPoint, setDebugBackgroundPoint] = useState<GalaxyPoint | null>(null);
@@ -166,6 +176,10 @@ export function AgentConstellation({
   const orbitCenterRef = useRef<SVGGElement | null>(null);
   const viewportSizeRef = useRef({ width: 0, height: 0 });
   const stageNodeRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const motionAngleRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const motionOffsetRef = useRef<HTMLSpanElement | null>(null);
+  const rawPhaseRef = useRef(0);
+  const focusedStageRef = useRef(0);
 
   const currentView = views[position.viewIndex] ?? views[0];
   const currentProject = currentView?.project ?? null;
@@ -175,19 +189,22 @@ export function AgentConstellation({
   );
   const selectedIndex = hoveredStage ?? position.stageIndex;
   const selected = stageViews[selectedIndex] ?? stageViews[0];
-  const playbackPaused = true;
+  const playbackPaused = userPaused || reducedMotion || !pageVisible;
 
-  const applyStaticLayout = useCallback(() => {
+  const applyOrbitLayout = useCallback((phase: number) => {
     const count = stageViews.length;
     if (count === 0) return;
 
     const { width, height } = viewportSizeRef.current;
+    const focusIndex = getFocusedStageIndex(phase, count);
 
     stageNodeRefs.current.forEach((node, index) => {
       if (!node || index >= count) return;
-      const orbit = computeStaticOrbitNode(index, count, viewModeRef.current);
+      const orbit = computeOrbitNode(index, phase, count, viewModeRef.current);
       const visualLevel = viewModeRef.current === "3d" ? getStageVisualLevel(orbit.depth) : "middle";
-      const staticLevel = getStaticStageLevel(index, count);
+      const depthLevel = index === focusIndex
+        ? "focus"
+        : visualLevel === "far" ? "deep" : visualLevel;
       const targetCoreDiameter = viewModeRef.current === "3d" ? getStageOrbDiameter(orbit.depth) : 40;
       const offsetX = (orbit.x / GALAXY_VIEWBOX.width) * width;
       const offsetY = (orbit.y / GALAXY_VIEWBOX.height) * height;
@@ -198,9 +215,10 @@ export function AgentConstellation({
       node.style.opacity = String(orbit.opacity);
       node.style.filter = "none";
       node.style.transform = `translate(-50%, -50%) translate3d(${offsetX.toFixed(2)}px, ${offsetY.toFixed(2)}px, ${Math.round(orbit.depth * 54)}px) scale(${orbit.scale.toFixed(3)})`;
+      node.classList.toggle("galaxy-stage-node-focused", index === focusIndex);
       node.dataset.depth = orbit.depth.toFixed(3);
       node.dataset.visualLevel = visualLevel;
-      node.dataset.staticLevel = staticLevel;
+      node.dataset.depthLevel = depthLevel;
       node.dataset.angle = ((orbit.angle * 180) / Math.PI).toFixed(2);
       node.style.setProperty("--stage-depth", orbit.depth.toFixed(3));
       node.style.setProperty("--stage-orb-blur", `${orbit.blur.toFixed(2)}px`);
@@ -209,8 +227,21 @@ export function AgentConstellation({
       node.style.setProperty("--stage-inverse-scale", (1 / Math.max(0.01, orbit.scale)).toFixed(3));
       node.style.setProperty("--stage-middle-progress", middleProgress.toFixed(3));
       node.style.setProperty("--stage-near-progress", nearProgress.toFixed(3));
+      if (motionAngleRefs.current[index]) {
+        motionAngleRefs.current[index]!.textContent = `${String(index + 1).padStart(2, "0")} · ${((orbit.angle * 180) / Math.PI).toFixed(1)}° · ${STAGE_HOLOGRAM_ICON_IDS[stageViews[index].key as keyof typeof STAGE_HOLOGRAM_ICON_IDS] ?? "requirement-scan"}`;
+      }
     });
-  }, [stageViews.length]);
+
+    if (motionOffsetRef.current) {
+      motionOffsetRef.current.textContent = `rotationOffset：${getClockwiseRotationOffset(phase, count).toFixed(4)} rad`;
+    }
+    if (focusedStageRef.current !== focusIndex) {
+      focusedStageRef.current = focusIndex;
+      setPosition((current) => current.stageIndex === focusIndex
+        ? current
+        : { ...current, stageIndex: focusIndex });
+    }
+  }, [stageViews]);
 
   useEffect(() => {
     const debugEnabled = process.env.NODE_ENV !== "production";
@@ -221,13 +252,30 @@ export function AgentConstellation({
     const layersEnabled = params.get("galaxyDebug") === "layers";
     const layoutEnabled = params.get("galaxyDebug") === "layout";
     const occlusionEnabled = params.get("galaxyDebug") === "occlusion";
+    const motionEnabled = params.get("galaxyDebug") === "motion";
     const requestedView = params.get("galaxyLayer") as GalaxyLayerDebugView | null;
 
     setCoreDebug(coreEnabled);
     setLayerDebug(layersEnabled);
     setLayoutDebug(layoutEnabled);
     setOcclusionDebug(occlusionEnabled);
+    setMotionDebug(motionEnabled);
     setLayerDebugView(requestedView && GALAXY_LAYER_DEBUG_VIEWS.has(requestedView) ? requestedView : "all");
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePreference = () => setReducedMotion(media.matches);
+    updatePreference();
+    media.addEventListener("change", updatePreference);
+    return () => media.removeEventListener("change", updatePreference);
+  }, []);
+
+  useEffect(() => {
+    const updateVisibility = () => setPageVisible(document.visibilityState === "visible");
+    updateVisibility();
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () => document.removeEventListener("visibilitychange", updateVisibility);
   }, []);
 
   useEffect(() => {
@@ -238,14 +286,36 @@ export function AgentConstellation({
       const bounds = viewport.getBoundingClientRect();
       viewportSizeRef.current = { width: bounds.width, height: bounds.height };
       setGalaxyLayout(computeGalaxyLayout({ width: bounds.width, height: bounds.height }));
-      applyStaticLayout();
+      applyOrbitLayout(easeOrbitPhase(rawPhaseRef.current));
     };
 
     const observer = new ResizeObserver(updateSize);
     observer.observe(viewport);
     updateSize();
     return () => observer.disconnect();
-  }, [applyStaticLayout]);
+  }, [applyOrbitLayout]);
+
+  useEffect(() => {
+    const count = stageViews.length;
+    if (count === 0) return;
+
+    applyOrbitLayout(easeOrbitPhase(rawPhaseRef.current));
+    if (playbackPaused) return;
+
+    let frameId = 0;
+    let previousTime: number | null = null;
+    const animate = (timestamp: number) => {
+      if (previousTime === null) previousTime = timestamp;
+      const deltaMs = Math.min(64, Math.max(0, timestamp - previousTime));
+      previousTime = timestamp;
+      rawPhaseRef.current = advanceOrbitRawPhase(rawPhaseRef.current, deltaMs, count, false);
+      applyOrbitLayout(easeOrbitPhase(rawPhaseRef.current));
+      frameId = requestAnimationFrame(animate);
+    };
+
+    frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
+  }, [applyOrbitLayout, playbackPaused, stageViews.length]);
 
   useEffect(() => {
     if (!coreDebug && !layoutDebug && !occlusionDebug) return;
@@ -287,21 +357,25 @@ export function AgentConstellation({
 
   useEffect(() => {
     viewModeRef.current = viewMode;
-    applyStaticLayout();
-  }, [applyStaticLayout, viewMode]);
+    applyOrbitLayout(easeOrbitPhase(rawPhaseRef.current));
+  }, [applyOrbitLayout, viewMode]);
 
   useEffect(() => {
     setPosition((current) => ({
       viewIndex: Math.min(current.viewIndex, Math.max(views.length - 1, 0)),
       stageIndex: 0,
     }));
-    applyStaticLayout();
-  }, [applyStaticLayout, views.length]);
+    rawPhaseRef.current = 0;
+    focusedStageRef.current = 0;
+    applyOrbitLayout(0);
+  }, [applyOrbitLayout, views.length]);
 
   const selectView = useCallback((viewIndex: number) => {
-    applyStaticLayout();
+    rawPhaseRef.current = 0;
+    focusedStageRef.current = 0;
+    applyOrbitLayout(0);
     setPosition({ viewIndex, stageIndex: 0 });
-  }, [applyStaticLayout]);
+  }, [applyOrbitLayout]);
 
   const prevProject = useCallback(() => {
     selectView((position.viewIndex - 1 + views.length) % views.length);
@@ -346,9 +420,10 @@ export function AgentConstellation({
         "--galaxy-core-x": `${galaxyLayout.focalX}px`,
         "--galaxy-core-y": `${galaxyLayout.focalY}px`,
       } as CSSProperties}
-      data-paused={playbackPaused ? "true" : "false"}
-      data-reduced-motion="true"
-      data-static-layout="true"
+      data-paused="true"
+      data-motion-paused={playbackPaused ? "true" : "false"}
+      data-motion-direction={GALAXY_MOTION_DIRECTION}
+      data-reduced-motion={reducedMotion ? "true" : "false"}
       data-core-debug={coreDebug ? "true" : "false"}
       data-layout-debug={layoutDebug ? "true" : "false"}
       data-occlusion-debug={occlusionDebug ? "true" : "false"}
@@ -374,8 +449,29 @@ export function AgentConstellation({
           <strong>Phase 2 静态构图</strong>
           <span>中心：({galaxyLayout.focalX.toFixed(2)}, {galaxyLayout.focalY.toFixed(2)}) px</span>
           <span>轨道：{GALAXY_ORBIT_GEOMETRY.radiusX} × {GALAXY_ORBIT_GEOMETRY.radiusY}</span>
-          <span>固定 phase：{GALAXY_STATIC_LAYOUT.phase.toFixed(2)}</span>
+          <span>当前 phase：{easeOrbitPhase(rawPhaseRef.current).toFixed(2)}</span>
           <span>HUD 最小距离：{minHudClearance.toFixed(2)} px</span>
+        </output>
+      )}
+
+      {motionDebug && (
+        <output className="galaxy-motion-debug-panel" data-testid="galaxy-motion-debug-panel">
+          <strong>轨道运动调试</strong>
+          <span>方向：{GALAXY_MOTION_DIRECTION}</span>
+          <span ref={motionOffsetRef}>rotationOffset：0.0000 rad</span>
+          <span>当前焦点：{String(position.stageIndex + 1).padStart(2, "0")}</span>
+          <span>下一阶段：{String(((position.stageIndex + 1) % Math.max(1, stageViews.length)) + 1).padStart(2, "0")}</span>
+          <span>图标保持正向：true</span>
+          <span className="galaxy-motion-debug-angles">
+            {stageViews.map((stage, index) => (
+              <span
+                key={`motion-${stage.key}`}
+                ref={(node) => { motionAngleRefs.current[index] = node; }}
+              >
+                {String(index + 1).padStart(2, "0")} · {STAGE_HOLOGRAM_ICON_IDS[stage.key as keyof typeof STAGE_HOLOGRAM_ICON_IDS] ?? "requirement-scan"}
+              </span>
+            ))}
+          </span>
         </output>
       )}
 
@@ -461,7 +557,7 @@ export function AgentConstellation({
             <ellipse cx="0" cy="0" rx="94" ry="59" fill="url(#galaxy-core-glow)" className="galaxy-nebula-breath" />
             <g className="galaxy-layout-debug-anchors">
               {stageViews.map((stage, index) => {
-                const anchor = computeStaticOrbitNode(index, stageViews.length, "3d");
+                const anchor = computeOrbitNode(index, easeOrbitPhase(rawPhaseRef.current), stageViews.length, "3d");
                 return <circle key={`anchor-${stage.key}`} cx={anchor.x} cy={anchor.y} r="3.5" />;
               })}
             </g>
@@ -501,12 +597,13 @@ export function AgentConstellation({
         <div className="galaxy-debug-project-cross" aria-hidden="true" />
 
         {stageViews.map((stage, index) => {
-          const orbit = computeStaticOrbitNode(index, stageViews.length, viewMode);
+          const currentPhase = easeOrbitPhase(rawPhaseRef.current);
+          const orbit = computeOrbitNode(index, currentPhase, stageViews.length, viewMode);
           const visualLevel = viewMode === "3d" ? getStageVisualLevel(orbit.depth) : "middle";
-          const staticLevel = getStaticStageLevel(index, stageViews.length);
+          const focused = index === getFocusedStageIndex(currentPhase, stageViews.length);
+          const depthLevel = focused ? "focus" : visualLevel === "far" ? "deep" : visualLevel;
           const targetCoreDiameter = viewMode === "3d" ? getStageOrbDiameter(orbit.depth) : 40;
           const color = stageColors[stage.key] ?? "#8fe9ff";
-          const focused = index === GALAXY_STATIC_LAYOUT.focusIndex;
           const stageName = stageNames[stage.key] ?? stage.name;
           const viewportWidth = viewportSizeRef.current.width || GALAXY_VIEWBOX.width;
           const viewportHeight = viewportSizeRef.current.height || 300;
@@ -537,7 +634,8 @@ export function AgentConstellation({
               className={cn("galaxy-stage-node", focused && "galaxy-stage-node-focused")}
               style={style}
               data-visual-level={visualLevel}
-              data-static-level={staticLevel}
+              data-depth-level={depthLevel}
+              data-stage-icon={STAGE_HOLOGRAM_ICON_IDS[stage.key as keyof typeof STAGE_HOLOGRAM_ICON_IDS] ?? "requirement-scan"}
               data-depth={orbit.depth.toFixed(3)}
               data-angle={((orbit.angle * 180) / Math.PI).toFixed(2)}
               aria-label={`${String(index + 1).padStart(2, "0")} ${stageName}，${stage.status_label}，${stage.value_label}`}
@@ -551,7 +649,7 @@ export function AgentConstellation({
                 <span className="galaxy-stage-orb-ring galaxy-stage-orb-ring-inner" />
                 <span className="galaxy-stage-orb-core">
                   <span className="galaxy-stage-starflare" />
-                  <ProductIcon name={stageIcons[stage.key] || "agents"} className="h-4 w-4" />
+                  <StageHologramIcon stageKey={stage.key} className="galaxy-hologram-icon" />
                 </span>
                 <span className="galaxy-stage-orb-caption">
                   <span className="galaxy-stage-caption-heading">

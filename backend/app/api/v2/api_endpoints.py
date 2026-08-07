@@ -13,7 +13,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, String, cast
 
 from app.api.deps import CurrentUserIdDep, DbSessionDep
 from app.models.api_endpoint import APIEndpoint
@@ -28,7 +28,7 @@ from app.schemas.api_endpoint import (
     OpenAPIParseResult,
     OpenAPIUploadRequest
 )
-from app.services.openapi_parser import OpenAPIParser
+from app.services.openapi_parser import OpenAPIParser, parse_openapi_document_content
 
 router = APIRouter()
 
@@ -47,13 +47,7 @@ async def fetch_openapi_from_url(url: str) -> dict[str, Any]:
             response = await client.get(url)
             response.raise_for_status()
 
-            # 根据内容类型解析
-            content_type = response.headers.get("content-type", "")
-            if "application/json" in content_type:
-                return response.json()
-            else:
-                # 尝试作为 JSON 解析
-                return response.json()
+            return parse_openapi_document_content(response.text)
 
     except httpx.HTTPStatusError as e:
         raise HTTPException(
@@ -111,14 +105,15 @@ async def upload_openapi_schema(
         except HTTPException:
             raise
 
-    # 4. 验证是否为有效的 OpenAPI 文档
-    if not isinstance(openapi_spec, dict):
+    # 4. 验证并规范化 OpenAPI 文档内容，支持 JSON/YAML/Markdown 文本
+    try:
+        openapi_spec = parse_openapi_document_content(openapi_spec)
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="文件内容必须是有效的 JSON 对象"
+            detail=str(e)
         )
 
-    # 检查必需字段
     if "paths" not in openapi_spec:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -531,19 +526,29 @@ async def get_endpoint_artifacts_api(
             AttachmentEntityType.API_TEST_REPORT,
         ]
 
-        # 构建查询 - 只查询 API 测试成果物
+        api_test_artifact_type_labels = [entity_type.name for entity_type in api_test_artifact_types]
+
+        # Build query with DB enum labels. The existing attachmententitytype type
+        # stores labels such as API_TEST_PLAN, not enum values like api_test_plan.
         stmt = select(Attachment).where(
             Attachment.entity_id == endpoint_id,
-            Attachment.entity_type.in_(api_test_artifact_types)
+            cast(Attachment.entity_type, String).in_(api_test_artifact_type_labels)
         )
 
-        # 按类型过滤（可选）
+        # Optional type filter; accepts both API_TEST_PLAN and api_test_plan.
         if artifact_type:
-            try:
-                entity_type = AttachmentEntityType[artifact_type]
-                stmt = stmt.where(Attachment.entity_type == entity_type)
-            except KeyError:
-                pass
+            normalized_artifact_type = artifact_type.strip()
+            matched_entity_type = next(
+                (
+                    entity_type
+                    for entity_type in api_test_artifact_types
+                    if normalized_artifact_type in (entity_type.name, entity_type.value)
+                ),
+                None,
+            )
+            if matched_entity_type:
+                stmt = stmt.where(cast(Attachment.entity_type, String) == matched_entity_type.name)
+
 
         # 执行查询
         result = await db.execute(stmt)
@@ -861,4 +866,3 @@ async def update_attachment_content_api(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"更新附件失败: {str(e)}"
         )
-

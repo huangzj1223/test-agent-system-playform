@@ -1,0 +1,6 @@
+
+D:\install\PycharmProjects\test-agent-system-platform\ui>node  "D:\install\PycharmProjects\test-agent-system-platform\ui\node_modules\.bin\\..\.pnpm\@playwright+cli@0.1.17\node_modules\@playwright\cli\playwright-cli.js" --raw -s=workspace-boundaries eval ()= 
+SyntaxError: Unexpected token ')'
+    at eval (eval at evaluate (:303:30), <anonymous>:2:38)
+    at UtilityScript.evaluate (<anonymous>:305:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)

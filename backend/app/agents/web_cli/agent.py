@@ -17,6 +17,7 @@ Web 自动化测试智能体（CLI 版本）
 - Tools: 原子操作（数据库、存储、Shell 执行）
 """
 
+import os
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -26,29 +27,30 @@ from deepagents import create_deep_agent as create_agent
 from deepagents.backends import FilesystemBackend, LocalShellBackend, CompositeBackend
 from deepagents.middleware import SkillsMiddleware
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
-from langchain_core.language_models import ModelProfile
 from langgraph.pregel import Pregel
 
 from app.agents.tools.web import get_local_tools
 from app.config.settings import settings
-from app.core.llms import text_model as model
+from app.core.llms import get_default_text_model
 
 # =============================================================================
 # 配置
 # =============================================================================
 
-model.profile = ModelProfile(max_input_tokens=128000)
 # pragma: no cover  MC80OmFIVnBZMlhwdTRUbGphRG1zWjg2ZFdkTk1nPT06NWM4OTJkNTg=
 
-skills_root = Path(settings.web_cli_skills_root).resolve()
-workspace_root = Path(settings.web_cli_workspace_root).resolve()
+project_root = Path(__file__).resolve().parents[4]
+skills_root = (project_root / settings.web_cli_skills_root).resolve()
+workspace_root = (project_root / settings.web_cli_workspace_root).resolve()
+ui_node_bin = project_root / "ui" / "node_modules" / ".bin"
+shell_path = os.pathsep.join((str(ui_node_bin), os.environ.get("PATH", "")))
 # fmt: off  MS80OmFIVnBZMlhwdTRUbGphRG1zWjg2ZFdkTk1nPT06NWM4OTJkNTg=
 
 skills_backend = FilesystemBackend(root_dir=skills_root, virtual_mode=True)
 workspace_backend = FilesystemBackend(root_dir=workspace_root, virtual_mode=True)
-shell_backend = LocalShellBackend(root_dir=Path(settings.web_cli_workspace_root).resolve(),
+shell_backend = LocalShellBackend(root_dir=workspace_root,
                                   inherit_env=True,
-                                  env={"PATH": r"C:\Program Files\nodejs;C:\Users\65132\AppData\Roaming\npm;C:\Windows\System32;C:\Windows;"},
+                                  env={"PATH": shell_path},
                                   timeout=180,
                                   virtual_mode=True)
 composite_backend = CompositeBackend(
@@ -73,6 +75,7 @@ class WebAgentContext:
     """Web 智能体运行时上下文"""
     project_identifier: str = ""
     folder_id: str = ""
+    target_url: str = ""
     current_user_id: str = "00000000-0000-0000-0000-000000000001"
 
 # type: ignore  Mi80OmFIVnBZMlhwdTRUbGphRG1zWjg2ZFdkTk1nPT06NWM4OTJkNTg=
@@ -91,6 +94,7 @@ class WebContextInjectionMiddleware(AgentMiddleware):
     ) -> ModelResponse:
         project_identifier = request.runtime.context.project_identifier
         folder_id = request.runtime.context.folder_id
+        target_url = request.runtime.context.target_url
 
         context_info = f"""
 
@@ -100,6 +104,7 @@ class WebContextInjectionMiddleware(AgentMiddleware):
 **当前会话参数（调用工具时必须使用）：**
 - `project_identifier`: `{project_identifier}`
 - `folder_id`: `{folder_id}`
+- `target_url`: `{target_url}`
 
 **重要提示：** 这些参数由系统自动注入，不要询问用户提供。
 ---
@@ -115,6 +120,10 @@ SYSTEM_PROMPT = """# Web 自动化测试专家（CLI 版本）
 
 你是一位资深的 Web 自动化测试专家，专注于基于浏览器的 UI 测试设计与实现。
 你通过 `playwright-cli` 命令行工具与浏览器交互。
+
+当运行时上下文包含 `target_url` 时，必须首先调用 `inspect_web_page(target_url)`。
+该工具会真实打开页面、返回页面快照并生成截图路径。不得声称没有浏览器工具，
+也不得在未取得截图路径时宣称浏览器检查成功。
 
 ## 🎯 核心能力
 
@@ -132,7 +141,7 @@ SYSTEM_PROMPT = """# Web 自动化测试专家（CLI 版本）
 
 **执行步骤**：
 1. 获取子功能信息 → `get_sub_function_details(sub_function_id)`
-2. 打开浏览器并探索页面 → 使用 `execute` 工具执行 `playwright-cli open --browser=chromium <url>` 和 `playwright-cli snapshot`
+2. 打开浏览器并探索页面 → 使用 `execute` 工具执行 `playwright-cli open --browser=chrome <url>` 和 `playwright-cli snapshot`
 3. 使用 **dogfood** skill → 生成测试计划（包含前置条件分析和**元素定位器**）
 4. 保存计划 → `save_web_test_plan(plan_content=...)`
 5. 使用 **dogfood** skill → 根据测试计划生成结构化测试用例
@@ -222,7 +231,7 @@ SYSTEM_PROMPT = """# Web 自动化测试专家（CLI 版本）
 
 ```bash
 # ✅ 正确：先打开浏览器
-playwright-cli open --browser=chromium https://example.com
+playwright-cli open --browser=chrome https://example.com
 playwright-cli snapshot
 
 # ❌ 错误：没有打开浏览器就执行操作
@@ -230,7 +239,7 @@ playwright-cli goto https://example.com  # 错误：没有活跃的浏览器会�
 ```
 
 **核心命令**：
-- `playwright-cli open --browser=chromium <url>` - 打开浏览器并导航
+- `playwright-cli open --browser=chrome <url>` - 打开浏览器并导航
 - `playwright-cli goto <url>` - 导航到指定页面
 - `playwright-cli snapshot` - 获取页面快照（包含元素 refs eN）
 - `playwright-cli snapshot --depth=4` - 限制快照深度以节省 token
@@ -246,11 +255,11 @@ playwright-cli goto https://example.com  # 错误：没有活跃的浏览器会�
 - `playwright-cli close` - 关闭浏览器
 
 **重要提示**：
-- **始终使用 `--browser=chromium`**，环境中没有 Chrome 二进制文件
+- **始终使用 `--browser=chrome`**，复用当前环境已安装并验证的系统 Chrome
 - **Refs (eN) 是临时的** — 每次快照后都会变化。记录问题时需要同时记录稳定的定位器（CSS 选择器、data-testid、role+name）
 - **使用 `execute` 工具执行上述命令**，例如：
   ```
-  execute(command="playwright-cli open --browser=chromium https://example.com")
+  execute(command="playwright-cli open --browser=chrome https://example.com")
   ```
 
 ### 页面加载和验证
@@ -430,6 +439,7 @@ async def make_agent() -> AsyncIterator[Pregel]:
     - 智能体生命周期内资源正确管理
     - 退出时自动清理资源
     """
+    model = await get_default_text_model()
     # 创建中间件
     context_middleware = WebContextInjectionMiddleware()
 

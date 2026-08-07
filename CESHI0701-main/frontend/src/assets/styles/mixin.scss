@@ -1,0 +1,206 @@
+// sass 混合宏（函数）
+@use '@styles/variables.scss' as *; // 引入断点变量（$device-*），供下方 mixin 在自身作用域内解析
+
+
+/**
+* 溢出省略号
+* @param {Number} 行数
+*/
+@mixin ellipsis($rowCount: 1) {
+  @if $rowCount <=1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: $rowCount;
+    -webkit-box-orient: vertical;
+  }
+}
+
+/**
+* 控制用户能否选中文本
+* @param {String} 类型
+*/
+@mixin userSelect($value: none) {
+  user-select: $value;
+  -moz-user-select: $value;
+  -ms-user-select: $value;
+  -webkit-user-select: $value;
+}
+
+// 绝对定位居中
+@mixin absoluteCenter() {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+}
+
+/**
+* css3动画
+* 
+*/
+@mixin animation(
+  $from: (
+    width: 0px
+  ),
+  $to: (
+    width: 100px
+  ),
+  $name: mymove,
+  $animate: mymove 2s 1 linear infinite
+) {
+  -webkit-animation: $animate;
+  -o-animation: $animate;
+  animation: $animate;
+
+  @keyframes #{$name} {
+    from {
+      @each $key, $value in $from {
+        #{$key}: #{$value};
+      }
+    }
+
+    to {
+      @each $key, $value in $to {
+        #{$key}: #{$value};
+      }
+    }
+  }
+
+  @-webkit-keyframes #{$name} {
+    from {
+      @each $key, $value in $from {
+        $key: $value;
+      }
+    }
+
+    to {
+      @each $key, $value in $to {
+        $key: $value;
+      }
+    }
+  }
+}
+
+// 圆形盒子
+@mixin circle($size: 11px, $bg: #fff) {
+  border-radius: 50%;
+  width: $size;
+  height: $size;
+  line-height: $size;
+  text-align: center;
+  background: $bg;
+}
+
+// placeholder
+@mixin placeholder($color: #bbb) {
+  // Firefox
+  &::-moz-placeholder {
+    color: $color;
+    opacity: 1;
+  }
+
+  // Internet Explorer 10+
+  &:-ms-input-placeholder {
+    color: $color;
+  }
+
+  // Safari and Chrome
+  &::-webkit-input-placeholder {
+    color: $color;
+  }
+
+  &:placeholder-shown {
+    text-overflow: ellipsis;
+  }
+}
+
+//背景透明，文字不透明。兼容IE8
+@mixin betterTransparentize($color, $alpha) {
+  $c: rgba($color, $alpha);
+  $ie_c: ie_hex_str($c);
+  background: rgba($color, 1);
+  background: $c;
+  background: transparent \9;
+  zoom: 1;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#{$ie_c}, endColorstr=#{$ie_c});
+  -ms-filter: 'progid:DXImageTransform.Microsoft.gradient(startColorstr=#{$ie_c}, endColorstr=#{$ie_c})';
+}
+
+//添加浏览器前缀
+@mixin browserPrefix($propertyName, $value) {
+  @each $prefix in -webkit-, -moz-, -ms-, -o-, '' {
+    #{$prefix}#{$propertyName}: $value;
+  }
+}
+
+// 边框
+@mixin border($color: red) {
+  border: 1px solid $color;
+}
+
+// 背景滤镜
+@mixin backdropBlur() {
+  --tw-backdrop-blur: blur(30px);
+  -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness)
+    var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate)
+    var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate)
+    var(--tw-backdrop-sepia);
+  backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast)
+    var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert)
+    var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+}
+
+// 列表页筛选表单的响应式布局
+// 用法：在 .filter-form 上 @include responsiveFilterForm()
+// 约定：搜索控件加 .filter-input / .filter-select class，按钮放在末尾的 ElFormItem 内
+// 宽屏行内排列且控件可随容器收缩；窄屏（iPad Pro 及以下）每项独占一行、控件撑满，避免标签与输入框挤压
+@mixin responsiveFilterForm($input-width: 220px, $select-width: 150px) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  :deep(.el-form-item) {
+    margin-bottom: 0;
+  }
+
+  .filter-input {
+    width: $input-width;
+    max-width: 100%;
+  }
+
+  .filter-select {
+    width: $select-width;
+    max-width: 100%;
+  }
+
+  @media only screen and (max-width: $device-ipad-pro) {
+    :deep(.el-form-item) {
+      display: flex;
+      width: 100%;
+      margin-bottom: 12px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .el-form-item__content {
+        flex: 1;
+        gap: 12px;
+      }
+    }
+
+    .filter-input,
+    .filter-select {
+      width: 100%;
+    }
+  }
+}
+

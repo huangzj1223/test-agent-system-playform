@@ -134,6 +134,7 @@ export const GALAXY_STAGE_KEYS = [
 ] as const;
 
 export const GALAXY_CYCLE_DURATION_MS = 16_000;
+export const GALAXY_MOTION_DIRECTION = "clockwise" as const;
 export const GALAXY_SPATIAL_CONFIG = {
   viewBox: {
     width: 730,
@@ -179,6 +180,11 @@ const ORBIT_RADIUS_X = GALAXY_ORBIT_GEOMETRY.radiusX;
 const ORBIT_RADIUS_Y = GALAXY_ORBIT_GEOMETRY.radiusY;
 const ORBIT_FRONT_ANGLE = Math.PI / 2;
 const ORBIT_HOLD_RATIO = 0.56;
+
+export function getClockwiseRotationOffset(phase: number, count: number): number {
+  if (count <= 0 || !Number.isFinite(phase)) return 0;
+  return phase * ((Math.PI * 2) / count);
+}
 
 export function clipConnector(
   from: ConstellationPoint,
@@ -320,7 +326,8 @@ export function computeOrbitNode(
   }
 
   const step = (Math.PI * 2) / count;
-  const angle = ORBIT_FRONT_ANGLE + (index - phase) * step;
+  const baseAngle = ORBIT_FRONT_ANGLE - index * step;
+  const angle = baseAngle + getClockwiseRotationOffset(phase, count);
   const depth = (Math.sin(angle) + 1) / 2;
   const isThreeDimensional = mode === "3d";
 
@@ -427,13 +434,14 @@ export function buildOrbitArc(
   const startScreenGap = Math.max(1, options.startScreenGap ?? screenGap);
   const endScreenGap = Math.max(1, options.endScreenGap ?? screenGap);
   const maxPadding = Math.min(step * 0.5, 0.46);
-  const fromAngle = ORBIT_FRONT_ANGLE + (index - phase) * step;
-  const toAngle = ORBIT_FRONT_ANGLE + (index + 1 - phase) * step;
-  const startAngle = fromAngle + findOrbitAngleForScreenGap(fromAngle, 1, maxPadding, scaleX, scaleY, startScreenGap);
-  const endAngle = toAngle - findOrbitAngleForScreenGap(toAngle, -1, maxPadding, scaleX, scaleY, endScreenGap);
+  const rotationOffset = getClockwiseRotationOffset(phase, count);
+  const fromAngle = ORBIT_FRONT_ANGLE - index * step + rotationOffset;
+  const toAngle = ORBIT_FRONT_ANGLE - (index + 1) * step + rotationOffset;
+  const startAngle = fromAngle - findOrbitAngleForScreenGap(fromAngle, -1, maxPadding, scaleX, scaleY, startScreenGap);
+  const endAngle = toAngle + findOrbitAngleForScreenGap(toAngle, 1, maxPadding, scaleX, scaleY, endScreenGap);
   const start = orbitPoint(startAngle);
   const end = orbitPoint(endAngle);
-  const path = `M ${formatCoordinate(start.x)} ${formatCoordinate(start.y)} A ${ORBIT_RADIUS_X} ${ORBIT_RADIUS_Y} 0 0 1 ${formatCoordinate(end.x)} ${formatCoordinate(end.y)}`;
+  const path = `M ${formatCoordinate(start.x)} ${formatCoordinate(start.y)} A ${ORBIT_RADIUS_X} ${ORBIT_RADIUS_Y} 0 0 0 ${formatCoordinate(end.x)} ${formatCoordinate(end.y)}`;
 
   return { path, start, end, startAngle, endAngle };
 }

@@ -32,11 +32,11 @@ interface APIEndpointListProps {
 
 // HTTP 方法颜色映射
 const methodColors: Record<string, string> = {
-  GET: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-  POST: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-  PUT: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
-  PATCH: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
-  DELETE: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+  GET: "bg-[hsl(var(--chart-1))] text-[hsl(var(--chart-1))]",
+  POST: "bg-[hsl(var(--chart-2))] text-[hsl(var(--chart-2))]",
+  PUT: "bg-[hsl(var(--chart-3))] text-[hsl(var(--chart-3))]",
+  PATCH: "bg-[hsl(var(--chart-5))] text-[hsl(var(--chart-5))]",
+  DELETE: "bg-[hsl(var(--chart-4))] text-[hsl(var(--chart-4))]",
 };
 // FIXME  My80OmFIVnBZMlhwdTRUbGphRG1zWjg2VjBSalVBPT06ODM5OGU4OWY=
 
@@ -105,7 +105,7 @@ export function APIEndpointList({
                   <Badge
                     className={cn(
                       "shrink-0 font-mono text-xs",
-                      methodColors[endpoint.method] || "bg-gray-100 text-gray-700"
+                      methodColors[endpoint.method] || "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]"
                     )}
                   >
                     {endpoint.method}
@@ -128,9 +128,9 @@ export function APIEndpointList({
                     variant="outline"
                     className={cn(
                       "shrink-0",
-                      endpoint.last_run_status === "passed" && "border-green-500 text-green-700",
-                      endpoint.last_run_status === "failed" && "border-red-500 text-red-700",
-                      endpoint.last_run_status === "running" && "border-blue-500 text-blue-700"
+                      endpoint.last_run_status === "passed" && "border-[hsl(var(--success))] text-[hsl(var(--success))]",
+                      endpoint.last_run_status === "failed" && "border-[hsl(var(--destructive))] text-[hsl(var(--destructive))]",
+                      endpoint.last_run_status === "running" && "border-[hsl(var(--info))] text-[hsl(var(--info))]"
                     )}
                   >
                     {endpoint.last_run_status === "passed" && "✓ " + t("status.passed")}

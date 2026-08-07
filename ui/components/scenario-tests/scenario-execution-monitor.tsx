@@ -123,11 +123,11 @@ export function ScenarioExecutionMonitor({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+        return <CheckCircle2 className="h-4 w-4 text-success" />;
       case "failed":
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       case "running":
-        return <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />;
+        return <RefreshCw className="h-4 w-4 text-info animate-spin" />;
       default:
         return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
@@ -136,9 +136,9 @@ export function ScenarioExecutionMonitor({
   const getStepStatusBadge = (status: string) => {
     switch (status) {
       case "passed":
-        return <Badge className="bg-green-100 text-green-700">通过</Badge>;
+        return <Badge className="bg-[hsl(var(--success))] text-[hsl(var(--success)-foreground)]">通过</Badge>;
       case "failed":
-        return <Badge className="bg-red-100 text-red-700">失败</Badge>;
+        return <Badge className="bg-[hsl(var(--destructive))] text-[hsl(var(--destructive)-foreground)]">失败</Badge>;
       case "skipped":
         return <Badge variant="secondary">跳过</Badge>;
       case "error":
@@ -219,11 +219,11 @@ export function ScenarioExecutionMonitor({
                         {new Date(run.created_at).toLocaleString()}
                       </div>
                       <div className="flex items-center gap-2 mt-1 text-xs">
-                        <span className="text-green-600">
+                        <span className="text-success">
                           通过 {run.passed_steps}
                         </span>
                         {run.failed_steps > 0 && (
-                          <span className="text-red-600">
+                          <span className="text-destructive">
                             失败 {run.failed_steps}
                           </span>
                         )}
@@ -278,7 +278,7 @@ export function ScenarioExecutionMonitor({
                                 )}
                               </div>
                               {result.error_message && (
-                                <div className="text-xs text-red-600 mt-1">
+                                <div className="text-xs text-destructive mt-1">
                                   {result.error_message}
                                 </div>
                               )}
@@ -353,8 +353,8 @@ export function ScenarioExecutionMonitor({
                                           key={idx}
                                           className={`text-xs px-2 py-1 rounded flex items-center gap-2 ${
                                             assertion.passed
-                                              ? "bg-green-50 text-green-700"
-                                              : "bg-red-50 text-red-700"
+                                              ? "bg-[hsl(var(--success)/0.08)] text-[hsl(var(--success))]"
+                                              : "bg-[hsl(var(--destructive)/0.08)] text-[hsl(var(--destructive))]"
                                           }`}
                                         >
                                           {assertion.passed ? (

@@ -96,7 +96,7 @@ export function ScenarioListPanel({
   const getStatusBadge = (scenario: Scenario) => {
     switch (scenario.status) {
       case "active":
-        return <Badge className="bg-green-100 text-green-700">{t("apiTests.active")}</Badge>;
+        return <Badge className="bg-[hsl(var(--success))] text-[hsl(var(--success)-foreground)]">{t("apiTests.active")}</Badge>;
       case "draft":
         return <Badge variant="secondary">{t("apiTests.draft")}</Badge>;
       case "archived":
@@ -114,21 +114,21 @@ export function ScenarioListPanel({
     switch (scenario.last_run_status) {
       case "completed":
         return (
-          <div className="flex items-center gap-1 text-xs text-green-600">
+          <div className="flex items-center gap-1 text-xs text-success">
             <CheckCircle2 className="h-3 w-3" />
             <span>{t("scenarioTests.lastRunSuccess")}</span>
           </div>
         );
       case "failed":
         return (
-          <div className="flex items-center gap-1 text-xs text-red-600">
+          <div className="flex items-center gap-1 text-xs text-destructive">
             <XCircle className="h-3 w-3" />
             <span>{t("scenarioTests.lastRunFailed")}</span>
           </div>
         );
       default:
         return (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 text-xs text-info">
             <Clock className="h-3 w-3" />
             <span>{t("scenarioTests.lastRunRunning")}</span>
           </div>

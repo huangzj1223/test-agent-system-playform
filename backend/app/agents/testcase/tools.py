@@ -329,7 +329,7 @@ def export_testcases_to_json(
 
 
 @tool
-def extract_pdf_text_from_file(file_path: str, enable_multimodal: bool = False) -> str:
+async def extract_pdf_text_from_file(file_path: str, enable_multimodal: bool = False) -> str:
     """
     从 PDF 文件路径中提取文本。
 
@@ -352,12 +352,16 @@ def extract_pdf_text_from_file(file_path: str, enable_multimodal: bool = False) 
         return f"读取PDF文件失败: {str(e)}"
 
     filename = os.path.basename(file_path)
+    from app.core.llms import get_default_image_model
     from app.processors.pdf import extract_pdf_text
+
+    image_model = await get_default_image_model() if enable_multimodal else None
 
     return extract_pdf_text(
         pdf_data,
         filename=filename,
         enable_multimodal=enable_multimodal,
+        image_model=image_model,
     )
 
 

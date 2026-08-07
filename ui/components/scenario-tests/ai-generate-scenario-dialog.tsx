@@ -196,7 +196,7 @@ ${customRequirements.trim()}`;
           </DialogDescription>
 
           {/* 安全提示 */}
-          <div className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700 mt-3">
+          <div className="flex items-center gap-2 rounded-lg banner-success mt-3">
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
@@ -300,11 +300,11 @@ ${customRequirements.trim()}`;
                         >
                           <div className="flex items-center gap-2 mb-1">
                             <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                              intf.method === "GET" ? "bg-green-100 text-green-700" :
-                              intf.method === "POST" ? "bg-blue-100 text-blue-700" :
-                              intf.method === "PUT" ? "bg-yellow-100 text-yellow-700" :
-                              intf.method === "DELETE" ? "bg-red-100 text-red-700" :
-                              "bg-gray-100 text-gray-700"
+                              intf.method === "GET" ? "bg-[hsl(var(--chart-1))] text-[hsl(var(--chart-1)-foreground)]" :
+                              intf.method === "POST" ? "bg-[hsl(var(--chart-5))] text-[hsl(var(--chart-5)-foreground)]" :
+                              intf.method === "PUT" ? "bg-[hsl(var(--chart-3))] text-[hsl(var(--chart-3)-foreground)]" :
+                              intf.method === "DELETE" ? "bg-[hsl(var(--chart-4))] text-[hsl(var(--chart-4)-foreground)]" :
+                              "bg-muted text-muted-foreground"
                             }`}>
                               {intf.method}
                             </span>
@@ -413,7 +413,7 @@ ${customRequirements.trim()}`;
 
           {/* 说明 */}
           {schemaSource === "interfaces" ? (
-            <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 p-4 text-sm text-blue-700 dark:text-blue-400">
+            <div className="rounded-lg banner-info">
               <div className="flex items-start gap-2">
                 <Workflow className="h-5 w-5 shrink-0 mt-0.5" />
                 <div>
@@ -428,7 +428,7 @@ ${customRequirements.trim()}`;
               </div>
             </div>
           ) : (
-            <div className="rounded-lg bg-purple-50 dark:bg-purple-950/20 p-4 text-sm text-purple-700 dark:text-purple-400">
+            <div className="rounded-lg bg-[hsl(var(--chart-1)/0.06)] border border-[hsl(var(--chart-1)/0.15)] p-4 text-sm text-[hsl(var(--chart-1))]">
               <div className="flex items-start gap-2">
                 <Workflow className="h-5 w-5 shrink-0 mt-0.5" />
                 <div>

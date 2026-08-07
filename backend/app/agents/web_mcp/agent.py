@@ -24,7 +24,6 @@ from deepagents import create_deep_agent as create_agent
 from deepagents.backends import FilesystemBackend, LocalShellBackend, CompositeBackend
 from deepagents.middleware import SkillsMiddleware
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
-from langchain_core.language_models import ModelProfile
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.pregel import Pregel
@@ -32,13 +31,11 @@ from langgraph.pregel import Pregel
 from app.agents.tools.web import get_local_tools
 from app.agents.tools.error_handler import wrap_tools_with_error_handling
 from app.config.settings import settings
-from app.core.llms import text_model as model
+from app.core.llms import get_default_text_model
 
 # =============================================================================
 # 配置
 # =============================================================================
-
-model.profile = ModelProfile(max_input_tokens=128000)
 
 skills_root = Path(settings.web_mcp_skills_root).resolve()
 workspace_root = Path(settings.web_mcp_workspace_root).resolve()
@@ -435,6 +432,7 @@ async def make_agent() -> AsyncIterator[Pregel]:
     - MCP session 在智能体生命周期内保持活跃
     - 退出时自动清理资源
     """
+    model = await get_default_text_model()
     # 创建中间件
     context_middleware = WebContextInjectionMiddleware()
 

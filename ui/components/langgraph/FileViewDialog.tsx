@@ -9,8 +9,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { toast } from "sonner";
 import { MarkdownContent } from "@/components/langgraph/MarkdownContent";
 import type { FileItem } from "@/lib/langgraph/types";
@@ -63,6 +61,8 @@ export const FileViewDialog = React.memo<{
   const [isEditingMode, setIsEditingMode] = useState(file === null);
   const [fileName, setFileName] = useState(String(file?.path || ""));
   const [fileContent, setFileContent] = useState(String(file?.content || ""));
+  const [SyntaxHighlighterComponent, setSyntaxHighlighterComponent] = useState<any>(null);
+  const [syntaxStyle, setSyntaxStyle] = useState<any>(null);
 
   const fileUpdate = useSWRMutation(
     { kind: "files-update", fileName, fileContent },
@@ -94,6 +94,27 @@ export const FileViewDialog = React.memo<{
   const language = useMemo(() => {
     return LANGUAGE_MAP[fileExtension] || "text";
   }, [fileExtension]);
+
+  useEffect(() => {
+    if (isEditingMode || isMarkdown || SyntaxHighlighterComponent) {
+      return;
+    }
+
+    let disposed = false;
+
+    Promise.all([
+      import("react-syntax-highlighter"),
+      import("react-syntax-highlighter/dist/esm/styles/prism"),
+    ]).then(([highlighterModule, styleModule]) => {
+      if (disposed) return;
+      setSyntaxHighlighterComponent(() => highlighterModule.Prism);
+      setSyntaxStyle(styleModule.oneDark);
+    });
+
+    return () => {
+      disposed = true;
+    };
+  }, [SyntaxHighlighterComponent, isEditingMode, isMarkdown]);
 
   const handleCopy = useCallback(() => {
     if (fileContent) {
@@ -216,17 +237,17 @@ export const FileViewDialog = React.memo<{
               className="h-full min-h-[400px] resize-none font-mono text-sm"
             />
           ) : (
-            <ScrollArea className="bg-surface h-full rounded-md">
+            <ScrollArea className="bg-background h-full rounded-md">
               <div className="p-4">
                 {fileContent ? (
                   isMarkdown ? (
                     <div className="rounded-md p-6">
                       <MarkdownContent content={fileContent} />
                     </div>
-                  ) : (
-                    <SyntaxHighlighter
+                  ) : SyntaxHighlighterComponent && syntaxStyle ? (
+                    <SyntaxHighlighterComponent
                       language={language}
-                      style={oneDark}
+                      style={syntaxStyle}
                       customStyle={{
                         margin: 0,
                         borderRadius: "0.5rem",
@@ -241,7 +262,11 @@ export const FileViewDialog = React.memo<{
                       }}
                     >
                       {fileContent}
-                    </SyntaxHighlighter>
+                    </SyntaxHighlighterComponent>
+                  ) : (
+                    <pre className="m-0 overflow-x-auto whitespace-pre-wrap break-all rounded-md bg-[hsl(var(--muted))] p-4 font-mono text-sm leading-6 text-[hsl(var(--foreground))]">
+                      {fileContent}
+                    </pre>
                   )
                 ) : (
                   <div className="flex items-center justify-center p-12">

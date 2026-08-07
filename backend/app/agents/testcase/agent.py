@@ -10,7 +10,7 @@ from app.agents.testcase.shell_guard import TestcaseShellBackend
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse, wrap_model_call
 
 from app.config.settings import settings
-from app.core.llms import image_model, text_model
+from app.core.llms import get_default_image_model, get_default_text_model
 from app.middleware.file_context import FileContextMiddleware
 from app.middleware.model_empty_stream_retry import ModelEmptyStreamRetryMiddleware
 from app.middleware.output_continuation import OutputContinuationMiddleware
@@ -34,9 +34,6 @@ class Context(TypedDict, total=False):
 # ============================================================================
 # 大语言模型配置（统一 max_tokens，避免 Phase 3 长用例输出被截断）
 # ============================================================================
-# 使用 backend 的统一模型配置
-llm = text_model
-
 # ============================================================================
 # 系统提示词：六大 Skills 体系 + 样例风格基准 + URL/RAG 工具降级
 # ============================================================================
@@ -408,14 +405,16 @@ def _has_file_attachments(request: ModelRequest) -> bool:
     return False
 
 
-@wrap_model_call
-async def dynamic_model_selection(request: ModelRequest, handler) -> ModelResponse:
-    """根据消息是否含直接图片输入，在多模态模型与文本模型之间动态切换。"""
-    has_direct_image = _has_image_in_messages(request) and not _has_file_attachments(request)
-    model = image_model if has_direct_image else text_model
-    if model is None:
-        return await handler(request)
-    return await handler(request.override(model=model))
+def build_dynamic_model_selection(text_model, image_model):
+    """Create per-run model routing backed by the current database defaults."""
+
+    @wrap_model_call
+    async def dynamic_model_selection(request: ModelRequest, handler) -> ModelResponse:
+        has_direct_image = _has_image_in_messages(request) and not _has_file_attachments(request)
+        model = image_model if has_direct_image else text_model
+        return await handler(request.override(model=model))
+
+    return dynamic_model_selection
 
 
 class ToolCallMessageSanitizer(AgentMiddleware):
@@ -517,27 +516,33 @@ composite_backend = CompositeBackend(
     default=shell_backend,
     routes={"/": file_backend, **_skills_routes},
 )
-agent = create_agent(
-    model=llm,
-    tools=get_all_tools(),
-    backend=composite_backend,
-    skills=["/testcase/skills/"],
-    middleware=[
-        ModelEmptyStreamRetryMiddleware(max_retries=3),
-        OutputContinuationMiddleware(max_continuations=8),
-        PhaseTodoSyncMiddleware(),
-        RuntimeContextInjectionMiddleware(),
-        dynamic_model_selection,
-        RAGMiddleware(),
-        FileContextMiddleware(original_system_prompt=SYSTEM_PROMPT),
-        ToolCallMessageSanitizer(),
-    ],
-    system_prompt=SYSTEM_PROMPT,
-    context_schema=Context,
-)
-
-
 @asynccontextmanager
 async def make_agent():
-    """Backward-compatible async factory for callers that expect make_agent()."""
-    yield agent
+    """Create a test-case agent with the latest database-selected models."""
+    text_model = await get_default_text_model()
+    image_model = await get_default_image_model()
+    runtime_agent = create_agent(
+        model=text_model,
+        tools=get_all_tools(),
+        backend=composite_backend,
+        skills=["/testcase/skills/"],
+        middleware=[
+            ModelEmptyStreamRetryMiddleware(max_retries=3),
+            OutputContinuationMiddleware(max_continuations=8),
+            PhaseTodoSyncMiddleware(),
+            RuntimeContextInjectionMiddleware(),
+            build_dynamic_model_selection(text_model, image_model),
+            RAGMiddleware(),
+            FileContextMiddleware(
+                original_system_prompt=SYSTEM_PROMPT,
+                image_model=image_model,
+            ),
+            ToolCallMessageSanitizer(),
+        ],
+        system_prompt=SYSTEM_PROMPT,
+        context_schema=Context,
+    )
+    yield runtime_agent
+
+
+agent = make_agent

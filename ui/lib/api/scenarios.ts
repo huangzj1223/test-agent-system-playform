@@ -382,3 +382,50 @@ export async function getStepResults(
   }
   return response.json();
 }
+
+
+function getDownloadFilename(response: Response, fallback: string): string {
+  const disposition = response.headers.get("content-disposition") || "";
+  const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+  const filename = decodeURIComponent(match?.[1] || match?.[2] || fallback);
+  return filename || fallback;
+}
+
+async function downloadFile(url: string, fallbackFilename: string): Promise<void> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    let message = "Download failed";
+    try {
+      const error = await response.json();
+      message = error.detail || error.message || message;
+    } catch {
+      message = await response.text() || message;
+    }
+    throw new Error(message);
+  }
+
+  const blob = await response.blob();
+  const filename = getDownloadFilename(response, fallbackFilename);
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
+export function exportScenarioTestCases(projectId: string): Promise<void> {
+  return downloadFile(
+    `${API_BASE}/exports/test-cases?project_id=${encodeURIComponent(projectId)}`,
+    `scenario-test-cases-${projectId}.xlsx`
+  );
+}
+
+export function exportScenarioTestScripts(projectId: string): Promise<void> {
+  return downloadFile(
+    `${API_BASE}/exports/scripts?project_id=${encodeURIComponent(projectId)}`,
+    `scenario-test-scripts-${projectId}.zip`
+  );
+}

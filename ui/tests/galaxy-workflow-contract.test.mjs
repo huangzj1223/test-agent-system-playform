@@ -354,14 +354,56 @@ test("Phase 2 renders one weak static orbit without arrows or flow effects", () 
   assert.match(orbit, /animation:\s*none;/);
 });
 
-test("Phase 2 keeps phase zero and does not start automatic rotation", () => {
+test("clockwise motion advances phase while preserving pause and reduced-motion controls", () => {
   const component = readUi("components/dashboard/agent-constellation.tsx");
 
-  assert.match(component, /GALAXY_STATIC_LAYOUT\.phase/);
-  assert.match(component, /computeStaticOrbitNode/);
-  assert.match(component, /data-static-layout="true"/);
-  assert.doesNotMatch(component, /requestAnimationFrame\(animate\)|advanceOrbitRawPhase|easeOrbitPhase|getForwardPhaseTarget/);
+  assert.match(component, /GALAXY_MOTION_DIRECTION/);
+  assert.match(component, /computeOrbitNode/);
+  assert.match(component, /requestAnimationFrame\(animate\)/);
+  assert.match(component, /advanceOrbitRawPhase/);
+  assert.match(component, /easeOrbitPhase/);
+  assert.match(component, /data-motion-direction=\{GALAXY_MOTION_DIRECTION\}/);
+  assert.match(component, /prefers-reduced-motion/);
   assert.doesNotMatch(component, /setInterval\(/);
+});
+
+test("seven stage nodes use unique upright holographic energy emblems", () => {
+  const component = readUi("components/dashboard/agent-constellation.tsx");
+  const css = readUi("app/globals.css");
+
+  assert.match(component, /StageHologramIcon/);
+  assert.match(component, /data-stage-icon=/);
+  assert.doesNotMatch(component, /galaxy-stage-orb-core[\s\S]{0,240}<ProductIcon/);
+
+  const iconSource = readUi("components/dashboard/stage-hologram-icon.tsx");
+  const iconIds = [
+    "requirement-scan",
+    "test-blueprint",
+    "script-braces",
+    "execution-orbit",
+    "result-radiance",
+    "repair-reconnect",
+    "regression-shield",
+  ];
+
+  for (const iconId of iconIds) {
+    assert.match(iconSource, new RegExp(`\\"${iconId}\\"`));
+  }
+  assert.equal(new Set(iconIds).size, 7);
+  assert.match(iconSource, /viewBox="0 0 32 32"/);
+  assert.match(iconSource, /vectorEffect:\s*"non-scaling-stroke"/);
+  assert.match(iconSource, /galaxy-hologram-icon-primary/);
+  assert.match(iconSource, /galaxy-hologram-icon-accent/);
+
+  const uprightIcon = css.match(/\.galaxy-hologram-icon\s*\{([\s\S]*?)\}/)?.[1] ?? "";
+  const farIcon = css.match(/\.galaxy-stage-node\[data-visual-level="far"\] \.galaxy-stage-orb-core > svg\s*\{([\s\S]*?)\}/)?.[1] ?? "";
+  const nearIcon = css.match(/\.galaxy-stage-node\[data-visual-level="near"\] \.galaxy-stage-orb-core > svg\s*\{([\s\S]*?)\}/)?.[1] ?? "";
+  assert.match(uprightIcon, /transform:\s*rotate\(0deg\)/);
+  assert.match(farIcon, /opacity:\s*0\.94/);
+  assert.match(farIcon, /width:\s*10px/);
+  assert.doesNotMatch(farIcon, /blur\(/);
+  assert.match(nearIcon, /width:\s*28px/);
+  assert.match(nearIcon, /height:\s*28px/);
 });
 
 test("Phase E keeps a layered spiral galaxy and a luminous project source", () => {
@@ -470,7 +512,7 @@ test("immersive shell removes the title block while preserving right controls an
   assert.match(action, /background:\s*rgb\(255 255 255 \/ 0\.07\)/);
 });
 
-test("Phase 2 static layout preserves far identity, debug geometry and HUD clearance", () => {
+test("clockwise depth layout preserves far identity, debug geometry and HUD clearance", () => {
   const component = readUi("components/dashboard/agent-constellation.tsx");
   const css = readUi("app/globals.css");
   const carousel = readUi("lib/dashboard/constellation-carousel.ts");
@@ -482,7 +524,9 @@ test("Phase 2 static layout preserves far identity, debug geometry and HUD clear
   assert.match(component, /galaxy-layout-debug-safe-zone/);
   assert.match(component, /galaxy-layout-debug-node-meta/);
   assert.match(component, /--stage-inverse-scale/);
-  assert.match(component, /data-static-level=/);
+  assert.match(component, /data-depth-level=/);
+  assert.match(component, /galaxyDebug"\) === "motion"/);
+  assert.match(component, /galaxy-motion-debug-panel/);
 
   const farCore = css.match(/\.galaxy-stage-node\[data-visual-level="far"\] \.galaxy-stage-orb-core\s*\{([\s\S]*?)\}/)?.[1] ?? "";
   assert.match(farCore, /width:\s*var\(--stage-core-size\)/);
@@ -490,8 +534,8 @@ test("Phase 2 static layout preserves far identity, debug geometry and HUD clear
   assert.match(css, /\.galaxy-stage-node\[data-visual-level="far"\]:hover \.galaxy-stage-name/);
   assert.match(css, /\.galaxy-constellation\[data-layout-debug="true"\]/);
 
-  const staticMiddleCaption = css.match(/\.galaxy-stage-node\[data-static-level="middle"\] \.galaxy-stage-orb-caption\s*\{([\s\S]*?)\}/)?.[1] ?? "";
-  const staticMiddleIcon = css.match(/\.galaxy-stage-node\[data-static-level="middle"\] \.galaxy-stage-orb-core > svg\s*\{([\s\S]*?)\}/)?.[1] ?? "";
+  const staticMiddleCaption = css.match(/\.galaxy-stage-node\[data-depth-level="middle"\] \.galaxy-stage-orb-caption\s*\{([\s\S]*?)\}/)?.[1] ?? "";
+  const staticMiddleIcon = css.match(/\.galaxy-stage-node\[data-depth-level="middle"\] \.galaxy-stage-orb-core > svg\s*\{([\s\S]*?)\}/)?.[1] ?? "";
   assert.match(staticMiddleCaption, /opacity:\s*1/);
   assert.match(staticMiddleCaption, /scale\(var\(--stage-inverse-scale\)\)/);
   assert.match(staticMiddleIcon, /opacity:\s*0\.9/);

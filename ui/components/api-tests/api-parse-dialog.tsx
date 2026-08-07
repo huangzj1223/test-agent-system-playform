@@ -1,11 +1,11 @@
-﻿// TODO  MC80OmFIVnBZMlhwdTRUbGphRG1zWjg2Ykhvd1JnPT06ZGNmMzdjNjE=
+// TODO  MC80OmFIVnBZMlhwdTRUbGphRG1zWjg2Ykhvd1JnPT06ZGNmMzdjNjE=
 
 /**
  * API 解析对话框（增强版）
  *
  * 支持两种方式：
  * 1. 输入 OpenAPI 文档的 URL
- * 2. 上传本地 JSON 文件
+ * 2. 上传本地 JSON/YAML/Markdown 文件
  */
 "use client";
 // eslint-disable  MS80OmFIVnBZMlhwdTRUbGphRG1zWjg2Ykhvd1JnPT06ZGNmMzdjNjE=
@@ -71,8 +71,10 @@ export function APIParseDialog({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.name.endsWith('.json')) {
-        toast.error("请选择 JSON 格式的文件");
+      const fileName = file.name.toLowerCase();
+      const supported = ['.json', '.yaml', '.yml', '.md'].some((ext) => fileName.endsWith(ext));
+      if (!supported) {
+        toast.error("请选择 JSON、YAML 或 Markdown 格式的文件");
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
@@ -104,7 +106,8 @@ export function APIParseDialog({
       if (sourceType === "file") {
         // 从文件读取
         const text = await selectedFile!.text();
-        fileContent = JSON.parse(text);
+        const fileName = selectedFile!.name.toLowerCase();
+        fileContent = fileName.endsWith(".json") ? JSON.parse(text) : text;
       } else {
         // 从 URL 获取（后端会处理远程获取）
         fileContent = { url: url.trim() };
@@ -125,8 +128,9 @@ export function APIParseDialog({
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || '解析失败');
+        const error = await response.json().catch(() => ({}));
+        const detail = Array.isArray(error.detail) ? error.detail.map((item: any) => item.msg || JSON.stringify(item)).join('; ') : error.detail;
+        throw new Error(detail || '解析失败');
       }
 
       const result = await response.json();
@@ -158,7 +162,7 @@ export function APIParseDialog({
           </DialogTitle>
           <DialogDescription className="text-base">
             {currentStep === "input" &&
-              "支持输入 URL 或上传 JSON 文件，自动创建文件夹结构并提取接口信息"
+              "支持输入 URL 或上传 JSON/YAML/Markdown 文件，自动创建文件夹结构并提取接口信息"
             }
             {currentStep === "parsing" &&
               "正在解析文档并创建文件夹结构，请稍候..."
@@ -170,7 +174,7 @@ export function APIParseDialog({
 
           {/* 安全提示 */}
           {currentStep === "input" && (
-            <div className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700 mt-3">
+            <div className="flex items-center gap-2 rounded-lg banner-success mt-3">
               <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
@@ -220,7 +224,7 @@ export function APIParseDialog({
                   placeholder="https://api.example.com/openapi.json"
                 />
                 <p className="text-xs text-muted-foreground">
-                  支持公开的 OpenAPI/Swagger JSON URL
+                  支持公开的 OpenAPI/Swagger JSON、YAML 或 Markdown URL
                 </p>
               </div>
             )}
@@ -229,13 +233,13 @@ export function APIParseDialog({
             {sourceType === "file" && (
               <div className="space-y-2">
                 <Label>
-                  选择 JSON 文件 <span className="text-destructive">*</span>
+                  选择 API 文档文件 <span className="text-destructive">*</span>
                 </Label>
                 <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors">
                   <input
                     type="file"
                     id="openapiFile"
-                    accept=".json"
+                    accept=".json,.yaml,.yml,.md"
                     className="hidden"
                     onChange={handleFileSelect}
                   />
@@ -268,7 +272,7 @@ export function APIParseDialog({
                           <div>
                             <p className="text-sm font-medium">点击选择文件</p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              支持 JSON 格式，最大 10MB
+                              支持 JSON、YAML、Markdown 格式，最大 10MB
                             </p>
                           </div>
                         </>
@@ -280,7 +284,7 @@ export function APIParseDialog({
             )}
 
             {/* 说明信息 */}
-            <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
+            <div className="rounded-lg banner-info">
               <div className="flex items-start gap-2">
                 <FolderOpen className="h-5 w-5 shrink-0 mt-0.5" />
                 <div>
@@ -300,9 +304,9 @@ export function APIParseDialog({
             <div className="rounded-lg border p-4 text-sm">
               <p className="font-medium mb-2">支持的文件格式：</p>
               <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
-                <div>• OpenAPI 3.0.x (JSON)</div>
-                <div>• OpenAPI 3.1.x (JSON)</div>
-                <div>• Swagger 2.0 (JSON)</div>
+                <div>• OpenAPI 3.0.x (JSON/YAML/MD)</div>
+                <div>• OpenAPI 3.1.x (JSON/YAML/MD)</div>
+                <div>• Swagger 2.0 (JSON/YAML/MD)</div>
               </div>
             </div>
           </div>
@@ -329,8 +333,8 @@ export function APIParseDialog({
           <div className="space-y-6 py-4">
             {/* 成功图标 */}
             <div className="flex justify-center">
-              <div className="rounded-full bg-green-100 p-4">
-                <CheckCircle2 className="h-12 w-12 text-green-600" />
+              <div className="rounded-full bg-[hsl(var(--success)/0.1)] p-4">
+                <CheckCircle2 className="h-12 w-12 text-[hsl(var(--success))]" />
               </div>
             </div>
 
@@ -357,7 +361,7 @@ export function APIParseDialog({
                 <div className="text-xs text-muted-foreground mt-1">接口总数</div>
               </div>
               <div className="rounded-lg border p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-[hsl(var(--success))]">
                   {parseResult.tag_folders?.length || 0}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">已创建文件夹</div>
@@ -381,7 +385,7 @@ export function APIParseDialog({
             )}
 
             {/* 下一步提示 */}
-            <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
+            <div className="rounded-lg banner-info">
               <div className="flex items-start gap-2">
                 <FolderOpen className="h-5 w-5 shrink-0 mt-0.5" />
                 <div>

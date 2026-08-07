@@ -14,6 +14,7 @@ API 自动化测试智能体
 """
 
 import asyncio
+import os
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,21 +31,24 @@ from langgraph.pregel import Pregel
 
 from app.agents.tools.api import get_local_tools
 from app.config.settings import settings
-from app.core.llms import text_model as model
+from app.core.llms import get_default_text_model
 from app.utils.filesystem import FixedFilesystemBackend
 
 # =============================================================================
 # 配置
 # =============================================================================
 
-skills_root = Path(settings.api_skills_root).resolve()
-workspace_root = Path(settings.api_workspace_root).resolve()
+project_root = Path(__file__).resolve().parents[4]
+skills_root = (project_root / settings.api_skills_root).resolve()
+workspace_root = (project_root / settings.api_workspace_root).resolve()
+ui_node_bin = project_root / "ui" / "node_modules" / ".bin"
+shell_path = os.pathsep.join((str(ui_node_bin), os.environ.get("PATH", "")))
 
 skills_backend = FilesystemBackend(root_dir=skills_root, virtual_mode=True)
 workspace_backend = FilesystemBackend(root_dir=workspace_root, virtual_mode=True)
-shell_backend = LocalShellBackend(root_dir=Path(settings.api_workspace_root).resolve(),
+shell_backend = LocalShellBackend(root_dir=workspace_root,
                                   inherit_env=True,
-                                  env={"PATH": r"C:\Program Files\nodejs;C:\Users\65132\AppData\Roaming\npm;C:\Windows\System32;C:\Windows",},
+                                  env={"PATH": shell_path},
                                   timeout=180,
                                   virtual_mode=True)
 composite_backend = CompositeBackend(
@@ -97,7 +101,11 @@ class APIContextInjectionMiddleware(AgentMiddleware):
 - `project_identifier`: `{project_identifier}`
 - `folder_id`: `{folder_id}`
 
-**重要提示：** 这些参数由系统自动注入，不要询问用户提供。
+**重要提示：**
+- 这些参数由系统自动注入，不要询问用户提供。
+- 项目标识只能使用上面的 `project_identifier`。
+- 用户提示中的“验收编号”“任务编号”“请求编号”仅用于追踪，不是项目 ID、端点 UUID 或测试计划 ID。
+- 除非用户明确提供了端点 UUID，否则不要把提示中的其他编号传给要求 UUID 的工具。
 ---
 """
         # 如果 content 是列表，需要将字符串包装成正确的内容块格式
@@ -298,6 +306,7 @@ async def make_agent() -> AsyncIterator[Pregel]:
     - MCP session 在智能体生命周期内保持活跃
     - 退出时自动清理资源
     """
+    model = await get_default_text_model()
     # 创建中间件
     context_middleware = APIContextInjectionMiddleware()
 # type: ignore  My80OmFIVnBZMlhwdTRUbGphRG1zWjg2ZEdGUWJ3PT06YzI4ZjYxMjE=
@@ -327,16 +336,5 @@ async def make_agent() -> AsyncIterator[Pregel]:
 
         yield api_agent
 
-# 创建中间件
-context_middleware = APIContextInjectionMiddleware()
-all_tools = get_local_tools()
-api_agent = create_agent(
-            model=model,
-            tools=all_tools,
-            system_prompt=SYSTEM_PROMPT,
-            middleware=[skills_middleware, context_middleware],
-            backend=composite_backend,
-            context_schema=APIAgentContext,
-        )
-# 导出 make_agent 供 LangGraph API 使用
-agent = api_agent
+# 导出异步工厂，确保每次运行使用数据库中的当前默认模型。
+agent = make_agent

@@ -36,6 +36,7 @@ import type {
   TestCaseTemplate,
   AutomationStatus,
 } from "@/lib/api/types";
+import { PriorityIndicator, TestCaseStateIndicator } from "@/components/icons";
 
 interface TestCaseDialogProps {
   open: boolean;
@@ -599,15 +600,15 @@ export function TestCaseDialog({
                       </SelectTrigger>
                       <SelectContent>
                         {/* 设计阶段 */}
-                        <SelectItem value="new">🆕 新建</SelectItem>
-                        <SelectItem value="review_pending">⏳ 待评审</SelectItem>
-                        <SelectItem value="reviewed">✅ 已评审</SelectItem>
+                        <SelectItem value="new"><TestCaseStateIndicator state="new" /></SelectItem>
+                        <SelectItem value="review_pending"><TestCaseStateIndicator state="review_pending" /></SelectItem>
+                        <SelectItem value="reviewed"><TestCaseStateIndicator state="reviewed" /></SelectItem>
                         {/* 执行阶段 */}
-                        <SelectItem value="not_run">⚪ 未执行</SelectItem>
-                        <SelectItem value="passed">✅ 通过</SelectItem>
-                        <SelectItem value="failed">❌ 失败</SelectItem>
-                        <SelectItem value="blocked">🚫 阻塞</SelectItem>
-                        <SelectItem value="skipped">⏭️ 跳过</SelectItem>
+                        <SelectItem value="not_run"><TestCaseStateIndicator state="not_run" /></SelectItem>
+                        <SelectItem value="passed"><TestCaseStateIndicator state="passed" /></SelectItem>
+                        <SelectItem value="failed"><TestCaseStateIndicator state="failed" /></SelectItem>
+                        <SelectItem value="blocked"><TestCaseStateIndicator state="blocked" /></SelectItem>
+                        <SelectItem value="skipped"><TestCaseStateIndicator state="skipped" /></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -627,10 +628,10 @@ export function TestCaseDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="critical">🔴 紧急</SelectItem>
-                        <SelectItem value="high">🟠 高</SelectItem>
-                        <SelectItem value="medium">🟡 中</SelectItem>
-                        <SelectItem value="low">🟢 低</SelectItem>
+                        <SelectItem value="critical"><PriorityIndicator priority="critical" /></SelectItem>
+                        <SelectItem value="high"><PriorityIndicator priority="high" /></SelectItem>
+                        <SelectItem value="medium"><PriorityIndicator priority="medium" /></SelectItem>
+                        <SelectItem value="low"><PriorityIndicator priority="low" /></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

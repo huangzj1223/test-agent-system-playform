@@ -1,0 +1,51 @@
+/**
+ * 扩展页面共享设计变量（SidePanel 等扩展自有页面）
+ * 取值对齐主平台企业浅色后台风格：白/浅灰底、蓝色主色、圆角卡片、细边框、轻阴影。
+ * 扩展页天然与被访问网页 CSS 隔离，此处仅约束扩展自身页面。
+ */
+:root {
+  --ag-primary: #2563eb;
+  --ag-primary-hover: #1d4ed8;
+  --ag-primary-light: #eef3ff;
+  --ag-page-bg: #f5f7fa;
+  --ag-card-bg: #ffffff;
+  --ag-border: #eef0f3;
+  --ag-border-strong: #e2e6ec;
+  --ag-text-primary: #1f2733;
+  --ag-text-secondary: #737a86;
+  --ag-text-placeholder: #a8b0bd;
+  --ag-danger: #f56c6c;
+  --ag-success: #22c55e;
+  --ag-radius-card: 12px;
+  --ag-radius-input: 8px;
+  --ag-radius-btn: 8px;
+  --ag-shadow-card: 0 2px 12px rgb(0 0 0 / 6%);
+  --ag-shadow-pop: 0 6px 24px rgb(0 0 0 / 10%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--ag-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 细化滚动条，禁止横向滚动 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d9e0;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

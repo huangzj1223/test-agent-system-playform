@@ -9,7 +9,7 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Info, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -124,9 +124,9 @@ export function ScenarioCreateDialog({
             </div>
 
             {/* 提示信息 */}
-            <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 p-3 border border-blue-200 dark:border-blue-800">
-              <p className="text-xs text-blue-700 dark:text-blue-400">
-                💡 <strong>{t("common.info")}</strong>：{t("scenarioTests.scenarioCreateHint")}
+            <div className="rounded-lg bg-[hsl(var(--info)/0.06)] border border-[hsl(var(--info)/0.15)] p-3">
+              <p className="text-xs text-info">
+                <Info className="mr-1 inline h-4 w-4" /><strong>{t("common.info")}</strong>：{t("scenarioTests.scenarioCreateHint")}
               </p>
             </div>
           </div>

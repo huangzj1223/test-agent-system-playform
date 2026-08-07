@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "proposal_id": "e74a3c1d-a357-4758-95bb-88cb0097ace0",
+  "state": "generalized",
+  "project_root_hash": "8635ef161b4ffbae96dfb8f2ecae5071721d2ceed0c0e08ff18c70db7779e6f4",
+  "feedback_ids": [],
+  "candidate": {
+    "id": "datafoundry-current-api-dataset-id-producer",
+    "kind": "creator_mapping",
+    "match": {
+      "project": "datafoundry",
+      "field": "dataset_id"
+    },
+    "action": {
+      "method": "POST",
+      "path": "/api/v1/datasets",
+      "response_path": "$.data.id"
+    },
+    "evidence": [
+      "services/datafoundry_service/modules/dataset/api.py",
+      "services/datafoundry_service/modules/dataset/models.py"
+    ]
+  },
+  "created_at": "2026-07-10T07:01:08.458879+00:00"
+}

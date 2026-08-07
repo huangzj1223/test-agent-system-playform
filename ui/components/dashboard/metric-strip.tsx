@@ -13,26 +13,22 @@ const items = [
 
 export function MetricStrip({ metrics }: { metrics: DashboardMetrics }) {
   return (
-    <div className="workspace-panel grid grid-cols-2 overflow-hidden lg:grid-cols-5">
+    <div className="workspace-panel grid grid-cols-1 overflow-hidden sm:grid-cols-2 lg:grid-cols-5">
       {items.map(({ key, label, icon, suffix }, index) => (
         <div
           key={key}
-          className={`relative min-h-[86px] px-4 py-4 ${index >= 2 ? "border-t" : ""} ${index % 2 === 1 ? "border-l" : ""} ${index === 4 ? "col-span-2" : ""} lg:col-span-1 lg:border-t-0 ${index ? "lg:border-l" : "lg:border-l-0"}`}
+          className={`relative flex items-center gap-3 px-4 py-3 ${index >= 2 ? "border-t sm:border-t-0" : ""} ${index % 2 === 1 ? "sm:border-l" : ""} ${index ? "lg:border-l" : ""}`}
         >
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs font-medium text-muted-foreground">{label}</span>
-            <IconFrame variant="plain" className="h-7 w-7 rounded-md bg-[hsl(var(--accent))] text-[hsl(var(--primary))]">
-              <ProductIcon name={icon as ProductIconKey} className="h-4 w-4" />
-            </IconFrame>
-          </div>
-          <div className="mt-2 flex items-end gap-2">
-            <span className="text-2xl font-semibold tracking-normal text-foreground">
-              {formatMetric(metrics[key], suffix)}
-            </span>
-            {key === "active_projects" && (
-              <span className="mb-1 text-[11px] text-muted-foreground">/ {metrics.total_projects}</span>
-            )}
-          </div>
+          <IconFrame variant="plain" className="h-7 w-7 shrink-0 rounded-md bg-[hsl(var(--accent))] text-[hsl(var(--primary))]">
+            <ProductIcon name={icon as ProductIconKey} className="h-4 w-4" />
+          </IconFrame>
+          <span className="text-xs font-medium text-muted-foreground">{label}</span>
+          <span className="ml-auto text-lg font-semibold tracking-normal text-foreground tabular-nums">
+            {formatMetric(metrics[key], suffix)}
+          </span>
+          {key === "active_projects" && (
+            <span className="text-[11px] text-muted-foreground">/ {metrics.total_projects}</span>
+          )}
           {key === "manual_actions" && metrics.manual_actions > 0 && (
             <span className="absolute bottom-0 left-0 top-0 w-0.5 bg-[hsl(var(--risk-warning))]" />
           )}

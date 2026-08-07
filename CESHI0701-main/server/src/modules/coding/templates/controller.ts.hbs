@@ -1,0 +1,20 @@
+import { ApiTags } from '@nestjs/swagger';
+import { CrudController, CrudControllerBase } from '@/common/crud';
+import { {{name}}Service } from '../../services/{{kebab name}}.service';
+
+@ApiTags('{{comment}}')
+@CrudController({
+  prefix: '{{routePrefix}}',
+  api: [{{#each options.api}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}}],
+  pageQueryOp: {
+    keyWordLikeFields: [{{#each options.keyWordLikeFields}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}}],
+{{#if options.fieldEq.length}}
+    fieldEq: [{{#each options.fieldEq}}'{{this}}'{{#unless @last}}, {{/unless}}{{/each}}],
+{{/if}}
+  },
+})
+export class {{name}}Controller extends CrudControllerBase {
+  constructor(private readonly {{camel name}}Service: {{name}}Service) {
+    super({{camel name}}Service);
+  }
+}

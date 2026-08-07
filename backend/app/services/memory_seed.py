@@ -1,0 +1,77 @@
+"""Built-in memory seed data."""
+
+BUILTIN_MEMORIES = [
+    {
+        "memory_key": "soul.md",
+        "name": "soul.md",
+        "description": "智能体身份与行为边界",
+        "category": "internal",
+        "risk_level": "L3",
+        "version": "v1.0.0",
+        "content": "# SOUL.md\n\n你是企业智能测试平台中的协作智能体。高风险操作需要人工确认。",
+        "related_keys": ["user.md", "memory.md"],
+        "sort": 0,
+        "permission": {"can_auto_write": False, "need_confirm": True},
+        "suggestions": ["建议补充高风险 CLI 操作的确认规则。"],
+    },
+    {
+        "memory_key": "user.md",
+        "name": "user.md",
+        "description": "用户画像与偏好",
+        "category": "internal",
+        "risk_level": "L3",
+        "version": "v1.0.0",
+        "content": "# USER.md\n\n用户偏好结果导向、验证充分、中文清晰总结。",
+        "related_keys": ["soul.md"],
+        "sort": 1,
+        "permission": {"can_auto_write": False, "need_confirm": True},
+        "suggestions": ["建议记录用户希望每阶段自动验证后再继续。"],
+    },
+    {
+        "memory_key": "memory.md",
+        "name": "memory.md",
+        "description": "项目长期记忆",
+        "category": "project",
+        "risk_level": "L2",
+        "version": "v1.0.0",
+        "content": "# MEMORY.md\n\n当前项目是智能自动化测试平台，迁移目标包含模型配置、AG-UI、记忆、工具和技能。",
+        "related_keys": ["soul.md", "skill-memory.md"],
+        "sort": 2,
+        "permission": {"can_auto_write": True, "need_confirm": True},
+        "suggestions": ["建议补充迁移阶段验证记录。"],
+    },
+    {
+        "memory_key": "skill-memory.md",
+        "name": "skill-memory.md",
+        "description": "技能使用经验",
+        "category": "internal",
+        "risk_level": "L2",
+        "version": "v1.0.0",
+        "content": "# SKILL-MEMORY.md\n\n执行技能前先确认任务边界，完成后保留可复核证据。",
+        "related_keys": ["memory.md", "tool-memory.md"],
+        "sort": 3,
+        "permission": {"can_auto_write": True, "need_confirm": False},
+        "suggestions": ["建议后端生成前先读取表结构。"],
+    },
+    {
+        "memory_key": "tool-memory.md",
+        "name": "tool-memory.md",
+        "description": "工具和 CLI 调用经验",
+        "category": "internal",
+        "risk_level": "L1",
+        "version": "v1.0.0",
+        "content": "# TOOL-MEMORY.md\n\n执行命令前确认工作目录，完成后记录 stdout、stderr 和退出码。",
+        "related_keys": ["skill-memory.md"],
+        "sort": 4,
+        "permission": {"can_auto_write": True, "need_confirm": True},
+        "suggestions": [],
+    },
+]
+
+BUILTIN_PENDING = [
+    {
+        "target_key": "user.md",
+        "text": "用户要求每个迁移阶段都必须测试验证后再进入下一阶段。",
+        "source": "迁移任务对话",
+    }
+]

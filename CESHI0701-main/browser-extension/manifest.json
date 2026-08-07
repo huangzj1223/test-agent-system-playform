@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "AG-UI 智能体助手",
+  "version": "1.0.0",
+  "description": "在浏览器右侧原生侧边栏中提供 AG-UI 智能体入口（骨架）。",
+  "minimum_chrome_version": "116",
+  "permissions": ["sidePanel"],
+  "icons": {
+    "16": "src/assets/icon-16.png",
+    "48": "src/assets/icon-48.png",
+    "128": "src/assets/icon-128.png"
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.ts",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "AG-UI 智能体助手 · 点击打开侧边栏",
+    "default_icon": {
+      "16": "src/assets/icon-16.png",
+      "48": "src/assets/icon-48.png",
+      "128": "src/assets/icon-128.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel/sidepanel.html"
+  }
+}

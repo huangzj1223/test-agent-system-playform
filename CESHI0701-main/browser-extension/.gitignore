@@ -1,0 +1,10 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+dist.crx
+
+# 扩展签名私钥：绝不入库（泄露需重新生成密钥并作废旧包）
+*.pem
+dist.pem

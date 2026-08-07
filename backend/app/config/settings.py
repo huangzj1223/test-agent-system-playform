@@ -97,11 +97,31 @@ class Settings(BaseSettings):
     secret_key: str = "your-secret-key-change-in-production"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    # RBAC 认证：access/refresh token 有效期（秒）
+    jwt_access_expire: int = 7200  # access token 2 小时
+    jwt_refresh_expire: int = 1296000  # refresh token 15 天
+
+    # Redis 配置（用于 token / 权限缓存）
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_db: int = 0
+    redis_password: Optional[str] = None
+    # 本地无 Redis 时启用进程内内存后端（仅开发联调用，生产必须为 False）
+    redis_use_memory: bool = False
+
+    @property
+    def redis_url(self) -> str:
+        """获取 Redis 连接 URL"""
+        auth = f":{self.redis_password}@" if self.redis_password else ""
+        return f"redis://{auth}{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
     # 默认测试用户配置（开发环境使用）
     default_user_id: str = "00000000-0000-0000-0000-000000000001"
     default_user_email: str = "admin@test.com"
     default_user_name: str = "管理员"
+    # 默认管理员账号（首次启动初始化，登录后请及时修改）
+    default_admin_username: str = "admin"
+    default_admin_password: str = "123456"
 
     # MinIO 对象存储配置
     minio_endpoint: str = "82.157.253.242:19001"
@@ -126,14 +146,21 @@ class Settings(BaseSettings):
     enable_pdf_multimodal: bool = False  # 是否启用 PDF 多模态图片解析（需要配置 DOUBAO_API_KEY）
 
     # 大模型配置
-    # DeepSeek 文本模型（用于 ChatDeepSeek）
-    llm_model: str = "deepseek-chat"
+    # 首选文本模型（OpenAI 兼容接口，如 agnes-2.0-flash）
+    text_model_api_base: str = "https://apihub.agnes-ai.com/v1"
+    text_model_api_key: Optional[str] = None
+    text_model_name: str = "agnes-2.0-flash"
+    text_model_max_tokens: int = 8192
+    # DeepSeek 文本模型（作为首选模型不可用时的后备）
     deepseek_api_key: Optional[str] = None
     llm_api_base: str = "https://api.deepseek.com"
     # 思考模式开关：v4-pro 默认 enabled，非思考模式需显式 disabled
     llm_thinking_enabled: bool = False
     # 单次模型回复最大 token（DeepSeek-Chat 上限 8192）
     llm_max_tokens: int = 8192
+    # 默认 LLM 模型名称（向后兼容旧变量名 LLM_MODEL）
+    llm_model: str = "deepseek-chat"
+    model_config_enc_key: str = "change-me-model-config-encryption-key"
 
     # 图片解析模型（OpenAI 兼容接口，用于 ChatOpenAI）
     image_parser_api_base: Optional[str] = None
@@ -196,6 +223,9 @@ class Settings(BaseSettings):
     # 渗透测试工作目录配置
     security_workspace_root: str = "backend/workspace/security"
     security_skills_root: str = ".agents/skills"
+
+    # 页面探测智能体工作目录配置
+    explorer_workspace_root: str = "backend/workspace/explorer"
 
 @lru_cache
 def get_settings() -> Settings:

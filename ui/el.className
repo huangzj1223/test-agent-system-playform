@@ -1,0 +1,2 @@
+
+D:\install\PycharmProjects\test-agent-system-platform\ui>  "D:\install\PycharmProjects\test-agent-system-platform\ui\node_modules\.bin\\node.exe"  "D:\install\PycharmProjects\test-agent-system-platform\ui\node_modules\.bin\\..\.pnpm\@playwright+cli@0.1.17\node_modules\@playwright\cli\playwright-cli.js" --raw -s=project-insight eval (el)= e132

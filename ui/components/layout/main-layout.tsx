@@ -5,9 +5,11 @@ import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
+import { ProjectSectionTabs } from "./project-section-tabs";
 import { useProjectContext } from "@/lib/context/project-context";
 import type { ProjectInfo } from "@/lib/api/types";
 import { extractProjectIdentifier } from "@/lib/dashboard/global-workspace";
+import { switchProjectPath } from "@/lib/navigation/project-workspace";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -42,7 +44,7 @@ export function MainLayout({ children, title, headerEyebrow, headerContent }: Ma
   // 处理项目切换
   const handleProjectChange = (project: ProjectInfo) => {
     setCurrentProject(project);
-    router.push(`/projects/${project.identifier}`);
+    router.push(switchProjectPath(pathname, project.identifier));
   };
 
   return (
@@ -56,7 +58,8 @@ export function MainLayout({ children, title, headerEyebrow, headerContent }: Ma
       />
       <div className="min-w-0 flex flex-1 flex-col overflow-hidden">
         <Header title={title} eyebrow={headerEyebrow} onMenuClick={() => setMobileOpen(true)}>{headerContent}</Header>
-        <main className="flex-1 overflow-auto px-4 py-5 sm:px-6 sm:py-6">{children}</main>
+        {projectIdFromUrl && <ProjectSectionTabs projectIdentifier={projectIdFromUrl} />}
+        <main className="flex-1 overflow-auto px-4 py-4 sm:px-6 sm:py-4">{children}</main>
       </div>
     </div>
   );

@@ -33,6 +33,15 @@ from .test_scenario import (
     ScenarioStepResult,
 )
 from .pentest import Pentest, PentestReport, PentestVulnerability
+from .role import Role, UserRole, RoleMenu
+from .menu import Menu
+from .department import Department, Position
+from .model_config import ModelConfig, ModelProvider
+from .conversation import Conversation, ChatMessage
+from .agent_memory import AgentMemory, MemoryReadLog, MemorySuggestion, MemoryVersion
+from .agent_tool import AgentTool, ToolCallLog
+from .agent_skill import AgentSkill
+from .agent_run import AgentRun
 # fmt: off  MS80OmFIVnBZMlhwdTRUbGphRG1zWjg2Ym0wM2RnPT06YjYzMDQxOTg=
 
 # 枚举类型从 schemas.enums 导入，避免重复定义
@@ -86,6 +95,24 @@ __all__ = [
     "Pentest",
     "PentestReport",
     "PentestVulnerability",
+    "Role",
+    "UserRole",
+    "RoleMenu",
+    "Menu",
+    "Department",
+    "Position",
+    "ModelProvider",
+    "ModelConfig",
+    "Conversation",
+    "ChatMessage",
+    "AgentMemory",
+    "MemoryReadLog",
+    "MemorySuggestion",
+    "MemoryVersion",
+    "AgentTool",
+    "ToolCallLog",
+    "AgentSkill",
+    "AgentRun",
 ]
 
 # pragma: no cover  My80OmFIVnBZMlhwdTRUbGphRG1zWjg2Ym0wM2RnPT06YjYzMDQxOTg=

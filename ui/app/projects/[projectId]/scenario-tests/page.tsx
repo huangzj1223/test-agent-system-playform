@@ -150,7 +150,7 @@ export default function ScenarioTestsPage() {
                   </Button>
                   <Button
                     size="sm"
-                    className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600"
+                    className="gap-2 bg-gradient-to-r from-[hsl(var(--chart-5))] to-[hsl(var(--chart-1))]"
                   >
                     <Zap className="h-4 w-4" />
                     {t("apiTests.runScenario")}

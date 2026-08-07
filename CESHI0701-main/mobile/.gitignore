@@ -1,0 +1,51 @@
+# 依赖目录
+node_modules/
+
+# 构建输出
+dist/
+dist-ssr/
+*.local
+
+# Capacitor 原生项目
+android/
+ios/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 编辑器
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 测试覆盖率
+coverage/
+*.lcov
+
+# 临时文件
+*.tmp
+*.temp
+.cache/
+
+# 打包文件
+*.tgz

@@ -98,9 +98,9 @@ export function WebPageSidebar({ page, onClose }: WebPageSidebarProps) {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Last Status</span>
                 <span className={`font-medium ${
-                  page.last_run_status === "passed" ? "text-green-600" :
-                  page.last_run_status === "failed" ? "text-red-600" :
-                  "text-yellow-600"
+                  page.last_run_status === "passed" ? "text-[hsl(var(--success))]" :
+                  page.last_run_status === "failed" ? "text-[hsl(var(--destructive))]" :
+                  "text-[hsl(var(--warning))]"
                 }`}>
                   {page.last_run_status}
                 </span>

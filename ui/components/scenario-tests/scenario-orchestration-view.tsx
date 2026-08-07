@@ -355,13 +355,13 @@ function SortableStepItem({
 
   const getMethodColor = (method: string) => {
     const colors: Record<string, string> = {
-      GET: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400",
-      POST: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400",
-      PUT: "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400",
-      DELETE: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400",
-      PATCH: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400",
+      GET: "bg-[hsl(var(--chart-5))] text-[hsl(var(--chart-5)-foreground)] border-[hsl(var(--chart-5)/0.3)]",
+      POST: "bg-[hsl(var(--chart-2))] text-[hsl(var(--chart-2)-foreground)] border-[hsl(var(--chart-2)/0.3)]",
+      PUT: "bg-[hsl(var(--chart-3))] text-[hsl(var(--chart-3)-foreground)] border-[hsl(var(--chart-3)/0.3)]",
+      DELETE: "bg-[hsl(var(--chart-4))] text-[hsl(var(--chart-4)-foreground)] border-[hsl(var(--chart-4)/0.3)]",
+      PATCH: "bg-[hsl(var(--chart-1))] text-[hsl(var(--chart-1)-foreground)] border-[hsl(var(--chart-1)/0.3)]",
     };
-    return colors[method] || "bg-gray-100 text-gray-700";
+    return colors[method] || "bg-muted text-muted-foreground";
   };
 
   return (
@@ -485,7 +485,7 @@ function SortableStepItem({
                         key={idx}
                         className="text-xs bg-muted/50 px-2 py-1 rounded flex items-center gap-2"
                       >
-                        <CheckCircle2 className="h-3 w-3 text-green-500" />
+                        <CheckCircle2 className="h-3 w-3 text-success" />
                         <span>{assertion.type}: {JSON.stringify(assertion.expected)}</span>
                       </div>
                     ))}

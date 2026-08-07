@@ -1,0 +1,33 @@
+import { {{validatorImports}} } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+
+/**
+ * {{comment}} - 新增入参
+ */
+export class Create{{name}}Dto {
+{{#each fields}}
+{{~#if inDto}}
+  @ApiProperty({ description: '{{comment}}'{{#if nullable}}, required: false{{/if}} })
+{{#if nullable}}  @IsOptional()
+{{/if}}{{#each validators}}  {{this}}
+{{/each}}  {{name}}{{#if nullable}}?{{/if}}: {{tsType}};
+{{/if}}
+{{~/each}}
+}
+
+/**
+ * {{comment}} - 更新入参
+ */
+export class Update{{name}}Dto {
+  @ApiProperty({ description: '主键 ID' })
+  @IsInt()
+  id: number;
+{{#each fields}}
+{{~#if inDto}}
+  @ApiProperty({ description: '{{comment}}', required: false })
+  @IsOptional()
+{{#each validators}}  {{this}}
+{{/each}}  {{name}}?: {{tsType}};
+{{/if}}
+{{~/each}}
+}

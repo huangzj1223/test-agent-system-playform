@@ -1,0 +1,33 @@
+# 开发环境 - 只启动 MySQL + Redis，后端本地运行
+services:
+  mysql:
+    container_name: agentpm-mysql-dev
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      TZ: "Asia/Shanghai"
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: "agentpm"
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    networks:
+      - agentpm-dev
+
+  redis:
+    container_name: agentpm-redis-dev
+    image: redis:7-alpine
+    restart: unless-stopped
+    environment:
+      TZ: "Asia/Shanghai"
+    ports:
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - agentpm-dev
+
+networks:
+  agentpm-dev:
+    driver: bridge

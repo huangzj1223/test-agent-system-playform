@@ -246,14 +246,14 @@ export const translations = {
     priorityLow: "Low",
 
     // Status labels
-    statusNew: "🆕 New",
-    statusReviewPending: "⏳ Review Pending",
-    statusReviewed: "✅ Reviewed",
-    statusNotRun: "⚪ Not Run",
-    statusPassed: "✅ Passed",
-    statusFailed: "❌ Failed",
-    statusBlocked: "🚫 Blocked",
-    statusSkipped: "⏭️ Skipped",
+    statusNew: "New",
+    statusReviewPending: "Review Pending",
+    statusReviewed: "Reviewed",
+    statusNotRun: "Not Run",
+    statusPassed: "Passed",
+    statusFailed: "Failed",
+    statusBlocked: "Blocked",
+    statusSkipped: "Skipped",
 
     // Other UI text
     searchPlaceholder: "Search test cases...",
@@ -274,6 +274,14 @@ export const translations = {
     recentTestCases: "Recent Test Cases",
     orderUpdated: "Test case order updated",
     pleaseEnterTitle: "Please enter test case title",
+
+    // Table column headers
+    colId: "ID",
+    colTitle: "Title",
+    colPriority: "Priority",
+    colStatus: "Status",
+    colOwner: "Owner",
+    colTags: "Tags",
   },
 
   // API Tests
@@ -625,7 +633,7 @@ export const translations = {
     scenarioDescriptionLabel: "Scenario Description",
     scenarioNamePlaceholder: "e.g., Complete user order flow",
     scenarioDescriptionPlaceholder: "Describe the purpose of the scenario and the business flow being tested...",
-    scenarioCreateHint: "💡 Tip: After creating a scenario, you can add steps, configure data dependencies, and assertions in the Scenario Orchestration view.",
+    scenarioCreateHint: "After creating a scenario, you can add steps, configure data dependencies, and assertions in the Scenario Orchestration view.",
     scenarioCreating: "Creating...",
   },
 

@@ -24,6 +24,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { IconFrame } from "@/components/icons";
 import { MainLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -103,7 +104,7 @@ const caseTypeLabels: Record<string, string> = {
   other: "\u5176\u4ed6",
 };
 
-const typeColors = ["hsl(var(--chart-5))", "hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--info))", "hsl(var(--muted-foreground))", "hsl(var(--success))", "hsl(var(--chart-1))", "hsl(var(--warning))"];
+const typeColors = ["hsl(var(--primary))", "hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--info))", "hsl(var(--muted-foreground))", "hsl(var(--success))", "hsl(var(--chart-1))", "hsl(var(--warning))"];
 const timeRanges = [
   { value: "1D", label: "1\u5929" },
   { value: "7D", label: "7\u5929" },
@@ -357,6 +358,14 @@ export default function ProjectOverviewPage() {
     }
   };
 
+  const resetDashboard = () => {
+    setActiveTab("overview");
+    setActiveRange("30D");
+    setCaseTypeFilter("all");
+    setRunStateFilter("all");
+    setShowTip(true);
+  };
+
   return (
     <MainLayout title={project?.name || S.pageTitle}>
       {loading ? (
@@ -364,29 +373,32 @@ export default function ProjectOverviewPage() {
       ) : !project ? (
         <div className="flex h-96 items-center justify-center text-muted-foreground">{S.notFound}</div>
       ) : (
-        <div className="min-h-full bg-[hsl(var(--muted)/0.15)]">
-          <section className="border-b bg-[hsl(var(--card-bg))] px-1 pb-0 pt-2">
-            <div className="flex items-start justify-between gap-4 px-6 py-8">
+        <div data-testid="project-insight-page" className="mx-auto max-w-[1720px] space-y-5 pb-8">
+          <section>
+            <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
               <div>
-                <h1 className="text-3xl font-semibold tracking-normal text-[hsl(var(--foreground))]">{S.pageTitle}</h1>
-                <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
+                <div className="text-[11px] font-medium text-[hsl(var(--primary))]">项目质量工作台</div>
+                <h1 className="mt-2 text-2xl font-semibold tracking-normal text-foreground">{S.pageTitle}</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   {S.currentProject}: {project.name} - {project.description || "\u805a\u5408\u6d4b\u8bd5\u8d44\u4ea7\u3001\u8fd0\u884c\u7ed3\u679c\u3001\u81ea\u52a8\u5316\u5065\u5eb7\u72b6\u6001\u548c\u8d28\u91cf\u98ce\u9669"}
                 </p>
               </div>
-              <Button className="h-12 bg-[hsl(var(--chart-5))] px-6 hover:bg-[hsl(var(--chart-5))]" onClick={sharePage}>
+              <Button variant="outline" size="sm" onClick={sharePage}>
                 <Share2 className="mr-2 h-4 w-4" />
                 {S.share}
               </Button>
             </div>
 
-            <div className="flex gap-8 px-6">
+            <div className="mt-5 flex min-h-11 gap-1 border-b" role="tablist" aria-label="项目洞察视图">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`border-b-2 px-1 pb-4 text-sm font-medium transition-colors ${
-                    activeTab === tab.id ? "border-[hsl(var(--chart-5))] text-[hsl(var(--chart-5))]" : "border-transparent text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+                  className={`relative flex h-11 items-center px-4 text-sm transition-colors ${
+                    activeTab === tab.id ? "font-medium text-foreground after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:bg-primary" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {tab.label}
@@ -395,21 +407,21 @@ export default function ProjectOverviewPage() {
             </div>
           </section>
 
-          <section className="space-y-6 p-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+          <section className="space-y-5">
+            <div className="workspace-panel flex flex-wrap items-center justify-between gap-3 p-3">
               <div className="flex flex-wrap items-center gap-3">
-                <Button variant="outline" className="h-10 min-w-48 justify-between bg-[hsl(var(--card-bg))]">
+                <Button variant="outline" className="h-9 min-w-44 justify-between" onClick={resetDashboard}>
                   {S.defaultDashboard}
-                  <ArrowUpRight className="h-4 w-4 rotate-45 text-[hsl(var(--foreground))]" />
+                  <FolderKanban className="h-4 w-4 text-muted-foreground" />
                 </Button>
-                <div className="inline-flex overflow-hidden rounded-md border bg-[hsl(var(--card-bg))]">
+                <div className="inline-flex overflow-hidden rounded-md border bg-background">
                   {timeRanges.map((range) => (
                     <button
                       key={range.value}
                       type="button"
                       onClick={() => setActiveRange(range.value)}
-                      className={`border-r px-5 py-2 text-sm font-medium last:border-r-0 ${
-                        activeRange === range.value ? "bg-[hsl(var(--chart-5)/0.08)] text-[hsl(var(--chart-5))]" : "text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted)/0.5)]"
+                      className={`h-9 border-r px-4 text-xs font-medium last:border-r-0 ${
+                        activeRange === range.value ? "bg-[hsl(var(--accent))] text-[hsl(var(--primary))]" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                       }`}
                     >
                       {range.label}
@@ -418,41 +430,35 @@ export default function ProjectOverviewPage() {
                 </div>
               </div>
               <div className="relative flex items-center gap-3">
-                <Button variant="outline" className="bg-[hsl(var(--card-bg))]" onClick={() => setFiltersOpen((open) => !open)}>
+                <Button variant="outline" size="sm" onClick={() => setFiltersOpen((open) => !open)} aria-expanded={filtersOpen}>
                   <Filter className="mr-2 h-4 w-4" />
                   {S.filters}
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon" className="bg-[hsl(var(--card-bg))]">
+                    <Button variant="outline" size="icon" className="h-9 w-9" aria-label="更多洞察操作">
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setActiveRange("30D");
-                        setCaseTypeFilter("all");
-                        setRunStateFilter("all");
-                      }}
-                    >
+                    <DropdownMenuItem onClick={resetDashboard}>
                       <RefreshCw className="mr-2 h-4 w-4" />
                       {S.resetFilters}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 {filtersOpen && (
-                  <div className="absolute right-0 top-12 z-20 w-72 rounded-lg border bg-[hsl(var(--card-bg))] p-4 shadow-xl">
+                  <div className="absolute right-0 top-11 z-20 w-72 rounded-lg border bg-background p-4 shadow-xl">
                     <div className="mb-3 flex items-center justify-between">
-                      <div className="font-semibold text-[hsl(var(--foreground))]">{S.filters}</div>
-                      <button type="button" onClick={() => setFiltersOpen(false)}>
-                        <X className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+                      <div className="text-sm font-semibold text-foreground">{S.filters}</div>
+                      <button type="button" className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => setFiltersOpen(false)} aria-label="关闭筛选条件">
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                     <div className="space-y-4">
                       <div>
-                        <label className="text-sm font-medium text-[hsl(var(--foreground))]">{S.caseType}</label>
-                        <select value={caseTypeFilter} onChange={(event) => setCaseTypeFilter(event.target.value)} className="mt-2 h-10 w-full rounded-md border px-3 text-sm">
+                        <label htmlFor="insight-case-type" className="text-xs font-medium text-foreground">{S.caseType}</label>
+                        <select id="insight-case-type" value={caseTypeFilter} onChange={(event) => setCaseTypeFilter(event.target.value)} className="mt-2 h-9 w-full rounded-md border bg-background px-3 text-sm">
                           <option value="all">{S.allTypes}</option>
                           {Object.entries(caseTypeLabels).map(([value, label]) => (
                             <option key={value} value={value}>
@@ -462,8 +468,8 @@ export default function ProjectOverviewPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-[hsl(var(--foreground))]">{S.activeRuns}</label>
-                        <select value={runStateFilter} onChange={(event) => setRunStateFilter(event.target.value)} className="mt-2 h-10 w-full rounded-md border px-3 text-sm">
+                        <label htmlFor="insight-run-state" className="text-xs font-medium text-foreground">{S.activeRuns}</label>
+                        <select id="insight-run-state" value={runStateFilter} onChange={(event) => setRunStateFilter(event.target.value)} className="mt-2 h-9 w-full rounded-md border bg-background px-3 text-sm">
                           <option value="all">{S.allRuns}</option>
                           <option value="active">{S.activeRunsOnly}</option>
                           <option value="closed">{S.closedRunsOnly}</option>
@@ -486,35 +492,36 @@ export default function ProjectOverviewPage() {
             </div>
 
             {activeTab === "overview" && showTip && (
-              <div className="relative overflow-hidden rounded-lg border bg-[hsl(var(--card-bg))] shadow-sm">
-                <button type="button" className="absolute right-4 top-4 rounded-md border bg-[hsl(var(--card-bg))] p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted)/0.5)]" onClick={() => setShowTip(false)}>
+              <div className="workspace-panel relative overflow-hidden border-l-2 border-l-[hsl(var(--primary))]">
+                <button type="button" className="absolute right-4 top-4 rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => setShowTip(false)} aria-label="关闭接入提示">
                   <X className="h-4 w-4" />
                 </button>
-                <div className="grid gap-6 p-7 lg:grid-cols-[1.2fr_0.85fr]">
+                <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[1.15fr_0.85fr]">
                   <div>
-                    <h2 className="max-w-3xl text-2xl font-semibold leading-snug text-[hsl(var(--foreground))]">{S.insightTitle}</h2>
-                    <p className="mt-4 max-w-4xl text-sm leading-6 text-[hsl(var(--muted-foreground))]">{S.insightDesc}</p>
-                    <div className="mt-8 flex items-center gap-5">
-              <Button className="h-14 bg-[hsl(var(--chart-5))] px-8 text-base hover:bg-[hsl(var(--chart-5))]" onClick={() => router.push(`/projects/${resolvedProjectId}/api-tests`)}>
+                    <div className="text-[11px] font-medium text-[hsl(var(--primary))]">覆盖度建议</div>
+                    <h2 className="mt-2 max-w-3xl text-xl font-semibold leading-snug text-foreground">{S.insightTitle}</h2>
+                    <p className="mt-3 max-w-4xl text-sm leading-6 text-muted-foreground">{S.insightDesc}</p>
+                    <div className="mt-6 flex flex-wrap items-center gap-3">
+                      <Button className="btn-ai h-10 px-5" onClick={() => router.push(`/projects/${resolvedProjectId}/api-tests`)}>
                         {S.tryNow}
                       </Button>
-                      <button type="button" className="flex items-center gap-2 text-sm font-medium text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--chart-5))]">
+                      <button type="button" onClick={() => document.getElementById("workspace-modules")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="flex h-10 items-center gap-2 rounded-md px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-[hsl(var(--primary))]">
                         {S.learnMore}
-                        <ArrowUpRight className="h-5 w-5" />
+                        <ArrowUpRight className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
-                  <div className="hidden items-center justify-center rounded-lg bg-[hsl(var(--muted)/0.15)] p-6 lg:flex">
-                    <div className="w-full max-w-md rounded-lg border bg-[hsl(var(--card-bg))] p-5 shadow-sm">
-                      <div className="mb-4 flex justify-around text-xs font-semibold">
-                        <Badge className="bg-[hsl(var(--chart-5)/0.15)] text-[hsl(var(--chart-1))] hover:bg-[hsl(var(--chart-5)/0.15)]">\u7aef\u5230\u7aef\u6d4b\u8bd5</Badge>
-                        <Badge className="bg-[hsl(var(--chart-4)/0.15)] text-[hsl(var(--chart-4))] hover:bg-[hsl(var(--chart-4)/0.15)]">\u5355\u5143\u6d4b\u8bd5</Badge>
-                        <Badge className="bg-[hsl(var(--chart-3)/0.08)] text-[hsl(var(--chart-3))] hover:bg-[hsl(var(--chart-3)/0.08)]">\u63a5\u53e3\u6d4b\u8bd5</Badge>
+                  <div className="hidden items-center justify-center border-l bg-muted/20 p-5 lg:flex">
+                    <div className="w-full max-w-md rounded-lg border bg-background p-5">
+                      <div className="mb-4 flex flex-wrap gap-2 text-xs font-semibold">
+                        <Badge className="bg-[hsl(var(--accent))] text-[hsl(var(--primary))] hover:bg-[hsl(var(--accent))]">端到端测试</Badge>
+                        <Badge className="bg-[hsl(var(--risk-warning)/0.14)] text-[hsl(32_76%_38%)] hover:bg-[hsl(var(--risk-warning)/0.14)]">单元测试</Badge>
+                        <Badge className="bg-[hsl(var(--loop-complete)/0.12)] text-[hsl(78_56%_32%)] hover:bg-[hsl(var(--loop-complete)/0.12)]">接口测试</Badge>
                       </div>
                       <div className="space-y-3">
                         {[0, 1, 2].map((row) => (
                           <div key={row} className="flex items-center gap-3">
-                            <div className="h-3 w-3 rounded-full bg-[hsl(var(--chart-5)/0.15)]" />
+                            <div className="h-3 w-3 rounded-full bg-[hsl(var(--primary)/0.18)]" />
                             <div className="h-3 flex-1 rounded-full bg-[hsl(var(--muted))]" />
                             <div className="h-3 w-16 rounded-full bg-[hsl(var(--muted))]" />
                           </div>
@@ -522,8 +529,8 @@ export default function ProjectOverviewPage() {
                       </div>
                       <div className="mt-6 grid grid-cols-3 gap-3">
                         {["\u6d4b\u8bd5", "\u6458\u8981", "\u7ec4\u4ef6"].map((item) => (
-                          <div key={item} className="rounded-md border p-3">
-                            <div className="text-xs font-medium text-[hsl(var(--foreground))]">{item}</div>
+                          <div key={item} className="rounded-md border bg-muted/15 p-3">
+                            <div className="text-xs font-medium text-foreground">{item}</div>
                             <div className="mt-3 h-2 rounded-full bg-[hsl(var(--muted))]" />
                             <div className="mt-2 h-2 w-2/3 rounded-full bg-[hsl(var(--muted))]" />
                           </div>
@@ -537,17 +544,19 @@ export default function ProjectOverviewPage() {
 
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               {(activeTab === "errors" ? errorMetrics : metrics).map((metric) => (
-                <div key={metric.title} className="rounded-lg border bg-[hsl(var(--card-bg))] p-5 shadow-sm">
+                <div key={metric.title} className="workspace-panel p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2 text-lg font-semibold leading-tight text-[hsl(var(--foreground))]">
+                      <div className="flex items-center gap-2 text-sm font-semibold leading-tight text-foreground">
                         <span>{metric.title}</span>
-                        <Info className="h-4 w-4 shrink-0 text-[hsl(var(--foreground))]" />
+                        <Info className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       </div>
-                      <div className="mt-5 text-4xl font-semibold text-[hsl(var(--foreground))]">{metric.value}</div>
-                      {"sub" in metric && <div className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{metric.sub}</div>}
+                      <div className="mt-4 text-3xl font-semibold tracking-normal text-foreground">{metric.value}</div>
+                      {"sub" in metric && <div className="mt-2 text-xs text-muted-foreground">{metric.sub}</div>}
                     </div>
-                    <metric.icon className="h-5 w-5 shrink-0 text-[hsl(var(--foreground))]" />
+                    <IconFrame variant="plain" className="h-9 w-9 rounded-lg bg-[hsl(var(--accent))] text-[hsl(var(--primary))]">
+                      <metric.icon className="h-4 w-4" />
+                    </IconFrame>
                   </div>
                 </div>
               ))}
@@ -557,7 +566,7 @@ export default function ProjectOverviewPage() {
               <>
                 <div className="grid gap-6 xl:grid-cols-2">
                   <DonutCard title={S.activeRuns} center={donutTotal} segments={donutSegments} background={donut} />
-                  <LineChartCard title={S.closedRuns} months={months} series={[{ label: S.closedRuns, values: closedRunMonthly, color: `hsl(var(--chart-5))` }]} />
+                  <LineChartCard title={S.closedRuns} months={months} series={[{ label: S.closedRuns, values: closedRunMonthly, color: `hsl(var(--primary))` }]} />
                 </div>
                 <div className="grid gap-6 xl:grid-cols-2">
                   <DonutCard title={S.caseType} center={totalCases} segments={caseTypeRows} />
@@ -571,7 +580,7 @@ export default function ProjectOverviewPage() {
                     ]}
                   />
                 </div>
-                <BarChartCard title={S.defectsLogged} months={months} values={defectsMonthly} color={`hsl(var(--chart-5))`} wide />
+                <BarChartCard title={S.defectsLogged} months={months} values={defectsMonthly} color={`hsl(var(--risk-warning))`} wide />
               </>
             )}
 
@@ -590,29 +599,34 @@ export default function ProjectOverviewPage() {
               </div>
             )}
 
-            {activeTab === "errors" && <BarChartCard title={S.defectsLogged} months={months} values={defectsMonthly} color={`hsl(var(--chart-5))`} />}
+            {activeTab === "errors" && <BarChartCard title={S.defectsLogged} months={months} values={defectsMonthly} color={`hsl(var(--risk-warning))`} />}
 
-            <div className="rounded-lg border bg-[hsl(var(--card-bg))] p-6 shadow-sm">
-              <div className="mb-5 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-[hsl(var(--foreground))]">{S.modules}</h2>
-                <Badge variant="outline">\u9879\u76ee\u6a21\u5757</Badge>
+            <div id="workspace-modules" className="workspace-panel scroll-mt-20 overflow-hidden">
+              <div className="flex min-h-16 items-center justify-between gap-4 border-b px-5 py-3">
+                <div>
+                  <h2 className="text-base font-semibold text-foreground">{S.modules}</h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">进入当前项目的测试设计、执行和分析功能</p>
+                </div>
+                <Badge variant="outline">项目模块</Badge>
               </div>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid md:grid-cols-2 xl:grid-cols-3">
                 {modules.map((module) => (
                   <button
                     key={module.href}
                     type="button"
                     onClick={() => router.push(`/projects/${resolvedProjectId}/${module.href}`)}
-                    className="group rounded-lg border bg-[hsl(var(--card-bg))] p-4 text-left transition-all hover:-translate-y-0.5 hover:border-[hsl(var(--chart-5))] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--chart-5))]"
+                    className="group min-h-28 border-b p-4 text-left transition-colors hover:bg-[hsl(var(--accent)/0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[hsl(var(--primary))] md:border-r xl:[&:nth-child(3n)]:border-r-0"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2 font-semibold text-[hsl(var(--foreground))]">
-                        <module.icon className="h-4 w-4 text-[hsl(var(--chart-5))]" />
+                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <IconFrame variant="plain" className="h-7 w-7 rounded-md bg-[hsl(var(--accent))] text-[hsl(var(--primary))]">
+                          <module.icon className="h-4 w-4" />
+                        </IconFrame>
                         {module.title}
                       </div>
-                      <ArrowUpRight className="h-4 w-4 text-[hsl(var(--foreground))] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                      <ArrowUpRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[hsl(var(--primary))]" />
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-[hsl(var(--muted-foreground))]">{module.text}</p>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{module.text}</p>
                   </button>
                 ))}
               </div>
@@ -647,26 +661,26 @@ function DonutCard({
       })
       .join(", ")})`;
   return (
-    <div className="rounded-lg border bg-[hsl(var(--card-bg))] p-6 shadow-sm">
+    <div className="workspace-panel p-5">
       <CardTitle title={title} />
-      <div className="grid items-center gap-8 md:grid-cols-[0.9fr_1fr]">
-        <div className="relative mx-auto h-72 w-72 rounded-full" style={{ background: chartBackground }}>
-          <div className="absolute inset-12 flex flex-col items-center justify-center rounded-full bg-[hsl(var(--card-bg))]">
-            <div className="text-4xl font-semibold text-[hsl(var(--foreground))]">{center}</div>
-            <div className="mt-2 text-center text-sm font-medium text-[hsl(var(--muted-foreground))]">{S.totalCases}</div>
+      <div className="grid items-center gap-6 md:grid-cols-[0.9fr_1fr]">
+        <div className="relative mx-auto aspect-square w-full max-w-64 rounded-full" style={{ background: chartBackground }}>
+          <div className="absolute inset-10 flex flex-col items-center justify-center rounded-full bg-background">
+            <div className="text-3xl font-semibold text-foreground">{center}</div>
+            <div className="mt-1 text-center text-xs font-medium text-muted-foreground">{S.totalCases}</div>
           </div>
         </div>
         <div className="space-y-4">
           {segments.length === 0 ? (
-            <div className="text-sm text-[hsl(var(--muted-foreground))]">{S.noData}</div>
+            <div className="text-sm text-muted-foreground">{S.noData}</div>
           ) : (
             segments.map((row) => (
               <div key={row.label} className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <span className="h-3 w-3 rounded-full" style={{ backgroundColor: row.color }} />
-                  <span className="text-sm font-medium text-[hsl(var(--foreground))]">{row.label}</span>
+                  <span className="text-sm font-medium text-foreground">{row.label}</span>
                 </div>
-                <span className="text-sm font-semibold text-[hsl(var(--foreground))]">
+                <span className="text-sm font-semibold text-foreground">
                   {row.value} ({pct(row.value, total)}%)
                 </span>
               </div>
@@ -690,25 +704,25 @@ function LineChartCard({
   const width = 620;
   const height = 300;
   return (
-    <div className="rounded-lg border bg-[hsl(var(--card-bg))] p-6 shadow-sm">
+    <div className="workspace-panel p-5">
       <CardTitle title={title} />
       <div className="mb-3 flex flex-wrap gap-4">
         {series.map((item) => (
-          <div key={item.label} className="flex items-center gap-2 text-xs text-[hsl(var(--muted-foreground))]">
+          <div key={item.label} className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="h-2 w-5 rounded-full" style={{ backgroundColor: item.color }} />
             {item.label}
           </div>
         ))}
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-80 w-full">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-72 w-full">
         {[0, 1, 2, 3, 4].map((line) => (
-          <line key={line} x1="40" x2="600" y1={36 + line * 52} y2={36 + line * 52} stroke={`hsl(var(--muted-foreground))`} strokeDasharray="6 6" />
+          <line key={line} x1="40" x2="600" y1={36 + line * 52} y2={36 + line * 52} stroke={`hsl(var(--border))`} strokeDasharray="6 6" />
         ))}
         {months.map((key, index) => {
           const x = 44 + (index * 540) / Math.max(1, months.length - 1);
           return (
             <g key={key}>
-              <line x1={x} x2={x} y1="32" y2="250" stroke={`hsl(var(--muted)/0.1)`} strokeDasharray="6 6" />
+              <line x1={x} x2={x} y1="32" y2="250" stroke={`hsl(var(--border)/0.65)`} strokeDasharray="6 6" />
               <text x={x - 10} y="280" fill={`hsl(var(--muted-foreground))`} fontSize="13">
                 {monthLabel(key)}
               </text>
@@ -726,16 +740,16 @@ function LineChartCard({
 function BarChartCard({ title, months, values, color, wide }: { title: string; months: string[]; values: number[]; color: string; wide?: boolean }) {
   const max = Math.max(1, ...values);
   return (
-    <div className={`rounded-lg border bg-[hsl(var(--card-bg))] p-6 shadow-sm ${wide ? "" : ""}`}>
+    <div className={`workspace-panel p-5 ${wide ? "" : ""}`}>
       <CardTitle title={title} />
-      <div className="mb-3 flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))]">
+      <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
         <span className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
         {title}
       </div>
       <div className="h-80">
         <svg viewBox="0 0 900 300" className="h-full w-full">
           {[0, 1, 2, 3, 4].map((line) => (
-            <line key={line} x1="40" x2="870" y1={36 + line * 52} y2={36 + line * 52} stroke={`hsl(var(--muted-foreground))`} strokeDasharray="6 6" />
+            <line key={line} x1="40" x2="870" y1={36 + line * 52} y2={36 + line * 52} stroke={`hsl(var(--border))`} strokeDasharray="6 6" />
           ))}
           {months.map((key, index) => {
             const x = 60 + (index * 780) / Math.max(1, months.length - 1);
@@ -758,12 +772,11 @@ function BarChartCard({ title, months, values, color, wide }: { title: string; m
 
 function CardTitle({ title }: { title: string }) {
   return (
-    <div className="mb-6 flex items-center justify-between">
-      <div className="flex items-center gap-2 text-xl font-semibold text-[hsl(var(--foreground))]">
+    <div className="mb-5 flex items-center justify-between border-b pb-3">
+      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
         {title}
-        <Info className="h-4 w-4 text-[hsl(var(--foreground))]" />
+        <Info className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
-      <MoreVertical className="h-5 w-5 text-[hsl(var(--foreground))]" />
     </div>
   );
 }

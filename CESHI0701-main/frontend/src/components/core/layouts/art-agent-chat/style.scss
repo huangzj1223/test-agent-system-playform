@@ -1,0 +1,162 @@
+@use '@/assets/styles/variables' as *;
+
+// 面板容器：作为 flex 第三栏，宽度受控，平滑过渡
+.agent-chat-panel {
+  position: relative;
+  flex-shrink: 0;
+  width: 0;
+  height: 100vh;
+  overflow: visible;
+  background: var(--art-main-bg-color);
+  border-left: 1px solid var(--art-border-color);
+  transition: width 0.24s ease;
+
+  &.is-open {
+    width: var(--agent-panel-width, 440px);
+  }
+
+  // 框架二：顶栏布局，面板固定在顶栏下方右侧，避免打断 fixed+margin 几何
+  &.is-framework-two {
+    position: fixed;
+    top: 60px;
+    right: 0;
+    z-index: 380;
+    height: calc(100vh - 60px);
+    border-left: 1px solid var(--art-border-color);
+  }
+
+  .panel-body {
+    display: flex;
+    flex-direction: column;
+    width: var(--agent-panel-width, 440px);
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+// 遮罩层（仅移动端抽屉模式）
+.agent-chat-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 399;
+  background: rgb(0 0 0 / 40%);
+}
+
+// 历史会话列表
+.history-list {
+  .history-item {
+    padding: 10px 12px;
+    margin-bottom: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background: var(--art-gray-100);
+    }
+
+    &.is-active {
+      color: var(--art-primary);
+      background: var(--art-primary-light-9, var(--art-gray-100));
+    }
+
+    .history-title {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .history-empty {
+    padding: 40px 0;
+    font-size: 13px;
+    color: var(--art-text-gray-400);
+    text-align: center;
+  }
+}
+
+// Markdown 内容深度样式（v-html 渲染，需穿透 scoped）
+:deep(.markdown) {
+  p {
+    margin: 0 0 8px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  ul,
+  ol {
+    padding-left: 20px;
+    margin: 4px 0 8px;
+  }
+
+  pre {
+    padding: 10px 12px;
+    margin: 8px 0;
+    overflow-x: auto;
+    background: var(--art-code-bg, #282c34);
+    border-radius: 6px;
+
+    code {
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+    }
+  }
+
+  .md-inline-code {
+    padding: 2px 5px;
+    font-size: 13px;
+    background: rgb(0 0 0 / 6%);
+    border-radius: 4px;
+  }
+
+  .md-table {
+    width: 100%;
+    margin: 8px 0;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 6px 10px;
+      border: 1px solid var(--art-border-color);
+    }
+
+    th {
+      background: var(--art-gray-100);
+    }
+  }
+
+  .md-img {
+    max-width: 100%;
+    border-radius: 6px;
+  }
+}
+
+// 移动端：≤800px 改为从右滑出抽屉，覆盖业务内容 + 遮罩
+@media only screen and (max-width: $device-ipad) {
+  .agent-chat-panel.is-mobile {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 400;
+    width: 100vw;
+    max-width: 420px;
+    height: 100%;
+    transform: translateX(100%);
+    transition: transform 0.24s ease;
+
+    &.is-open {
+      width: 100vw;
+      max-width: 420px;
+      transform: translateX(0);
+    }
+
+    .panel-body {
+      width: 100%;
+    }
+  }
+}
+

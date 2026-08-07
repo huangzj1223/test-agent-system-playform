@@ -233,7 +233,7 @@ export const InterruptActions = React.memo<InterruptActionsProps>(
     }
 
     return (
-      <div className="w-full space-y-4 rounded-lg border-2 border-orange-300 bg-orange-50/80 p-4 dark:border-orange-700 dark:bg-orange-950/30">
+      <div className="w-full space-y-4 rounded-lg border-2 border-[hsl(var(--warning))] bg-[hsl(var(--warning)/0.08)] p-4 dark:border-[hsl(var(--warning)/0.5)] dark:bg-[hsl(var(--warning)/0.05)]">
         {interrupts.map((humanInterrupt, idx) => {
           // 中断结构的防御性检查
           if (!humanInterrupt || !humanInterrupt.action_request) {
@@ -264,30 +264,30 @@ export const InterruptActions = React.memo<InterruptActionsProps>(
               key={idx}
               className={cn(
                 "rounded-lg border-2 bg-card p-4 shadow-sm transition-colors",
-                isEditing && "border-blue-500 bg-blue-50/50 dark:bg-blue-950/20",
-                isRejecting && "border-red-500 bg-red-50/50 dark:bg-red-950/20",
+                isEditing && "border-[hsl(var(--info))] bg-[hsl(var(--info)/0.05)] dark:bg-[hsl(var(--info)/0.03)]",
+                isRejecting && "border-[hsl(var(--destructive))] bg-[hsl(var(--destructive)/0.05)] dark:bg-[hsl(var(--destructive)/0.03)]",
                 !isEditing &&
                   !isRejecting &&
-                  "border-orange-500 bg-orange-50/50 dark:bg-orange-950/20"
+                  "border-[hsl(var(--warning))] bg-[hsl(var(--warning)/0.05)] dark:bg-[hsl(var(--warning)/0.03)]"
               )}
             >
               {/* 头部 */}
               <div className="mb-4 flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="rounded-md bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                    <span className="rounded-md bg-[hsl(var(--warning)/0.15)] px-2 py-1 text-xs font-semibold text-[hsl(var(--warning))]">
                       需要批准
                     </span>
                     {interrupts.length > 1 && (
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                      <span className="text-xs font-medium text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))]">
                         第 {idx + 1} 个，共 {interrupts.length} 个
                       </span>
                     )}
                   </div>
-                  <h3 className="mt-3 text-xl font-bold text-gray-900 dark:text-gray-100">
+                  <h3 className="mt-3 text-xl font-bold text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">
                     {safeActionRequest.action}
                   </h3>
-                  <p className="mt-1 text-sm font-medium text-gray-700 dark:text-gray-200">
+                  <p className="mt-1 text-sm font-medium text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">
                     请查看以下工具参数并选择操作
                   </p>
                 </div>
@@ -295,7 +295,7 @@ export const InterruptActions = React.memo<InterruptActionsProps>(
 
               {/* 工具参数 */}
               <div className="mb-4 space-y-2">
-                <h4 className="mb-1 text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                <h4 className="mb-1 text-xs font-bold uppercase tracking-wider text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))]">
                   参数
                 </h4>
                 {isEditing ? (
@@ -303,7 +303,7 @@ export const InterruptActions = React.memo<InterruptActionsProps>(
                     {Object.entries(safeActionRequest.args).map(([key, value]) => (
                       <div key={key} className="rounded-sm border border-border">
                         <div className="bg-muted/30 p-2">
-                          <label className="font-mono text-xs font-semibold text-gray-900 dark:text-gray-100">
+                          <label className="font-mono text-xs font-semibold text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))]">
                             {key}
                           </label>
                         </div>
@@ -382,7 +382,7 @@ export const InterruptActions = React.memo<InterruptActionsProps>(
               {/* 拒绝消息输入 */}
               {isRejecting && (
                 <div className="mb-4">
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))]">
                     反馈给代理（可选）
                   </label>
                   <Textarea
@@ -391,7 +391,7 @@ export const InterruptActions = React.memo<InterruptActionsProps>(
                     placeholder="解释为什么不应执行此操作以及代理应该怎么做..."
                     className="min-h-[80px]"
                   />
-                  <p className="mt-1 text-xs font-medium text-gray-600 dark:text-gray-300">
+                  <p className="mt-1 text-xs font-medium text-[hsl(var(--muted-foreground))] dark:text-[hsl(var(--muted-foreground))]">
                     此反馈将添加到对话中以帮助引导代理。
                   </p>
                 </div>
@@ -408,7 +408,7 @@ export const InterruptActions = React.memo<InterruptActionsProps>(
                     }
                     variant="default"
                     size="sm"
-                    className="bg-green-600 text-white hover:bg-green-700"
+                    className="bg-[hsl(var(--success))] text-white hover:bg-[hsl(var(--success)/0.85)]"
                     disabled={isLoading}
                   >
                     <CheckCircle size={14} />
@@ -436,7 +436,7 @@ export const InterruptActions = React.memo<InterruptActionsProps>(
                     size="sm"
                     disabled={isLoading}
                     className={
-                      isEditing ? "bg-blue-600 text-white hover:bg-blue-700" : ""
+                      isEditing ? "bg-[hsl(var(--chart-5))] text-white hover:bg-[hsl(var(--chart-5)/0.85)]" : ""
                     }
                   >
                     <Edit3 size={14} />
@@ -470,8 +470,8 @@ export const InterruptActions = React.memo<InterruptActionsProps>(
                     size="sm"
                     className={
                       isRejecting
-                        ? "bg-red-600 text-white hover:bg-red-700"
-                        : "border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                        ? "bg-[hsl(var(--destructive))] text-white hover:bg-[hsl(var(--destructive)/0.85)]"
+                        : "border-[hsl(var(--destructive))] text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive)/0.08)] hover:text-[hsl(var(--destructive))] dark:hover:bg-[hsl(var(--destructive)/0.12)]"
                     }
                     disabled={isLoading}
                   >
@@ -492,7 +492,7 @@ export const InterruptActions = React.memo<InterruptActionsProps>(
                     variant="ghost"
                     size="sm"
                     disabled={isLoading}
-                    className="text-gray-700 hover:text-gray-900 dark:text-gray-200 dark:hover:text-white"
+                    className="text-[hsl(var(--foreground))] hover:text-[hsl(var(--foreground))] dark:text-[hsl(var(--foreground))] dark:hover:text-[hsl(var(--foreground))]"
                   >
                     <span className="font-semibold">取消</span>
                   </Button>
@@ -509,7 +509,7 @@ export const InterruptActions = React.memo<InterruptActionsProps>(
               onClick={handleSubmit}
               disabled={isLoading}
               size="lg"
-              className="bg-blue-600 font-semibold text-white hover:bg-blue-700"
+              className="bg-[hsl(var(--chart-5))] font-semibold text-white hover:bg-[hsl(var(--chart-5)/0.85)]"
             >
               {isLoading ? (
                 "提交中..."

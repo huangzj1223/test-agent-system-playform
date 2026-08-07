@@ -308,9 +308,9 @@ export function CreateEndpointDialog({
             </Button>
 
             {showAdvanced && (
-              <div className="mt-4 space-y-4 p-4 rounded-lg border-2 border-orange-200 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/20 dark:to-amber-950/20">
+              <div className="mt-4 space-y-4 p-4 rounded-lg border-2 border-[hsl(var(--chart-3)/0.3)] bg-gradient-to-br from-[hsl(var(--chart-3)/0.05)] to-[hsl(var(--chart-3)/0.1)] dark:from-[hsl(var(--chart-3)/0.1)] dark:to-[hsl(var(--chart-3)/0.2)]">
                 <div className="flex items-center gap-2 mb-3">
-                  <FileCode className="h-4 w-4 text-orange-500" />
+                  <FileCode className="h-4 w-4 text-[hsl(var(--chart-3))]" />
                   <span className="font-semibold text-sm">高级定义（JSON 格式）</span>
                 </div>
 

@@ -64,37 +64,37 @@ const artifactTypeConfig = {
   API_TEST_PLAN: {
     icon: FileText,
     label: "测试计划",
-    color: "text-blue-500",
-    bgColor: "bg-blue-50 dark:bg-blue-950",
-    borderColor: "border-blue-200 dark:border-blue-800",
+    color: "text-[hsl(var(--chart-2))]",
+    bgColor: "bg-[hsl(var(--chart-2)/0.08)] dark:bg-[hsl(var(--chart-2)/0.15)]",
+    borderColor: "border-[hsl(var(--chart-2)/0.3)] dark:border-[hsl(var(--chart-2)/0.4)]",
   },
   API_TEST_CASE: {
     icon: ScrollText,
     label: "测试用例",
-    color: "text-green-500",
-    bgColor: "bg-green-50 dark:bg-green-950",
-    borderColor: "border-green-200 dark:border-green-800",
+    color: "text-[hsl(var(--success))]",
+    bgColor: "bg-[hsl(var(--success)/0.08)] dark:bg-[hsl(var(--success)/0.15)]",
+    borderColor: "border-[hsl(var(--success)/0.3)] dark:border-[hsl(var(--success)/0.4)]",
   },
   API_TEST_SCRIPT: {
     icon: Code,
     label: "测试脚本",
-    color: "text-purple-500",
-    bgColor: "bg-purple-50 dark:bg-purple-950",
-    borderColor: "border-purple-200 dark:border-purple-800",
+    color: "text-[hsl(var(--chart-5))]",
+    bgColor: "bg-[hsl(var(--chart-5)/0.08)] dark:bg-[hsl(var(--chart-5)/0.15)]",
+    borderColor: "border-[hsl(var(--chart-5)/0.3)] dark:border-[hsl(var(--chart-5)/0.4)]",
   },
   API_TEST_RESULT: {
     icon: CheckCircle2,
     label: "执行结果",
-    color: "text-orange-500",
-    bgColor: "bg-orange-50 dark:bg-orange-950",
-    borderColor: "border-orange-200 dark:border-orange-800",
+    color: "text-[hsl(var(--chart-3))]",
+    bgColor: "bg-[hsl(var(--chart-3)/0.08)] dark:bg-[hsl(var(--chart-3)/0.15)]",
+    borderColor: "border-[hsl(var(--chart-3)/0.3)] dark:border-[hsl(var(--chart-3)/0.4)]",
   },
   API_TEST_REPORT: {
     icon: FileCode,
     label: "测试报告",
-    color: "text-pink-500",
-    bgColor: "bg-pink-50 dark:bg-pink-950",
-    borderColor: "border-pink-200 dark:border-pink-800",
+    color: "text-[hsl(var(--chart-4))]",
+    bgColor: "bg-[hsl(var(--chart-4)/0.08)] dark:bg-[hsl(var(--chart-4)/0.15)]",
+    borderColor: "border-[hsl(var(--chart-4)/0.3)] dark:border-[hsl(var(--chart-4)/0.4)]",
   },
 };
 // TODO  My80OmFIVnBZMlhwdTRUbGphRG1zWjg2WlhGYU9RPT06Y2Y3ZjdmYmE=
@@ -414,12 +414,12 @@ export function EnhancedTestArtifactsPanel({
 
   if (artifacts.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed rounded-xl bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20">
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed rounded-xl bg-gradient-to-br from-[hsl(var(--chart-1)/0.06)] to-[hsl(var(--chart-5)/0.06)] dark:from-[hsl(var(--chart-1)/0.12)] dark:to-[hsl(var(--chart-5)/0.12)]">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-xl opacity-20 animate-pulse"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--chart-1))] to-[hsl(var(--chart-5))] rounded-full blur-xl opacity-20 animate-pulse"></div>
           <FileText className="relative h-20 w-20 text-muted-foreground mb-4" />
         </div>
-        <p className="text-lg font-semibold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        <p className="text-lg font-semibold mb-2 bg-gradient-to-r from-[hsl(var(--chart-1))] to-[hsl(var(--chart-5))] bg-clip-text text-transparent">
           暂无测试成果物
         </p>
         <p className="text-sm text-muted-foreground max-w-md mb-4">
@@ -429,7 +429,7 @@ export function EnhancedTestArtifactsPanel({
           variant="outline"
           size="sm"
           onClick={loadArtifacts}
-          className="gap-2 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50"
+          className="gap-2 hover:bg-[hsl(var(--muted)/0.5)]"
         >
           <RefreshCw className="h-4 w-4" />
           刷新
@@ -490,9 +490,9 @@ export function EnhancedTestArtifactsPanel({
               className={cn(
                 "w-full px-4 py-3 transition-all flex items-center justify-between",
                 "hover:bg-gradient-to-r",
-                type === "API_TEST_PLAN" && "hover:from-blue-50/50 hover:to-blue-100/50",
-                type === "API_TEST_CASE" && "hover:from-green-50/50 hover:to-green-100/50",
-                type === "API_TEST_SCRIPT" && "hover:from-purple-50/50 hover:to-purple-100/50"
+                type === "API_TEST_PLAN" && "hover:from-[hsl(var(--chart-2)/0.1)] hover:to-[hsl(var(--chart-2)/0.15)]",
+                type === "API_TEST_CASE" && "hover:from-[hsl(var(--success)/0.1)] hover:to-[hsl(var(--success)/0.15)]",
+                type === "API_TEST_SCRIPT" && "hover:from-[hsl(var(--chart-5)/0.1)] hover:to-[hsl(var(--chart-5)/0.15)]"
               )}
             >
               <div className="flex items-center gap-3">
@@ -548,7 +548,7 @@ export function EnhancedTestArtifactsPanel({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-9 px-3 gap-2 hover:bg-blue-50 hover:text-blue-600"
+                              className="h-9 px-3 gap-2 hover:bg-[hsl(var(--info)/0.1)] hover:text-[hsl(var(--info))]"
                               onClick={() => loadScriptContent(artifact)}
                               title="编辑脚本"
                             >
@@ -558,7 +558,7 @@ export function EnhancedTestArtifactsPanel({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-9 px-3 gap-2 hover:bg-green-50 hover:text-green-600"
+                              className="h-9 px-3 gap-2 hover:bg-[hsl(var(--success)/0.1)] hover:text-[hsl(var(--success))]"
                               onClick={() => {
                                 // 直接执行，不需要预先加载脚本内容
                                 executeScript(artifact);
@@ -574,7 +574,7 @@ export function EnhancedTestArtifactsPanel({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-9 px-3 gap-2 hover:bg-orange-50 hover:text-orange-600"
+                              className="h-9 px-3 gap-2 hover:bg-[hsl(var(--chart-3)/0.1)] hover:text-[hsl(var(--chart-3))]"
                               onClick={() => loadScriptContent(artifact)}
                               title="查看详情"
                             >
@@ -584,7 +584,7 @@ export function EnhancedTestArtifactsPanel({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-9 px-3 gap-2 hover:bg-slate-50 hover:text-slate-600"
+                              className="h-9 px-3 gap-2 hover:bg-[hsl(var(--muted))]"
                               onClick={() => {
                                 // TODO: 实现下载功能
                                 toast.info("下载功能开发中...");
@@ -599,7 +599,7 @@ export function EnhancedTestArtifactsPanel({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-9 px-3 gap-2 hover:bg-pink-50 hover:text-pink-600"
+                              className="h-9 px-3 gap-2 hover:bg-[hsl(var(--chart-4)/0.1)] hover:text-[hsl(var(--chart-4))]"
                               onClick={async () => {
                                 try {
                                   // 获取报告查看器 URL
@@ -624,7 +624,7 @@ export function EnhancedTestArtifactsPanel({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-9 px-3 gap-2 hover:bg-slate-50 hover:text-slate-600"
+                              className="h-9 px-3 gap-2 hover:bg-[hsl(var(--muted))]"
                               onClick={() => {
                                 // 下载 ZIP 文件
                                 window.open(`/api/v2/attachments/${artifact.id}/download`, '_blank');
@@ -639,7 +639,7 @@ export function EnhancedTestArtifactsPanel({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-9 px-3 gap-2 hover:bg-purple-50 hover:text-purple-600"
+                              className="h-9 px-3 gap-2 hover:bg-[hsl(var(--chart-5)/0.1)] hover:text-[hsl(var(--chart-5))]"
                               onClick={() => loadScriptContent(artifact)}
                               title="查看内容"
                             >
@@ -649,7 +649,7 @@ export function EnhancedTestArtifactsPanel({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-9 px-3 gap-2 hover:bg-slate-50 hover:text-slate-600"
+                              className="h-9 px-3 gap-2 hover:bg-[hsl(var(--muted))]"
                               onClick={() => {
                                 // TODO: 实现下载功能
                                 toast.info("下载功能开发中...");
@@ -677,24 +677,24 @@ export function EnhancedTestArtifactsPanel({
             {/* 头部 */}
             <div className={cn(
               "flex items-center justify-between px-6 py-4 border-b shrink-0",
-              editingArtifact.type === "API_TEST_SCRIPT" && "bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20",
-              editingArtifact.type === "API_TEST_RESULT" && "bg-gradient-to-r from-orange-50/50 to-amber-50/50 dark:from-orange-950/20 dark:to-amber-950/20",
-              editingArtifact.type === "API_TEST_REPORT" && "bg-gradient-to-r from-pink-50/50 to-rose-50/50 dark:from-pink-950/20 dark:to-rose-950/20",
-              (editingArtifact.type === "API_TEST_PLAN" || editingArtifact.type === "API_TEST_CASE") && "bg-gradient-to-r from-green-50/50 to-emerald-50/50 dark:from-green-950/20 dark:to-emerald-950/20"
+              editingArtifact.type === "API_TEST_SCRIPT" && "bg-gradient-to-r from-[hsl(var(--chart-5)/0.08)] to-[hsl(var(--chart-5)/0.12)] dark:from-[hsl(var(--chart-5)/0.15)] dark:to-[hsl(var(--chart-5)/0.2)]",
+              editingArtifact.type === "API_TEST_RESULT" && "bg-gradient-to-r from-[hsl(var(--chart-3)/0.08)] to-[hsl(var(--chart-3)/0.12)] dark:from-[hsl(var(--chart-3)/0.15)] dark:to-[hsl(var(--chart-3)/0.2)]",
+              editingArtifact.type === "API_TEST_REPORT" && "bg-gradient-to-r from-[hsl(var(--chart-4)/0.08)] to-[hsl(var(--chart-4)/0.12)] dark:from-[hsl(var(--chart-4)/0.15)] dark:to-[hsl(var(--chart-4)/0.2)]",
+              (editingArtifact.type === "API_TEST_PLAN" || editingArtifact.type === "API_TEST_CASE") && "bg-gradient-to-r from-[hsl(var(--chart-2)/0.08)] to-[hsl(var(--success)/0.08)] dark:from-[hsl(var(--chart-2)/0.15)] dark:to-[hsl(var(--success)/0.15)]"
             )}>
               <div className="flex items-center gap-3">
                 <div className={cn(
                   "p-2 rounded-lg",
-                  editingArtifact.type === "API_TEST_SCRIPT" && "bg-purple-100 dark:bg-purple-900",
-                  editingArtifact.type === "API_TEST_RESULT" && "bg-orange-100 dark:bg-orange-900",
-                  editingArtifact.type === "API_TEST_REPORT" && "bg-pink-100 dark:bg-pink-900",
-                  (editingArtifact.type === "API_TEST_PLAN" || editingArtifact.type === "API_TEST_CASE") && "bg-green-100 dark:bg-green-900"
+                  editingArtifact.type === "API_TEST_SCRIPT" && "bg-[hsl(var(--chart-5)/0.15)] dark:bg-[hsl(var(--chart-5)/0.3)]",
+                  editingArtifact.type === "API_TEST_RESULT" && "bg-[hsl(var(--chart-3)/0.15)] dark:bg-[hsl(var(--chart-3)/0.3)]",
+                  editingArtifact.type === "API_TEST_REPORT" && "bg-[hsl(var(--chart-4)/0.15)] dark:bg-[hsl(var(--chart-4)/0.3)]",
+                  (editingArtifact.type === "API_TEST_PLAN" || editingArtifact.type === "API_TEST_CASE") && "bg-[hsl(var(--chart-2)/0.15)] dark:bg-[hsl(var(--chart-2)/0.3)]"
                 )}>
-                  {editingArtifact.type === "API_TEST_SCRIPT" && <Code className="h-5 w-5 text-purple-600 dark:text-purple-400" />}
-                  {editingArtifact.type === "API_TEST_RESULT" && <CheckCircle2 className="h-5 w-5 text-orange-600 dark:text-orange-400" />}
-                  {editingArtifact.type === "API_TEST_REPORT" && <FileCode className="h-5 w-5 text-pink-600 dark:text-pink-400" />}
-                  {editingArtifact.type === "API_TEST_PLAN" && <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />}
-                  {editingArtifact.type === "API_TEST_CASE" && <ScrollText className="h-5 w-5 text-green-600 dark:text-green-400" />}
+                  {editingArtifact.type === "API_TEST_SCRIPT" && <Code className="h-5 w-5 text-[hsl(var(--chart-5))]" />}
+                  {editingArtifact.type === "API_TEST_RESULT" && <CheckCircle2 className="h-5 w-5 text-[hsl(var(--chart-3))]" />}
+                  {editingArtifact.type === "API_TEST_REPORT" && <FileCode className="h-5 w-5 text-[hsl(var(--chart-4))]" />}
+                  {editingArtifact.type === "API_TEST_PLAN" && <FileText className="h-5 w-5 text-[hsl(var(--chart-2))]" />}
+                  {editingArtifact.type === "API_TEST_CASE" && <ScrollText className="h-5 w-5 text-[hsl(var(--success))]" />}
                 </div>
                 <div>
                   <h3 className="text-lg font-bold">
@@ -748,7 +748,7 @@ export function EnhancedTestArtifactsPanel({
                       size="sm"
                       onClick={() => executeScript()}
                       disabled={executing || loadingScript}
-                      className="gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                      className="gap-2 bg-gradient-to-r from-[hsl(var(--success))] to-[hsl(var(--chart-2))] hover:from-[hsl(var(--success)/0.85)] hover:to-[hsl(var(--chart-2)/0.85)]"
                     >
                       {executing ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -767,7 +767,7 @@ export function EnhancedTestArtifactsPanel({
                     setExecutionResult({ status: null, output: '' });
                   }}
                   disabled={loadingScript || executing}
-                  className="hover:bg-red-50 hover:text-red-600"
+                  className="hover:bg-[hsl(var(--destructive)/0.08)] hover:text-[hsl(var(--destructive))]"
                 >
                   <XCircle className="h-5 w-5" />
                 </Button>
@@ -814,22 +814,22 @@ export function EnhancedTestArtifactsPanel({
               {/* 执行结果区域 */}
               {executionResult.status && (
                 <div className={cn(
-                  "flex-1 min-h-0 flex flex-col bg-slate-50 dark:bg-slate-950",
+                  "flex-1 min-h-0 flex flex-col bg-[hsl(var(--muted)/0.3)] dark:bg-[hsl(var(--muted)/0.5)]",
                   "lg:w-1/2"
                 )}>
                   {/* 结果头部 */}
                   <div className={cn(
                     "px-4 py-3 border-b flex items-center justify-between",
-                    executionResult.status === 'success' && "bg-green-50 dark:bg-green-950/20 border-green-200",
-                    executionResult.status === 'error' && "bg-red-50 dark:bg-red-950/20 border-red-200",
-                    executionResult.status === 'running' && "bg-blue-50 dark:bg-blue-950/20 border-blue-200"
+                    executionResult.status === 'success' && "bg-[hsl(var(--success)/0.08)] dark:bg-[hsl(var(--success)/0.15)] border-[hsl(var(--success)/0.3)]",
+                    executionResult.status === 'error' && "bg-[hsl(var(--destructive)/0.08)] dark:bg-[hsl(var(--destructive)/0.15)] border-[hsl(var(--destructive)/0.3)]",
+                    executionResult.status === 'running' && "bg-[hsl(var(--info)/0.08)] dark:bg-[hsl(var(--info)/0.15)] border-[hsl(var(--info)/0.3)]"
                   )}>
                     <div className="flex items-center gap-2">
                       <Terminal className={cn(
                         "h-4 w-4",
-                        executionResult.status === 'success' && "text-green-600",
-                        executionResult.status === 'error' && "text-red-600",
-                        executionResult.status === 'running' && "text-blue-600"
+                        executionResult.status === 'success' && "text-[hsl(var(--success))]",
+                        executionResult.status === 'error' && "text-[hsl(var(--destructive))]",
+                        executionResult.status === 'running' && "text-[hsl(var(--info))]"
                       )} />
                       <span className="font-semibold text-sm">
                         {executionResult.status === 'success' && "执行成功"}
@@ -856,9 +856,9 @@ export function EnhancedTestArtifactsPanel({
                   <ScrollArea className="flex-1 p-4">
                     <pre className={cn(
                       "text-xs font-mono whitespace-pre-wrap",
-                      executionResult.status === 'success' && "text-green-800 dark:text-green-200",
-                      executionResult.status === 'error' && "text-red-800 dark:text-red-200",
-                      executionResult.status === 'running' && "text-blue-800 dark:text-blue-200"
+                      executionResult.status === 'success' && "text-[hsl(var(--success)/0.85)] dark:text-[hsl(var(--success)/0.5)]",
+                      executionResult.status === 'error' && "text-[hsl(var(--destructive)/0.85)] dark:text-[hsl(var(--destructive)/0.5)]",
+                      executionResult.status === 'running' && "text-[hsl(var(--info)/0.85)] dark:text-[hsl(var(--info)/0.5)]"
                     )}>
                       {executionResult.output}
                     </pre>

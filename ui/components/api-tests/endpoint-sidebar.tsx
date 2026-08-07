@@ -76,11 +76,11 @@ export function APIEndpointSidebar({
   }
 
   const methodColors: Record<string, string> = {
-    GET: "bg-green-100 text-green-700 border-green-300",
-    POST: "bg-blue-100 text-blue-700 border-blue-300",
-    PUT: "bg-orange-100 text-orange-700 border-orange-300",
-    PATCH: "bg-yellow-100 text-yellow-700 border-yellow-300",
-    DELETE: "bg-red-100 text-red-700 border-red-300",
+    GET: "bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.3)]",
+    POST: "bg-[hsl(var(--chart-5)/0.1)] text-[hsl(var(--chart-5))] border-[hsl(var(--chart-5)/0.3)]",
+    PUT: "bg-[hsl(var(--chart-3)/0.1)] text-[hsl(var(--chart-3))] border-[hsl(var(--chart-3)/0.3)]",
+    PATCH: "bg-[hsl(var(--warning)/0.1)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.3)]",
+    DELETE: "bg-[hsl(var(--destructive)/0.1)] text-[hsl(var(--destructive))] border-[hsl(var(--destructive)/0.3)]",
   };
 
   const handleGenerateTest = () => {
@@ -108,11 +108,11 @@ export function APIEndpointSidebar({
         <div className="flex items-start justify-between">
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2">
-              <Badge className={methodColors[endpoint.method] || "bg-gray-100"}>
+              <Badge className={methodColors[endpoint.method] || "bg-[hsl(var(--muted)/0.5)]"}>
                 {endpoint.method}
               </Badge>
               {endpoint.custom_config?.deprecated && (
-                <Badge variant="outline" className="text-orange-600">
+                <Badge variant="outline" className="text-[hsl(var(--chart-3))]">
                   已弃用
                 </Badge>
               )}

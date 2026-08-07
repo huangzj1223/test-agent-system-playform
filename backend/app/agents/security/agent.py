@@ -35,7 +35,7 @@ from langgraph.pregel import Pregel
 
 from app.agents.tools.security import get_local_tools
 from app.config.settings import settings
-from app.core.llms import text_model as model
+from app.core.llms import get_default_text_model
 from app.utils.filesystem import FixedFilesystemBackend
 # pragma: no cover  MC80OmFIVnBZMlhwdTRUbGphRG1zWjg2U1cxSVRRPT06NmI4NmI0MmE=
 
@@ -396,6 +396,7 @@ async def make_agent() -> AsyncIterator[Pregel]:
     - MCP session 在智能体生命周期内保持活跃
     - 退出时自动清理资源
     """
+    model = await get_default_text_model()
     context_middleware = SecurityContextInjectionMiddleware()
 # fmt: off  Mi80OmFIVnBZMlhwdTRUbGphRG1zWjg2U1cxSVRRPT06NmI4NmI0MmE=
 
@@ -425,21 +426,5 @@ async def make_agent() -> AsyncIterator[Pregel]:
 
         yield security_agent
 
-# =============================================================================
-# 全局智能体实例（同步创建，供直接调用）
-# =============================================================================
-
-context_middleware = SecurityContextInjectionMiddleware()
-all_tools = get_local_tools()
-
-security_agent = create_agent(
-    model=model,
-    tools=all_tools,
-    system_prompt=SYSTEM_PROMPT,
-    middleware=[skills_middleware, context_middleware],
-    backend=composite_backend,
-    context_schema=SecurityAgentContext,
-)
-
-# 导出供 LangGraph API 使用
-agent = security_agent
+# 导出异步工厂，确保每次运行使用数据库中的当前默认模型。
+agent = make_agent

@@ -1,0 +1,298 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - link "智能体测试系统 智能体测试系统 质量智能网络" [ref=e7] [cursor=pointer]:
+          - /url: /projects
+          - img "智能体测试系统" [ref=e9]
+          - generic [ref=e17]:
+            - generic [ref=e18]: 智能体测试系统
+            - generic [ref=e19]: 质量智能网络
+        - navigation [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]: 工作台
+            - link "系统总览" [ref=e26] [cursor=pointer]:
+              - /url: /projects
+            - link "项目空间" [ref=e35] [cursor=pointer]:
+              - /url: /projects/spaces
+            - link "全局任务" [ref=e48] [cursor=pointer]:
+              - /url: /projects/agent-tasks
+            - link "智能测试" [ref=e54] [cursor=pointer]:
+              - /url: /chat
+          - generic [ref=e69]:
+            - generic [ref=e70]:
+              - generic [ref=e71]: 项目入口
+              - generic [ref=e72]: "3"
+            - link "模型工厂 PR-3" [ref=e73] [cursor=pointer]:
+              - /url: /projects/PR-3
+              - generic [ref=e85]:
+                - generic [ref=e86]: 模型工厂
+                - generic [ref=e87]: PR-3
+            - link "企业知识助手 PR-2" [ref=e88] [cursor=pointer]:
+              - /url: /projects/PR-2
+              - generic [ref=e100]:
+                - generic [ref=e101]: 企业知识助手
+                - generic [ref=e102]: PR-2
+            - link "数据工厂 PR-1" [ref=e103] [cursor=pointer]:
+              - /url: /projects/PR-1
+              - generic [ref=e115]:
+                - generic [ref=e116]: 数据工厂
+                - generic [ref=e117]: PR-1
+    - generic [ref=e118]:
+      - banner [ref=e119]:
+        - generic [ref=e121]:
+          - generic [ref=e122]: 智能质量控制中心
+          - heading "系统总览" [level=1] [ref=e123]
+        - generic [ref=e124]:
+          - generic [ref=e125]:
+            - generic "运行中" [ref=e126]
+            - text: 智能体链路在线
+          - button "通知" [ref=e129] [cursor=pointer]
+          - button "帮助" [ref=e130] [cursor=pointer]
+          - button [ref=e131] [cursor=pointer]
+      - main [ref=e134]:
+        - generic [ref=e135]:
+          - generic [ref=e136]:
+            - generic [ref=e137]:
+              - generic [ref=e138]: 智能质量网络
+              - heading "掌握质量全貌，驱动智能闭环" [level=1] [ref=e151]
+              - paragraph [ref=e152]: 预览跨项目质量态势、智能体运行和风险分布 · 最后更新 刚刚
+            - button "刷新数据" [ref=e153] [cursor=pointer]
+          - generic [ref=e154]:
+            - generic [ref=e155]:
+              - generic [ref=e156]: 活跃项目
+              - generic [ref=e169]:
+                - generic [ref=e170]: "1"
+                - generic [ref=e171]: / 3
+            - generic [ref=e172]:
+              - generic [ref=e173]: 测试资产
+              - generic [ref=e179]: "23"
+            - generic [ref=e181]:
+              - generic [ref=e182]: 运行任务
+              - generic [ref=e188]: "0"
+            - generic [ref=e190]:
+              - generic [ref=e191]: 待人工处置
+              - generic [ref=e206]: "10"
+            - generic [ref=e209]:
+              - generic [ref=e210]: 执行通过率
+              - generic [ref=e215]: 38%
+          - generic [ref=e217]:
+            - generic [ref=e218]:
+              - generic [ref=e219]:
+                - generic [ref=e220]:
+                  - generic [ref=e221]: 智能体协作星图
+                  - paragraph [ref=e235]: 全部项目 · 7 阶段自动流转 · 1/4
+                - generic [ref=e236]:
+                  - generic [ref=e237]: 1 关注
+                  - generic [ref=e239]:
+                    - button "上一个星图" [ref=e240] [cursor=pointer]
+                    - button "暂停星图动画" [ref=e243] [cursor=pointer]
+                    - button "切换为 2D 视图" [ref=e247] [cursor=pointer]:
+                      - generic [ref=e251]: 3D
+                    - button "下一个星图" [ref=e252] [cursor=pointer]
+              - generic [ref=e255]:
+                - img "全部项目 银河质量闭环"
+                - link "进入全部项目" [ref=e256] [cursor=pointer]:
+                  - /url: /projects/spaces
+                  - generic [ref=e257]:
+                    - generic [ref=e258]: 协作核心
+                    - strong [ref=e259]: 全部项目
+                    - generic [ref=e260]: 7 个阶段流转中
+                - button "01 需求分析，待接入，待接入" [ref=e261] [cursor=pointer]:
+                  - generic [ref=e263]:
+                    - generic [ref=e264]: "01"
+                    - generic [ref=e269]:
+                      - strong [ref=e270]: 需求分析
+                      - generic [ref=e271]: 数据待接入
+                    - generic [ref=e273]: 待接入
+                - button "02 测试设计，已就绪，13" [ref=e274] [cursor=pointer]:
+                  - generic [ref=e276]:
+                    - generic [ref=e277]: "02"
+                    - generic [ref=e286]:
+                      - strong [ref=e287]: 测试设计
+                      - generic [ref=e288]: 已就绪
+                    - generic [ref=e290]: "13"
+                - button "03 脚本生成，已就绪，10" [ref=e291] [cursor=pointer]:
+                  - generic [ref=e293]:
+                    - generic [ref=e294]: "03"
+                    - generic [ref=e299]:
+                      - strong [ref=e300]: 脚本生成
+                      - generic [ref=e301]: 已就绪
+                    - generic [ref=e303]: "10"
+                - button "04 自动执行，空闲，0" [ref=e304] [cursor=pointer]:
+                  - generic [ref=e306]:
+                    - generic [ref=e307]: "04"
+                    - generic [ref=e312]:
+                      - strong [ref=e313]: 自动执行
+                      - generic [ref=e314]: 空闲
+                    - generic [ref=e316]: "0"
+                - button "05 结果分析，需关注，8" [ref=e317] [cursor=pointer]:
+                  - generic [ref=e319]:
+                    - generic [ref=e320]: "05"
+                    - generic [ref=e329]:
+                      - strong [ref=e330]: 结果分析
+                      - generic [ref=e331]: 需关注
+                    - generic [ref=e333]: "8"
+                - button "06 失败修复，空闲，0" [ref=e334] [cursor=pointer]:
+                  - generic [ref=e336]:
+                    - generic [ref=e337]: "06"
+                    - generic [ref=e351]:
+                      - strong [ref=e352]: 失败修复
+                      - generic [ref=e353]: 空闲
+                    - generic [ref=e355]: "0"
+                - button "07 回归验证，已就绪，3" [ref=e356] [cursor=pointer]:
+                  - generic [ref=e358]:
+                    - generic [ref=e359]: "07"
+                    - generic [ref=e363]:
+                      - strong [ref=e364]: 回归验证
+                      - generic [ref=e365]: 已就绪
+                    - generic [ref=e367]: "3"
+              - generic [ref=e368]:
+                - generic [ref=e374]:
+                  - text: 当前阶段
+                  - generic [ref=e375]:
+                    - strong [ref=e376]: 01 需求分析
+                    - generic "待接入" [ref=e377]
+                  - paragraph [ref=e386]: 阶段 1 / 7 · 负责人：待数据接入
+                - generic [ref=e388]:
+                  - paragraph [ref=e389]: 需求任务尚未接入统一运行记录
+                  - generic [ref=e390]:
+                    - generic [ref=e391]: 0关联任务
+                    - generic [ref=e392]: 0风险异常
+                    - generic [ref=e393]: 待接入预计完成
+              - generic [ref=e394]:
+                - button "切换到 全部项目" [ref=e395] [cursor=pointer]
+                - button "切换到 数据工厂" [ref=e396] [cursor=pointer]
+                - button "切换到 企业知识助手" [ref=e397] [cursor=pointer]
+                - button "切换到 模型工厂" [ref=e398] [cursor=pointer]
+            - generic [ref=e399]:
+              - generic [ref=e400]:
+                - generic [ref=e401]: 今日质量简报
+                - paragraph [ref=e409]: 风险解释、影响范围和下一步处置建议
+              - generic [ref=e410]:
+                - link "Codex UI MinIO full closed loop demo 4 失败，初步归因为 timeout_or_flaky。 日志显示执行或等待超时，可能来自环境抖动、接口变慢或等待条件不稳定。 数据工厂 置信度 70%" [ref=e411] [cursor=pointer]:
+                  - /url: /projects/PR-1/test-runs/LE-DEMO-UI-MINIO-FULL-CLOSED-LOOP-4
+                  - generic [ref=e412]:
+                    - generic "需关注" [ref=e414]
+                    - generic [ref=e417]:
+                      - heading "Codex UI MinIO full closed loop demo 4 失败，初步归因为 timeout_or_flaky。" [level=3] [ref=e419]
+                      - paragraph [ref=e423]: 日志显示执行或等待超时，可能来自环境抖动、接口变慢或等待条件不稳定。
+                      - generic [ref=e424]:
+                        - generic [ref=e425]: 数据工厂
+                        - generic [ref=e426]: 置信度 70%
+                - link "Codex UI MinIO full closed loop demo 3 失败，初步归因为 timeout_or_flaky。 日志显示执行或等待超时，可能来自环境抖动、接口变慢或等待条件不稳定。 数据工厂 置信度 70%" [ref=e427] [cursor=pointer]:
+                  - /url: /projects/PR-1/test-runs/LE-DEMO-UI-MINIO-FULL-CLOSED-LOOP-3
+                  - generic [ref=e428]:
+                    - generic "需关注" [ref=e430]
+                    - generic [ref=e433]:
+                      - heading "Codex UI MinIO full closed loop demo 3 失败，初步归因为 timeout_or_flaky。" [level=3] [ref=e435]
+                      - paragraph [ref=e439]: 日志显示执行或等待超时，可能来自环境抖动、接口变慢或等待条件不稳定。
+                      - generic [ref=e440]:
+                        - generic [ref=e441]: 数据工厂
+                        - generic [ref=e442]: 置信度 70%
+                - link "Codex UI MinIO全闭环演示2因固定超时等待导致测试超时失败。 测试脚本中使用了page.waitForTimeout(5000)固定等待，导致测试在等待期间超时，可能由于环境抖动、接口响应变慢或等待条件不稳定引起。 数据工厂 置信度 70%" [ref=e443] [cursor=pointer]:
+                  - /url: /projects/PR-1/test-runs/LE-DEMO-UI-MINIO-FULL-CLOSED-LOOP-2
+                  - generic [ref=e444]:
+                    - generic "需关注" [ref=e446]
+                    - generic [ref=e449]:
+                      - heading "Codex UI MinIO全闭环演示2因固定超时等待导致测试超时失败。" [level=3] [ref=e451]
+                      - paragraph [ref=e455]: 测试脚本中使用了page.waitForTimeout(5000)固定等待，导致测试在等待期间超时，可能由于环境抖动、接口响应变慢或等待条件不稳定引起。
+                      - generic [ref=e456]:
+                        - generic [ref=e457]: 数据工厂
+                        - generic [ref=e458]: 置信度 70%
+                - link "Codex UI MinIO full closed loop demo 失败，初步归因为 timeout_or_flaky。 日志显示执行或等待超时，可能来自环境抖动、接口变慢或等待条件不稳定。 数据工厂 置信度 70%" [ref=e459] [cursor=pointer]:
+                  - /url: /projects/PR-1/test-runs/LE-DEMO-UI-MINIO-FULL-CLOSED-LOOP
+                  - generic [ref=e460]:
+                    - generic "需关注" [ref=e462]
+                    - generic [ref=e465]:
+                      - heading "Codex UI MinIO full closed loop demo 失败，初步归因为 timeout_or_flaky。" [level=3] [ref=e467]
+                      - paragraph [ref=e471]: 日志显示执行或等待超时，可能来自环境抖动、接口变慢或等待条件不稳定。
+                      - generic [ref=e472]:
+                        - generic [ref=e473]: 数据工厂
+                        - generic [ref=e474]: 置信度 70%
+                - link "Codex MinIO全闭环演示失败，原因是断言期望状态码200但实际收到201。 自动化测试脚本中针对POST /api/render-jobs接口的断言期望返回状态码200，但实际服务返回了201，表明接口行为可能已变更或测试数据/环境导致不同响应，需确认接口契约是否更新。 数据工厂 置信度 74%" [ref=e475] [cursor=pointer]:
+                  - /url: /projects/PR-1/test-runs/LE-DEMO-MINIO-FULL-CLOSED-LOOP
+                  - generic [ref=e476]:
+                    - generic "需关注" [ref=e478]
+                    - generic [ref=e481]:
+                      - heading "Codex MinIO全闭环演示失败，原因是断言期望状态码200但实际收到201。" [level=3] [ref=e483]
+                      - paragraph [ref=e487]: 自动化测试脚本中针对POST /api/render-jobs接口的断言期望返回状态码200，但实际服务返回了201，表明接口行为可能已变更或测试数据/环境导致不同响应，需确认接口契约是否更新。
+                      - generic [ref=e488]:
+                        - generic [ref=e489]: 数据工厂
+                        - generic [ref=e490]: 置信度 74%
+              - generic [ref=e491]: 最近检查：刚刚
+          - generic [ref=e492]:
+            - generic [ref=e506]:
+              - heading "全局项目战情预览" [level=2] [ref=e507]
+              - paragraph [ref=e508]: 只读预览跨项目质量状态；项目维护请前往项目空间
+            - generic [ref=e509]:
+              - generic [ref=e510]:
+                - generic [ref=e511]: 项目
+                - generic [ref=e512]: 测试资产
+                - generic [ref=e513]: 最近执行
+                - generic [ref=e514]: 运行任务
+                - generic [ref=e515]: 最近活动
+                - generic [ref=e516]: 操作
+              - generic [ref=e517]:
+                - generic [ref=e518]:
+                  - generic [ref=e519]:
+                    - generic [ref=e520]:
+                      - generic [ref=e521]: 数据工厂
+                      - generic [ref=e522]:
+                        - generic "需关注" [ref=e523]
+                        - text: 关注
+                    - paragraph [ref=e526]: PR-1
+                  - generic [ref=e527]:
+                    - generic [ref=e528]: "23"
+                    - generic [ref=e529]: 13 用例 · 10 脚本
+                  - generic [ref=e530]:
+                    - generic [ref=e531]: 38%
+                    - generic [ref=e532]: 5 失败 · 0 阻塞
+                  - generic [ref=e533]:
+                    - generic [ref=e534]: "0"
+                    - generic [ref=e535]: 8 次运行
+                  - generic [ref=e536]: 15 天前
+                  - link "进入" [ref=e539] [cursor=pointer]:
+                    - /url: /projects/PR-1
+                - generic [ref=e542]:
+                  - generic [ref=e543]:
+                    - generic [ref=e544]:
+                      - generic [ref=e545]: 企业知识助手
+                      - generic [ref=e546]:
+                        - generic "空闲" [ref=e547]
+                        - text: 暂无运行
+                    - paragraph [ref=e557]: PR-2
+                  - generic [ref=e558]:
+                    - generic [ref=e559]: "0"
+                    - generic [ref=e560]: 0 用例 · 0 脚本
+                  - generic [ref=e561]:
+                    - generic [ref=e562]: 暂无
+                    - generic [ref=e563]: 0 失败 · 0 阻塞
+                  - generic [ref=e564]:
+                    - generic [ref=e565]: "0"
+                    - generic [ref=e566]: 0 次运行
+                  - generic [ref=e567]: 暂无活动
+                  - link "进入" [ref=e570] [cursor=pointer]:
+                    - /url: /projects/PR-2
+                - generic [ref=e573]:
+                  - generic [ref=e574]:
+                    - generic [ref=e575]:
+                      - generic [ref=e576]: 模型工厂
+                      - generic [ref=e577]:
+                        - generic "空闲" [ref=e578]
+                        - text: 暂无运行
+                    - paragraph [ref=e588]: PR-3
+                  - generic [ref=e589]:
+                    - generic [ref=e590]: "0"
+                    - generic [ref=e591]: 0 用例 · 0 脚本
+                  - generic [ref=e592]:
+                    - generic [ref=e593]: 暂无
+                    - generic [ref=e594]: 0 失败 · 0 阻塞
+                  - generic [ref=e595]:
+                    - generic [ref=e596]: "0"
+                    - generic [ref=e597]: 0 次运行
+                  - generic [ref=e598]: 暂无活动
+                  - link "进入" [ref=e601] [cursor=pointer]:
+                    - /url: /projects/PR-3
+  - region "Notifications alt+T"

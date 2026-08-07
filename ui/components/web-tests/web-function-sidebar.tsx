@@ -266,22 +266,22 @@ export function WebSubFunctionSidebar({
   // 获取优先级对应的颜色
   const getPriorityColor = (priority: string) => {
     const colors: Record<string, string> = {
-      high: "bg-red-100 text-red-700 border-red-200",
-      medium: "bg-yellow-100 text-yellow-700 border-yellow-200",
-      low: "bg-green-100 text-green-700 border-green-200",
+      high: "bg-[hsl(var(--priority-high))]/10 text-[hsl(var(--priority-high))] border-[hsl(var(--priority-high))/0.3]",
+      medium: "bg-[hsl(var(--priority-medium))]/10 text-[hsl(var(--priority-medium))] border-[hsl(var(--priority-medium))/0.3]",
+      low: "bg-[hsl(var(--priority-low))]/10 text-[hsl(var(--priority-low))] border-[hsl(var(--priority-low))/0.3]",
     };
-    return colors[priority.toLowerCase()] || "bg-gray-100 text-gray-700 border-gray-200";
+    return colors[priority.toLowerCase()] || "bg-muted text-muted-foreground border-border";
   };
 
   // 获取测试类型对应的颜色
   const getTestTypeColor = (testType: string) => {
     const colors: Record<string, string> = {
-      functional: "bg-blue-100 text-blue-700 border-blue-200",
-      ui: "bg-purple-100 text-purple-700 border-purple-200",
-      performance: "bg-orange-100 text-orange-700 border-orange-200",
-      security: "bg-red-100 text-red-700 border-red-200",
+      functional: "bg-[hsl(var(--chart-1))]/10 text-[hsl(var(--chart-1))] border-[hsl(var(--chart-1))/0.3]",
+      ui: "bg-[hsl(var(--chart-2))]/10 text-[hsl(var(--chart-2))] border-[hsl(var(--chart-2))/0.3]",
+      performance: "bg-[hsl(var(--chart-3))]/10 text-[hsl(var(--chart-3))] border-[hsl(var(--chart-3))/0.3]",
+      security: "bg-[hsl(var(--chart-4))]/10 text-[hsl(var(--chart-4))] border-[hsl(var(--chart-4))/0.3]",
     };
-    return colors[testType.toLowerCase()] || "bg-gray-100 text-gray-700 border-gray-200";
+    return colors[testType.toLowerCase()] || "bg-muted text-muted-foreground border-border";
   };
 
   if (loading) {
@@ -335,7 +335,7 @@ export function WebSubFunctionSidebar({
   return (
     <div className="flex flex-col h-full bg-background">
       {/* 头部 - 优化设计 */}
-      <div className="border-b bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/30 dark:via-purple-950/30 dark:to-pink-950/30">
+      <div className="border-b bg-gradient-to-r from-[hsl(var(--chart-1))/0.08] via-[hsl(var(--chart-2))/0.08] to-[hsl(var(--chart-3))/0.08] dark:from-[hsl(var(--chart-1))/0.04] dark:via-[hsl(var(--chart-2))/0.04] dark:to-[hsl(var(--chart-3))/0.04]">
         <div className="px-6 py-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
@@ -358,7 +358,7 @@ export function WebSubFunctionSidebar({
                   <select
                     value={editForm.priority}
                     onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
-                    className="px-3 py-1.5 rounded-lg text-sm font-bold border-2 shadow-sm bg-white"
+                    className="px-3 py-1.5 rounded-lg text-sm font-bold border-2 shadow-sm bg-[hsl(var(--card))]"
                   >
                     <option value="high">高优先级</option>
                     <option value="medium">中优先级</option>
@@ -389,10 +389,10 @@ export function WebSubFunctionSidebar({
                 </div>
               ) : (
                 <>
-                  <h3 className="text-xl font-bold mb-1 truncate bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <h3 className="text-xl font-bold mb-1 truncate bg-gradient-to-r from-[hsl(var(--chart-1))] to-[hsl(var(--chart-2))] bg-clip-text text-transparent">
                     {subFunction.display_name}
                   </h3>
-                  <code className="text-sm text-muted-foreground font-mono bg-white/50 dark:bg-black/20 px-2 py-1 rounded">
+                  <code className="text-sm text-muted-foreground font-mono bg-[hsl(var(--card-bg)/0.5)] dark:bg-[hsl(var(--card-bg)/0.2)] px-2 py-1 rounded">
                     {subFunction.identifier}
                   </code>
                 </>
@@ -404,7 +404,7 @@ export function WebSubFunctionSidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 hover:bg-gray-100"
+                    className="h-9 w-9 hover:bg-muted"
                     onClick={handleCancelEdit}
                     disabled={saving}
                   >
@@ -413,7 +413,7 @@ export function WebSubFunctionSidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 hover:bg-green-50 hover:text-green-600"
+                    className="h-9 w-9 hover:bg-[hsl(var(--success))/0.1] hover:text-[hsl(var(--success))]"
                     onClick={handleSaveEdit}
                     disabled={saving}
                   >
@@ -425,7 +425,7 @@ export function WebSubFunctionSidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 hover:bg-green-50 hover:text-green-600"
+                    className="h-9 w-9 hover:bg-[hsl(var(--success))/0.1] hover:text-[hsl(var(--success))]"
                     onClick={onRefresh}
                     title="刷新数据"
                   >
@@ -434,7 +434,7 @@ export function WebSubFunctionSidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 hover:bg-blue-50 hover:text-blue-600"
+                    className="h-9 w-9 hover:bg-[hsl(var(--chart-1))/0.1] hover:text-[hsl(var(--chart-1))]"
                     onClick={handleStartEdit}
                     title="编辑子功能信息"
                   >
@@ -443,7 +443,7 @@ export function WebSubFunctionSidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 hover:bg-red-50 hover:text-red-600"
+                    className="h-9 w-9 hover:bg-[hsl(var(--destructive))/0.1] hover:text-[hsl(var(--destructive))]"
                     onClick={() => setShowDeleteDialog(true)}
                     title="删除子功能"
                   >
@@ -452,7 +452,7 @@ export function WebSubFunctionSidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 hover:bg-gray-100 hover:text-gray-600"
+                    className="h-9 w-9 hover:bg-muted hover:text-muted-foreground"
                     onClick={onClose}
                   >
                     <X className="h-5 w-5" />
@@ -464,27 +464,27 @@ export function WebSubFunctionSidebar({
 
           {/* 统计信息卡片 */}
           <div className="grid grid-cols-3 gap-3 mt-4">
-            <div className="bg-white/60 dark:bg-black/20 rounded-lg p-3 border">
+            <div className="bg-[hsl(var(--card-bg)/0.6)] dark:bg-[hsl(var(--card-bg)/0.2)] rounded-lg p-3 border">
               <div className="flex items-center gap-2 mb-1">
-                <FileCode className="h-4 w-4 text-blue-500" />
+                <FileCode className="h-4 w-4 text-[hsl(var(--chart-1))]" />
                 <span className="text-xs text-muted-foreground">测试用例</span>
               </div>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-[hsl(var(--chart-1))]">
                 {subFunction.total_test_cases || 0}
               </div>
             </div>
-            <div className="bg-white/60 dark:bg-black/20 rounded-lg p-3 border">
+            <div className="bg-[hsl(var(--card-bg)/0.6)] dark:bg-[hsl(var(--card-bg)/0.2)] rounded-lg p-3 border">
               <div className="flex items-center gap-2 mb-1">
-                <Play className="h-4 w-4 text-green-500" />
+                <Play className="h-4 w-4 text-[hsl(var(--success))]" />
                 <span className="text-xs text-muted-foreground">执行次数</span>
               </div>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-[hsl(var(--success))]">
                 {subFunction.total_test_runs || 0}
               </div>
             </div>
-            <div className="bg-white/60 dark:bg-black/20 rounded-lg p-3 border">
+            <div className="bg-[hsl(var(--card-bg)/0.6)] dark:bg-[hsl(var(--card-bg)/0.2)] rounded-lg p-3 border">
               <div className="flex items-center gap-2 mb-1">
-                <CheckCircle2 className="h-4 w-4 text-purple-500" />
+                <CheckCircle2 className="h-4 w-4 text-[hsl(var(--chart-2))]" />
                 <span className="text-xs text-muted-foreground">最后状态</span>
               </div>
               <div className="text-sm font-semibold">
@@ -507,9 +507,9 @@ export function WebSubFunctionSidebar({
         <div className="p-6 space-y-4">
           {/* 描述信息卡片 */}
           {(subFunction.description || editing) && (
-            <div className="rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20 p-4">
+            <div className="rounded-xl border-2 border-[hsl(var(--chart-1))/0.3] bg-gradient-to-br from-[hsl(var(--chart-1))/0.05] to-[hsl(var(--chart-5))/0.05] dark:from-[hsl(var(--chart-1))/0.03] dark:to-[hsl(var(--chart-5))/0.03] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Globe className="h-4 w-4 text-blue-500" />
+                <Globe className="h-4 w-4 text-[hsl(var(--chart-1))]" />
                 <span className="font-semibold text-sm">描述信息</span>
               </div>
               {editing ? (
@@ -533,9 +533,9 @@ export function WebSubFunctionSidebar({
             <Separator />
             {/* 高级编辑区域 */}
             <div className="p-6 space-y-4">
-              <div className="rounded-xl border-2 border-orange-200 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/20 dark:to-amber-950/20 p-4">
+              <div className="rounded-xl border-2 border-[hsl(var(--chart-3))/0.3] bg-gradient-to-br from-[hsl(var(--chart-3))/0.05] to-[hsl(var(--warning))/0.05] dark:from-[hsl(var(--chart-3))/0.03] dark:to-[hsl(var(--warning))/0.03] p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <FileCode className="h-4 w-4 text-orange-500" />
+                  <FileCode className="h-4 w-4 text-[hsl(var(--chart-3))]" />
                   <span className="font-semibold text-sm">高级编辑</span>
                   <span className="text-xs text-muted-foreground ml-auto">JSON 格式</span>
                 </div>
@@ -628,8 +628,8 @@ export function WebSubFunctionSidebar({
               expanded={expandedSections.has("pages")}
               onToggle={() => toggleSection("pages")}
             >
-              <div className="rounded-xl border-2 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 p-4">
-                <pre className="text-xs overflow-x-auto font-mono bg-white dark:bg-black p-3 rounded border">
+              <div className="rounded-xl border-2 bg-gradient-to-br from-[hsl(var(--muted))/0.5] to-[hsl(var(--card-bg)/0.5)] dark:from-[hsl(var(--muted))/0.3] dark:to-[hsl(var(--card-bg)/0.3)] p-4">
+                <pre className="text-xs overflow-x-auto font-mono bg-[hsl(var(--card))] dark:bg-[hsl(var(--card-bg))] p-3 rounded border">
                   {JSON.stringify(subFunction.target_pages, null, 2)}
                 </pre>
               </div>
@@ -644,7 +644,7 @@ export function WebSubFunctionSidebar({
               expanded={expandedSections.has("scenario")}
               onToggle={() => toggleSection("scenario")}
             >
-              <div className="rounded-xl border-2 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20 p-4">
+              <div className="rounded-xl border-2 bg-gradient-to-br from-[hsl(var(--chart-1))/0.05] to-[hsl(var(--chart-5))/0.05] dark:from-[hsl(var(--chart-1))/0.03] dark:to-[hsl(var(--chart-5))/0.03] p-4">
                 <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                   {subFunction.test_scenario}
                 </p>
@@ -660,8 +660,8 @@ export function WebSubFunctionSidebar({
               expanded={expandedSections.has("data")}
               onToggle={() => toggleSection("data")}
             >
-              <div className="rounded-xl border-2 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 p-4">
-                <pre className="text-xs overflow-x-auto font-mono bg-white dark:bg-black p-3 rounded border">
+              <div className="rounded-xl border-2 bg-gradient-to-br from-[hsl(var(--muted))/0.5] to-[hsl(var(--card-bg)/0.5)] dark:from-[hsl(var(--muted))/0.3] dark:to-[hsl(var(--card-bg)/0.3)] p-4">
+                <pre className="text-xs overflow-x-auto font-mono bg-[hsl(var(--card))] dark:bg-[hsl(var(--card-bg))] p-3 rounded border">
                   {JSON.stringify(subFunction.test_data, null, 2)}
                 </pre>
               </div>
@@ -687,8 +687,8 @@ export function WebSubFunctionSidebar({
                   className="min-h-[120px] resize-none"
                 />
               </div>
-              <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="font-medium text-blue-700 dark:text-blue-400 mb-1">提示</p>
+              <div className="text-xs text-muted-foreground bg-[hsl(var(--chart-1))/0.06] dark:bg-[hsl(var(--chart-1))/0.04] p-3 rounded-lg border border-[hsl(var(--chart-1))/0.2] dark:border-[hsl(var(--chart-1))/0.3]">
+                <p className="font-medium text-[hsl(var(--chart-1))] dark:text-[hsl(var(--chart-1))] mb-1">提示</p>
                 <p>AI 将根据子功能信息和你提供的生成要求自动创建测试计划、测试用例和测试脚本。</p>
               </div>
             </div>
@@ -697,14 +697,14 @@ export function WebSubFunctionSidebar({
       </div>
 
       {/* 底部操作栏 */}
-      <div className="border-t-2 px-6 py-4 bg-gradient-to-r from-slate-50 via-gray-50 to-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-900">
+      <div className="border-t-2 px-6 py-4 bg-gradient-to-r from-[hsl(var(--muted))/0.5] via-[hsl(var(--card-bg)/0.5)] to-[hsl(var(--muted))/0.5] dark:from-[hsl(var(--muted))/0.3] dark:via-[hsl(var(--card-bg)/0.3)] dark:to-[hsl(var(--muted))/0.3]">
         {editing ? (
           <div className="flex gap-3">
             <Button
               variant="outline"
               onClick={handleCancelEdit}
               disabled={saving}
-              className="flex-1 border-2 hover:bg-gray-50"
+              className="flex-1 border-2 hover:bg-[hsl(var(--muted))]"
             >
               <X className="mr-2 h-4 w-4" />
               取消
@@ -712,7 +712,7 @@ export function WebSubFunctionSidebar({
             <Button
               onClick={handleSaveEdit}
               disabled={saving}
-              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all"
+              className="flex-1 bg-gradient-to-r from-[hsl(var(--success))] to-[hsl(var(--chart-2))] hover:from-[hsl(var(--success)/0.9)] hover:to-[hsl(var(--chart-2)/0.9)] shadow-md hover:shadow-lg transition-all"
             >
               {saving ? (
                 <>
@@ -732,14 +732,14 @@ export function WebSubFunctionSidebar({
             <Button
               variant="outline"
               onClick={handleStartEdit}
-              className="flex-1 border-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+              className="flex-1 border-2 hover:bg-[hsl(var(--chart-1))/0.1] hover:text-[hsl(var(--chart-1))] hover:border-[hsl(var(--chart-1))/0.3]"
             >
               <Pencil className="mr-2 h-4 w-4" />
               编辑信息
             </Button>
             <Button
               onClick={handleAIGenerate}
-              className="flex-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 shadow-md hover:shadow-lg transition-all"
+              className="flex-1 bg-gradient-to-r from-[hsl(var(--chart-5))] via-[hsl(var(--chart-5))] to-[hsl(var(--chart-1))] hover:from-[hsl(var(--chart-5)/0.9)] hover:via-[hsl(var(--chart-5)/0.9)] hover:to-[hsl(var(--chart-1)/0.9)] shadow-md hover:shadow-lg transition-all"
             >
               <Zap className="mr-2 h-5 w-5" />
               AI 生成测试
@@ -807,8 +807,8 @@ function CollapsibleSection({
         onClick={onToggle}
         className={cn(
           "w-full flex items-center justify-between px-5 py-4 transition-all",
-          "hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50",
-          expanded && "bg-gradient-to-r from-blue-50/30 to-purple-50/30"
+          "hover:bg-gradient-to-r hover:from-[hsl(var(--chart-5)/0.08)] hover:to-[hsl(var(--chart-1)/0.08)]",
+          expanded && "bg-gradient-to-r from-[hsl(var(--chart-5)/0.08)] to-[hsl(var(--chart-1)/0.08)]"
         )}
       >
         <div className="flex items-center gap-3">

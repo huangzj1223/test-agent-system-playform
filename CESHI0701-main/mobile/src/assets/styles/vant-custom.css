@@ -1,0 +1,143 @@
+/**
+ * 文件名称：vant-custom.css - Vant 组件自定义样式
+ *
+ * 功能描述：
+ *   覆盖 Vant 组件的默认样式，实现自定义效果
+ *
+ * 使用方式：
+ *   在 main.js 中引入：import '@/assets/styles/vant-custom.css'
+ */
+
+/* ==================== Checkbox 组件样式 ==================== */
+/* 添加圆角 */
+:root:root .van-checkbox__icon--square {
+  border-radius: 0.125rem !important; /* 4px */
+}
+
+:root:root .van-checkbox__icon--square .van-icon {
+  border-radius: 0.125rem !important; /* 4px */
+}
+
+/* ==================== Cell 组件样式 ==================== */
+/* 移除左右 padding，保留上下 padding */
+/* :root:root .van-cell {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+} */
+
+/* Cell value 文字颜色和字重 */
+:root:root .van-cell__value {
+  color: var(--text-primary) !important;
+  font-weight: 500 !important;
+}
+
+/* ==================== CellGroup 组件样式 ==================== */
+/* 移除 inset 模式的 margin */
+:root:root .van-cell-group--inset {
+  margin: 0 !important;
+}
+:root:root .van-cell-group--inset .van-cell {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+/* ==================== DropdownMenu 组件样式 ==================== */
+/* 移除下拉菜单的阴影 */
+:root:root .van-dropdown-menu__bar {
+  box-shadow: none !important;
+}
+
+/* 下拉菜单项文本不换行 */
+:root:root .van-dropdown-item__option {
+  white-space: nowrap !important;
+}
+
+/* ==================== Dialog 组件样式 ==================== */
+/* 调整 Dialog 宽度 */
+:root:root .van-dialog {
+  width: 80%;
+  border-radius: 14px !important;
+}
+
+/* Dialog 标题样式 */
+:root:root .van-dialog__header {
+  padding: 20px 16px 16px !important;
+  position: relative;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 标题下方的细线 */
+:root:root .van-dialog__header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 0.5px;
+  background-color: var(--bg-page);
+}
+
+/* 调整 Dialog 内容区域 */
+:root:root .van-dialog__message {
+  padding: 24px 20px;
+  font-size: 16px !important;
+  line-height: 1.6;
+  color: var(--text-primary);
+  text-align: justify; /* 统一两端对齐 */
+  word-break: break-all; /* 强制字符间断行，实现两端对齐 */
+}
+
+/* Dialog 按钮样式优化 */
+/* 取消按钮 - 灰色背景 */
+:root:root .van-dialog__cancel {
+  background: #f7f8fa !important;
+  color: #646566 !important;
+  border-radius: 8px !important;
+}
+
+/* 确认按钮 - 使用主色变量 */
+:root:root .van-dialog__confirm {
+  background: var(--primary-color) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+
+/* 按钮容器 - 添加间距 */
+:root:root .van-dialog__footer {
+  padding: 16px !important;
+  gap: 12px !important;
+  display: flex !important;
+  border-top: none !important;
+}
+
+/* 移除 Dialog 内按钮的边框 */
+:root:root .van-dialog .van-button {
+  height: 48px !important;
+  border: none !important;
+  padding: 0 16px !important;
+  font-size: 18px !important;
+}
+
+/* 移除 Dialog 内的 hairline 边框 */
+:root:root .van-dialog .van-hairline--top::after {
+  border-top-width: 0 !important;
+}
+
+/* ==================== Toast 组件样式 ==================== */
+/* Toast 背景和文字颜色 */
+:root:root .van-toast {
+  background-color: rgba(50, 50, 51, 0.88) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+/* Toast 文字颜色 */
+:root:root .van-toast__text {
+  color: #fff !important;
+}

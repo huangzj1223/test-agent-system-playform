@@ -47,6 +47,24 @@ allure-report/
 langgraph_license/
 langgraph_runtime_postgres/
 
+# Images / media artifacts (not committed)
+artifacts/
+resources/background_clothing_conf/icon/
+CESHI0701-main/doraemon_cut.png
+*.png
+*.jpg
+*.jpg-*
+*.jpeg
+*.gif
+*.webm
+*.webp
+*.bmp
+*.ico
+# 保留前端运行必需的图片资源
+!ui/public/avatar.png
+!ui/public/assets/**
+!ui/public/assets/galaxy-workflow/galaxy-background-main.png
+
 # OS
 .DS_Store
 Thumbs.db

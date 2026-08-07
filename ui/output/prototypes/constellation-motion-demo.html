@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>智能体协作星图动画原型</title>
+  <style>
+    :root {
+      --page: #f5f6fa;
+      --surface: #ffffff;
+      --surface-soft: #f8f9fd;
+      --ink: #171a2f;
+      --muted: #667085;
+      --line: #dfe3ec;
+      --grid: rgba(91, 99, 126, .055);
+      --primary: #6964e8;
+      --cyan: #22b8b3;
+      --green: #75a52c;
+      --amber: #e0a134;
+      --coral: #dc6f67;
+      --slate: #8290a6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 1120px;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background-color: var(--page);
+      background-image:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 32px 32px;
+      font-family: "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button { font: inherit; }
+
+    .demo-shell {
+      width: 1100px;
+      margin: 36px auto;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 18px 48px rgba(34, 39, 66, .1);
+    }
+
+    .panel-head {
+      height: 72px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .heading { display: flex; align-items: center; gap: 11px; }
+    .heading-icon {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      color: var(--cyan);
+      background: #e4f7f5;
+    }
+    .heading svg, .node-icon svg, .analysis-icon svg, .control svg {
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .heading strong { display: block; font-size: 15px; }
+    .heading small { color: var(--muted); font-size: 11px; }
+
+    .controls { display: flex; align-items: center; gap: 10px; }
+    .legend { display: flex; align-items: center; gap: 13px; color: var(--muted); font-size: 10px; }
+    .legend span { display: flex; align-items: center; gap: 5px; }
+    .legend i { width: 7px; height: 7px; border-radius: 50%; }
+    .control-group { display: flex; padding: 3px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-soft); }
+    .control { width: 34px; height: 30px; display: grid; place-items: center; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
+    .control:hover { color: var(--primary); background: white; }
+
+    .board {
+      position: relative;
+      width: 1000px;
+      height: 520px;
+      margin: 22px auto 0;
+      overflow: hidden;
+      border: 1px solid #e5e8f0;
+      border-radius: 8px;
+      background-color: #fbfcff;
+      background-image:
+        linear-gradient(rgba(91,99,126,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(91,99,126,.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    .board::before {
+      content: "";
+      position: absolute;
+      inset: 68px 120px;
+      border: 1px dashed rgba(105,100,232,.12);
+      border-radius: 50%;
+    }
+
+    .wires { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .wire {
+      fill: none;
+      stroke: #bdc6d5;
+      stroke-width: 1.25;
+      stroke-dasharray: 5 7;
+      marker-end: url(#arrow-muted);
+      transition: stroke .3s ease, stroke-width .3s ease, opacity .3s ease;
+    }
+    .wire.completed { stroke: #91b466; marker-end: url(#arrow-green); opacity: .75; }
+    .wire.active { stroke: var(--cyan); stroke-width: 2; marker-end: url(#arrow-cyan); opacity: 1; filter: url(#wire-glow); }
+    .spoke { fill: none; stroke: rgba(105,100,232,.18); stroke-width: 1; stroke-dasharray: 3 7; marker-end: url(#arrow-primary); }
+
+    .packet { fill: var(--cyan); filter: url(#packet-glow); opacity: 0; }
+    .packet.running { opacity: 1; }
+
+    .core {
+      position: absolute;
+      left: 430px;
+      top: 205px;
+      width: 140px;
+      height: 110px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border: 1px solid rgba(105,100,232,.28);
+      border-radius: 50%;
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 0 0 12px rgba(105,100,232,.05), 0 14px 28px rgba(43,47,78,.12);
+      z-index: 2;
+    }
+    .core strong { display: block; font-size: 14px; }
+    .core span { color: var(--muted); font-size: 10px; }
+    .core b { color: var(--primary); font-size: 11px; }
+
+    .node {
+      --state: var(--slate);
+      position: absolute;
+      width: 160px;
+      height: 78px;
+      padding: 10px 11px 9px 13px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 7px 17px rgba(34,39,66,.08);
+      transition: border-color .25s ease, box-shadow .25s ease, background .25s ease;
+      z-index: 3;
+    }
+    .node::before {
+      content: "";
+      position: absolute;
+      left: -1px;
+      top: 9px;
+      bottom: 9px;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: var(--state);
+    }
+    .node::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      top: -16px;
+      height: 14px;
+      opacity: 0;
+      background: linear-gradient(180deg, transparent, rgba(34,184,179,.14), transparent);
+    }
+    .node.active {
+      --state: var(--cyan);
+      border-color: rgba(34,184,179,.5);
+      background: #fbffff;
+      box-shadow: 0 0 0 4px rgba(34,184,179,.08), 0 11px 25px rgba(34,39,66,.13);
+    }
+    .node.active::after { opacity: 1; animation: scan 2.1s ease-in-out infinite; }
+    .node.completed { --state: var(--green); }
+    .node.attention { --state: var(--amber); border-color: rgba(224,161,52,.3); }
+    .node.failed { --state: var(--coral); border-color: rgba(220,111,103,.36); }
+    .node.attention .signal { animation: attention 1.8s ease-out infinite; }
+
+    @keyframes scan { 0% { transform: translateY(0); } 70%,100% { transform: translateY(96px); } }
+    @keyframes attention { 0% { box-shadow: 0 0 0 0 rgba(224,161,52,.38); } 70%,100% { box-shadow: 0 0 0 8px rgba(224,161,52,0); } }
+
+    .node-top { display: flex; align-items: center; justify-content: space-between; }
+    .node-id { color: var(--muted); font-size: 9px; font-weight: 800; }
+    .signal { width: 7px; height: 7px; border-radius: 50%; background: var(--state); }
+    .node-main { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+    .node-icon { width: 26px; height: 26px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 6px; color: var(--state); background: color-mix(in srgb, var(--state) 11%, white); }
+    .node-icon svg { width: 14px; height: 14px; }
+    .node strong { display: block; font-size: 11px; line-height: 1.2; }
+    .node small { color: var(--muted); font-size: 9px; }
+    .node-count { margin-left: auto; color: var(--state); font-size: 9px; font-weight: 800; }
+
+    .n0 { left: 72px; top: 74px; }
+    .n1 { left: 420px; top: 30px; }
+    .n2 { left: 768px; top: 74px; }
+    .n3 { left: 820px; top: 262px; }
+    .n4 { left: 650px; top: 400px; }
+    .n5 { left: 340px; top: 400px; }
+    .n6 { left: 20px; top: 262px; }
+
+    .analysis {
+      min-height: 86px;
+      margin: 14px 49px 22px;
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 38px minmax(0,1fr) auto;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-soft);
+    }
+    .analysis-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 7px; color: var(--primary); background: #e9e8ff; }
+    .analysis strong { display: block; font-size: 12px; }
+    .analysis p { min-height: 17px; margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+    .analysis-status { text-align: right; }
+    .analysis-status b { display: block; color: var(--cyan); font-size: 11px; }
+    .analysis-status span { color: var(--muted); font-size: 9px; }
+    .fade-in { animation: fade-in .32s ease both; }
+    @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <section class="demo-shell">
+    <header class="panel-head">
+      <div class="heading">
+        <div class="heading-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="m10.8 6.7-4.6 9M13.2 6.7l4.6 9M7 18h10"/></svg></div>
+        <div><strong>智能体协作星图</strong><small>全量项目 · 智能体阶段自动巡航</small></div>
+      </div>
+      <div class="controls">
+        <div class="legend"><span><i style="background:var(--cyan)"></i>运行中</span><span><i style="background:var(--green)"></i>已完成</span><span><i style="background:var(--amber)"></i>需关注</span></div>
+        <div class="control-group"><button class="control" id="previous" aria-label="上一步"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><button class="control" id="toggle" aria-label="暂停"><svg id="toggle-icon" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></svg></button><button class="control" id="next" aria-label="下一步"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button></div>
+      </div>
+    </header>
+
+    <div class="board">
+      <svg class="wires" viewBox="0 0 1000 520" aria-hidden="true">
+        <defs>
+          <marker id="arrow-muted" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 7 3.5 0 7Z" fill="#aab5c6"/></marker>
+          <marker id="arrow-cyan" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 7 3.5 0 7Z" fill="#22b8b3"/></marker>
+          <marker id="arrow-green" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 7 3.5 0 7Z" fill="#75a52c"/></marker>
+          <marker id="arrow-primary" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0 6 3 0 6Z" fill="#aaa8ed"/></marker>
+          <filter id="wire-glow"><feGaussianBlur stdDeviation="1.7" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <filter id="packet-glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <path id="link-0" class="wire" d="M230 91 Q330 35 420 62"/>
+        <path id="link-1" class="wire" d="M580 62 Q680 35 768 91"/>
+        <path id="link-2" class="wire" d="M895 152 Q935 205 899 262"/>
+        <path id="link-3" class="wire" d="M855 340 Q820 386 773 400"/>
+        <path id="link-4" class="wire" d="M650 439 Q575 465 500 439"/>
+        <path id="link-5" class="wire" d="M340 439 Q205 433 139 340"/>
+        <path id="link-6" class="wire" d="M72 272 Q42 205 104 152"/>
+        <path class="spoke" d="M432 226 225 139"/><path class="spoke" d="M500 205 500 108"/><path class="spoke" d="M568 226 778 139"/><path class="spoke" d="M570 281 820 299"/><path class="spoke" d="M540 315 698 400"/><path class="spoke" d="M459 315 455 400"/><path class="spoke" d="M430 281 180 299"/>
+        <circle id="packet" class="packet" r="5"><animateMotion id="packet-motion" dur="900ms" fill="freeze"><mpath id="packet-path" href="#link-1"/></animateMotion></circle>
+      </svg>
+
+      <div class="core"><div><strong>全部项目</strong><span>智能体质量网络</span><b>闭环率 72%</b></div></div>
+
+      <div class="node n0 completed" data-index="0"><div class="node-top"><span class="node-id">01</span><i class="signal"></i></div><div class="node-main"><span class="node-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 8h8M8 12h5M8 16h7"/></svg></span><div><strong>需求解析</strong><small>测试范围已映射</small></div><span class="node-count">4 项</span></div></div>
+      <div class="node n1" data-index="1"><div class="node-top"><span class="node-id">02</span><i class="signal"></i></div><div class="node-main"><span class="node-icon"><svg viewBox="0 0 24 24"><path d="m9 11 3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><div><strong>测试设计</strong><small>标准用例生成</small></div><span class="node-count">13 项</span></div></div>
+      <div class="node n2 completed" data-index="2"><div class="node-top"><span class="node-id">03</span><i class="signal"></i></div><div class="node-main"><span class="node-icon"><svg viewBox="0 0 24 24"><path d="m8 3-5 9 5 9M16 3l5 9-5 9M14 4l-4 16"/></svg></span><div><strong>脚本生成</strong><small>自动化脚本就绪</small></div><span class="node-count">10 项</span></div></div>
+      <div class="node n3" data-index="3"><div class="node-top"><span class="node-id">04</span><i class="signal"></i></div><div class="node-main"><span class="node-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg></span><div><strong>自动执行</strong><small>等待运行任务</small></div><span class="node-count">0 项</span></div></div>
+      <div class="node n4 attention" data-index="4"><div class="node-top"><span class="node-id">05</span><i class="signal"></i></div><div class="node-main"><span class="node-icon"><svg viewBox="0 0 24 24"><path d="M3 18h18M5 15l4-4 3 3 7-8"/></svg></span><div><strong>结果分析</strong><small>异常原因聚合</small></div><span class="node-count">8 项</span></div></div>
+      <div class="node n5 failed" data-index="5"><div class="node-top"><span class="node-id">06</span><i class="signal"></i></div><div class="node-main"><span class="node-icon"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10 3 2 20h20L14 3z"/></svg></span><div><strong>失败修复</strong><small>等待人工审核</small></div><span class="node-count">5 项</span></div></div>
+      <div class="node n6 completed" data-index="6"><div class="node-top"><span class="node-id">07</span><i class="signal"></i></div><div class="node-main"><span class="node-icon"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span><div><strong>回归验证</strong><small>闭环结果已确认</small></div><span class="node-count">3 项</span></div></div>
+    </div>
+
+    <div class="analysis">
+      <div class="analysis-icon"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg></div>
+      <div id="analysis-copy"><strong>测试设计智能体正在生成标准用例</strong><p>基于需求与历史知识完成边界、异常和主流程覆盖，下一阶段将生成自动化脚本。</p></div>
+      <div class="analysis-status"><b id="analysis-progress">阶段 2 / 7</b><span id="analysis-state">运行中</span></div>
+    </div>
+  </section>
+
+  <script>
+    const stageCopy = [
+      ["需求解析智能体正在识别测试范围", "梳理功能边界、依赖关系和高风险路径，为后续测试设计建立覆盖基线。"],
+      ["测试设计智能体正在生成标准用例", "基于需求与历史知识完成边界、异常和主流程覆盖，下一阶段将生成自动化脚本。"],
+      ["脚本生成智能体正在构建自动化资产", "将已审核用例转换为 API、场景与 Web 自动化脚本，并完成基础语法检查。"],
+      ["执行智能体正在调度测试任务", "按环境、优先级和依赖顺序分配执行资源，并持续采集测试成果物。"],
+      ["分析智能体正在聚合失败原因", "关联日志、响应、截图和历史失败模式，输出根因判断与处置建议。"],
+      ["修复智能体正在生成修复建议", "已形成可审查的修复方案，等待负责人确认后进入自动回归。"],
+      ["回归智能体正在验证质量闭环", "重新执行受影响范围，确认修复有效且未引入新的回归风险。"]
+    ];
+    const baseline = ["completed", "", "completed", "", "attention", "failed", "completed"];
+    const nodes = [...document.querySelectorAll(".node")];
+    const wires = [...document.querySelectorAll(".wire")];
+    const packet = document.getElementById("packet");
+    const packetMotion = document.getElementById("packet-motion");
+    const packetPath = document.getElementById("packet-path");
+    const copy = document.getElementById("analysis-copy");
+    const progress = document.getElementById("analysis-progress");
+    const state = document.getElementById("analysis-state");
+    const toggle = document.getElementById("toggle");
+    const toggleIcon = document.getElementById("toggle-icon");
+    let current = 1;
+    let playing = true;
+    let timer;
+
+    function activate(index) {
+      current = (index + nodes.length) % nodes.length;
+      nodes.forEach((node, i) => {
+        node.className = `node n${i}${baseline[i] ? ` ${baseline[i]}` : ""}${i === current ? " active" : ""}`;
+      });
+      wires.forEach((wire, i) => {
+        wire.className.baseVal = `wire${i < current ? " completed" : ""}`;
+      });
+      copy.classList.remove("fade-in");
+      void copy.offsetWidth;
+      copy.innerHTML = `<strong>${stageCopy[current][0]}</strong><p>${stageCopy[current][1]}</p>`;
+      copy.classList.add("fade-in");
+      progress.textContent = `阶段 ${current + 1} / 7`;
+      state.textContent = baseline[current] === "attention" ? "需关注" : baseline[current] === "failed" ? "待审核" : "运行中";
+    }
+
+    function travel(direction = 1) {
+      const next = (current + direction + nodes.length) % nodes.length;
+      const pathIndex = direction > 0 ? current : next;
+      wires.forEach((wire, i) => wire.classList.toggle("active", i === pathIndex));
+      packetPath.setAttribute("href", `#link-${pathIndex}`);
+      packet.classList.add("running");
+      packetMotion.setAttribute("keyPoints", direction > 0 ? "0;1" : "1;0");
+      packetMotion.setAttribute("keyTimes", "0;1");
+      packetMotion.beginElement();
+      window.setTimeout(() => {
+        packet.classList.remove("running");
+        activate(next);
+        wires[pathIndex].classList.remove("active");
+      }, 900);
+    }
+
+    function schedule() {
+      window.clearTimeout(timer);
+      if (playing) timer = window.setTimeout(() => { travel(1); schedule(); }, 4200);
+    }
+
+    document.getElementById("next").addEventListener("click", () => { travel(1); schedule(); });
+    document.getElementById("previous").addEventListener("click", () => { travel(-1); schedule(); });
+    toggle.addEventListener("click", () => {
+      playing = !playing;
+      toggle.setAttribute("aria-label", playing ? "暂停" : "继续");
+      toggleIcon.innerHTML = playing ? '<path d="M9 5v14M15 5v14"/>' : '<path d="m8 5 11 7-11 7z"/>';
+      schedule();
+    });
+
+    activate(current);
+    schedule();
+  </script>
+</body>
+</html>

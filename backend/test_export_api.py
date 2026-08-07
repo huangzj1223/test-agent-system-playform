@@ -17,7 +17,7 @@ from app.services.testcase_export_service import TestCaseExportService
 from app.config.database import async_session_factory, get_mongodb
 
 
-async def test_export():
+def test_export():
     """测试导出服务"""
     print("=" * 60)
     print("测试导出服务")
@@ -132,4 +132,4 @@ async def test_export():
 
 
 if __name__ == "__main__":
-    asyncio.run(test_export())
+    test_export()

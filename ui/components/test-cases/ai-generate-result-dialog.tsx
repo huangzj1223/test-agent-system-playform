@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { TestCaseInfo } from "@/lib/api/types";
+import { ProductIcon } from "@/components/icons";
 
 interface Scenario {
   name: string;
@@ -75,16 +76,16 @@ export function AIGenerateResultDialog({
           <p className="text-sm text-muted-foreground">{prompt}</p>
           {folderId && (
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">📁</span>
+              <ProductIcon name="projects" className="h-4 w-4 text-muted-foreground" />
               <span>{folderId}</span>
             </div>
           )}
         </div>
 
         {/* 生成结果摘要 */}
-        <div className="flex items-center gap-2 rounded-lg bg-blue-50 px-4 py-3 text-sm">
+        <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--info)/0.1)] px-4 py-3 text-sm">
           <Sparkles className="h-4 w-4 text-primary shrink-0" />
-          <span className="text-blue-900">
+          <span className="text-[hsl(var(--info))]">
             我们已生成 <strong>{totalTestCases} 个测试用例</strong>，涵盖{" "}
             <strong>{scenarioCount} 个场景</strong>。保存这些测试用例后，您可以生成步骤/结果。
           </span>
@@ -151,7 +152,7 @@ export function AIGenerateResultDialog({
               size="icon"
               className={cn(
                 "h-8 w-8",
-                feedback === "up" && "bg-green-100 text-green-600 hover:bg-green-100"
+                feedback === "up" && "bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))] hover:bg-[hsl(var(--success)/0.1)]"
               )}
               onClick={() => setFeedback(feedback === "up" ? null : "up")}
             >
@@ -162,7 +163,7 @@ export function AIGenerateResultDialog({
               size="icon"
               className={cn(
                 "h-8 w-8",
-                feedback === "down" && "bg-red-100 text-red-600 hover:bg-red-100"
+                feedback === "down" && "bg-[hsl(var(--destructive)/0.1)] text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive)/0.1)]"
               )}
               onClick={() => setFeedback(feedback === "down" ? null : "down")}
             >

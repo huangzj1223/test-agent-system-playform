@@ -9,6 +9,7 @@ from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -100,6 +101,40 @@ async def create_scenario(
         project_id=resolved_project_id,
         scenario_in=scenario_in,
         created_by=current_user_id,
+    )
+
+
+@router.get("/exports/test-cases", response_class=Response)
+async def export_scenario_test_cases(
+    db: DbSessionDep,
+    current_user_id: CurrentUserIdDep,
+    project_id: str,
+):
+    """Export test cases to Excel."""
+    from app.services.test_artifact_export_service import TestArtifactExportService
+
+    content, filename, content_type = await TestArtifactExportService(db).export_scenario_test_cases_excel(project_id)
+    return Response(
+        content=content,
+        media_type=content_type,
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.get("/exports/scripts", response_class=Response)
+async def export_scenario_test_scripts(
+    db: DbSessionDep,
+    current_user_id: CurrentUserIdDep,
+    project_id: str,
+):
+    """Export test scripts to zip."""
+    from app.services.test_artifact_export_service import TestArtifactExportService
+
+    content, filename, content_type = await TestArtifactExportService(db).export_scenario_test_scripts_zip(project_id)
+    return Response(
+        content=content,
+        media_type=content_type,
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 @router.get("/{scenario_id}", response_model=ScenarioResponse)

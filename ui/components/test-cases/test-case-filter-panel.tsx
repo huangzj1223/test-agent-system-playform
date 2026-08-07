@@ -21,12 +21,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { Priority, TestCaseState } from "@/lib/api/types";
+import { PriorityIndicator, TestCaseStateIndicator } from "@/components/icons";
 
 const priorityColors: Record<Priority, string> = {
-  critical: "bg-red-500",
-  high: "bg-orange-500",
-  medium: "bg-yellow-500",
-  low: "bg-green-500",
+  critical: "bg-[hsl(var(--destructive))]",
+  high: "bg-[hsl(var(--warning))]",
+  medium: "bg-[hsl(var(--chart-3))]",
+  low: "bg-[hsl(var(--success))]",
 };
 // NOTE  MS80OmFIVnBZMlhwdTRUbGphRG1zWjg2WTFOVGRBPT06MjZiOTMzNTk=
 
@@ -62,25 +63,25 @@ interface TestCaseFilterPanelProps {
   showQuickFilters?: boolean;
 }
 
-const priorityOptions: { value: Priority; label: string; icon: string }[] = [
-  { value: "critical", label: "紧急", icon: "🔴" },
-  { value: "high", label: "高", icon: "🟠" },
-  { value: "medium", label: "中", icon: "🟡" },
-  { value: "low", label: "低", icon: "🟢" },
+const priorityOptions: { value: Priority; label: string }[] = [
+  { value: "critical", label: "紧急" },
+  { value: "high", label: "高" },
+  { value: "medium", label: "中" },
+  { value: "low", label: "低" },
 ];
 // eslint-disable  Mi80OmFIVnBZMlhwdTRUbGphRG1zWjg2WTFOVGRBPT06MjZiOTMzNTk=
 
 const statusOptions: { value: TestCaseState; label: string }[] = [
   // 设计阶段
-  { value: "new", label: "🆕 新建" },
-  { value: "review_pending", label: "⏳ 待评审" },
-  { value: "reviewed", label: "✅ 已评审" },
+  { value: "new", label: "新建" },
+  { value: "review_pending", label: "待评审" },
+  { value: "reviewed", label: "已评审" },
   // 执行阶段
-  { value: "not_run", label: "⚪ 未执行" },
-  { value: "passed", label: "✅ 通过" },
-  { value: "failed", label: "❌ 失败" },
-  { value: "blocked", label: "🚫 阻塞" },
-  { value: "skipped", label: "⏭️ 跳过" },
+  { value: "not_run", label: "未执行" },
+  { value: "passed", label: "通过" },
+  { value: "failed", label: "失败" },
+  { value: "blocked", label: "阻塞" },
+  { value: "skipped", label: "跳过" },
 ];
 // eslint-disable  My80OmFIVnBZMlhwdTRUbGphRG1zWjg2WTFOVGRBPT06MjZiOTMzNTk=
 
@@ -161,10 +162,7 @@ export function TestCaseFilterPanel({
                 <SelectItem value="all">全部优先级</SelectItem>
                 {priorityOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    <div className="flex items-center gap-2">
-                      <span>{option.icon}</span>
-                      <span>{option.label}</span>
-                    </div>
+                    <PriorityIndicator priority={option.value} />
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -258,10 +256,7 @@ export function TestCaseFilterPanel({
                   <SelectItem value="all">全部</SelectItem>
                   {priorityOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      <div className="flex items-center gap-2">
-                        <span>{option.icon}</span>
-                        <span>{option.label}</span>
-                      </div>
+                      <PriorityIndicator priority={option.value} />
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -287,7 +282,7 @@ export function TestCaseFilterPanel({
                   <SelectItem value="all">全部</SelectItem>
                   {statusOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      <TestCaseStateIndicator state={option.value} />
                     </SelectItem>
                   ))}
                 </SelectContent>

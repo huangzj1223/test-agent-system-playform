@@ -113,7 +113,7 @@ export function ToolApprovalInterrupt({
       <div className="mb-3 flex items-center gap-2 text-foreground">
         <AlertCircle
           size={16}
-          className="text-yellow-600 dark:text-yellow-400"
+          className="text-[hsl(var(--warning))]"
         />
         <span className="text-xs font-semibold uppercase tracking-wider">
           需要批准
@@ -215,7 +215,7 @@ export function ToolApprovalInterrupt({
               size="sm"
               onClick={handleEdit}
               disabled={isLoading}
-              className="bg-green-600 text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
+              className="bg-[hsl(var(--success))] text-white hover:bg-[hsl(var(--success)/0.85)]"
             >
               <Check size={14} />
               {isLoading ? "保存中..." : "保存并批准"}
@@ -274,8 +274,8 @@ export function ToolApprovalInterrupt({
                 onClick={handleApprove}
                 disabled={isLoading}
                 className={cn(
-                  "bg-green-600 text-white hover:bg-green-700",
-                  "dark:bg-green-600 dark:hover:bg-green-700"
+                  "bg-[hsl(var(--success))] text-white hover:bg-[hsl(var(--success)/0.85)]",
+                  "dark:bg-[hsl(var(--success))] dark:hover:bg-[hsl(var(--success)/0.85)]"
                 )}
               >
                 <Check size={14} />

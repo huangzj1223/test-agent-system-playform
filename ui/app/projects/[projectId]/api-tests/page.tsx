@@ -18,10 +18,11 @@ import {
   ChevronRight,
   ChevronDown,
   Play,
+  Download,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout";
 import { useLanguage } from "@/providers/LanguageProvider";
-import { APITestList, APITestDialog } from "@/components/api-tests";
+import { APITestList, APITestDialog, AIGenerateAPITestDialog } from "@/components/api-tests";
 import { APIEndpointSidebar } from "@/components/api-tests/api-endpoint-sidebar";
 import { APIParseDialog } from "@/components/api-tests/api-parse-dialog";
 import { APIEndpointList } from "@/components/api-tests/APIEndpointList";
@@ -58,6 +59,8 @@ import {
   updateAPITest,
   deleteAPITest,
   runAPITest,
+  exportAPITestCases,
+  exportAPITestScripts,
 } from "@/lib/api/api-tests";
 import {
   listAPIEndpoints,
@@ -68,7 +71,7 @@ import {
   updateFolder,
   deleteFolder,
 } from "@/lib/api/folders";
-import { listScenarios, executeScenario } from "@/lib/api/scenarios";
+import { listScenarios, executeScenario, exportScenarioTestCases, exportScenarioTestScripts } from "@/lib/api/scenarios";
 import type {
   FolderInfo,
   FolderCreate,
@@ -143,6 +146,8 @@ export default function APITestsPage() {
   const [aiChatInitialPrompt, setAiChatInitialPrompt] = React.useState<string>("");
   const [aiChatKey, setAiChatKey] = React.useState<number>(0);
   const [assistant, setAssistant] = React.useState<Assistant | null>(null);
+  const [exportingCases, setExportingCases] = React.useState(false);
+  const [exportingScripts, setExportingScripts] = React.useState(false);
 
   // 初始化 Assistant
   React.useEffect(() => {
@@ -319,6 +324,41 @@ export default function APITestsPage() {
     toast.success(t("apiTests.scenarioCreated"));
   };
 
+
+  const handleExportAllTestCases = async () => {
+    try {
+      setExportingCases(true);
+      if (testMode === "endpoint") {
+        await exportAPITestCases(projectId);
+      } else {
+        await exportScenarioTestCases(projectId);
+      }
+      toast.success("\u5bfc\u51fa\u5df2\u5f00\u59cb");
+    } catch (error: any) {
+      console.error("Failed to export test cases:", error);
+      toast.error(error?.message || "\u5bfc\u51fa\u5931\u8d25");
+    } finally {
+      setExportingCases(false);
+    }
+  };
+
+  const handleExportAllScripts = async () => {
+    try {
+      setExportingScripts(true);
+      if (testMode === "endpoint") {
+        await exportAPITestScripts(projectId);
+      } else {
+        await exportScenarioTestScripts(projectId);
+      }
+      toast.success("\u5bfc\u51fa\u5df2\u5f00\u59cb");
+    } catch (error: any) {
+      console.error("Failed to export scripts:", error);
+      toast.error(error?.message || "\u5bfc\u51fa\u5931\u8d25");
+    } finally {
+      setExportingScripts(false);
+    }
+  };
+
   // 处理提交文件夹
   const handleSubmitFolder = async () => {
     if (!folderFormData.name.trim()) {
@@ -394,11 +434,11 @@ export default function APITestsPage() {
             <div className="p-3 border-b bg-background">
               <Tabs value={testMode} onValueChange={(v) => setTestMode(v as TestMode)}>
                 <TabsList className="w-full grid grid-cols-2">
-                  <TabsTrigger value="endpoint" className="gap-1.5 data-[state=active]:bg-green-50 data-[state=active]:text-green-700 data-[state=active]:border-green-200">
+                  <TabsTrigger value="endpoint" className="gap-1.5 data-[state=active]:bg-[hsl(var(--success)/0.1)] data-[state=active]:text-[hsl(var(--success))] data-[state=active]:border-[hsl(var(--success)/0.2)]">
                     <FileCode className="h-4 w-4" />
                     {t("apiTests.endpointTest")}
                   </TabsTrigger>
-                  <TabsTrigger value="scenario" className="gap-1.5 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700 data-[state=active]:border-purple-200">
+                  <TabsTrigger value="scenario" className="gap-1.5 data-[state=active]:bg-[hsl(var(--chart-5)/0.1)] data-[state=active]:text-[hsl(var(--chart-5))] data-[state=active]:border-[hsl(var(--chart-5)/0.2)]">
                     <Workflow className="h-4 w-4" />
                     {t("apiTests.scenarioTest")}
                   </TabsTrigger>
@@ -486,7 +526,7 @@ export default function APITestsPage() {
               <div className="flex items-center gap-2">
                 {testMode === "endpoint" ? (
                   <>
-                    <Layers className="h-5 w-5 text-blue-500" />
+                    <Layers className="h-5 w-5 text-[hsl(var(--chart-1))]" />
                     <div>
                       <h2 className="text-lg font-semibold">
                         {selectedFolderName || t("apiTests.allEndpoints")}
@@ -498,7 +538,7 @@ export default function APITestsPage() {
                   </>
                 ) : (
                   <>
-                    <Workflow className="h-5 w-5 text-purple-500" />
+                    <Workflow className="h-5 w-5 text-[hsl(var(--chart-5))]" />
                     <div>
                       <h2 className="text-lg font-semibold">
                         {scenarioViewMode === "orchestrate" ? t("apiTests.scenarioOrchestration") : t("apiTests.executionMonitor")}
@@ -525,7 +565,7 @@ export default function APITestsPage() {
                     <Button
                       size="sm"
                       onClick={() => setAiChatOpen(true)}
-                      className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-md hover:shadow-lg transition-all"
+                      className="btn-ai"
                     >
                       <MessageSquare className="mr-2 h-4 w-4" />
                       {t("apiTests.aiAssistant")}
@@ -536,7 +576,7 @@ export default function APITestsPage() {
                     <Button
                       size="sm"
                       onClick={() => setAiGenerateScenarioDialogOpen(true)}
-                      className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-md hover:shadow-lg transition-all gap-2"
+                      className="btn-ai gap-2"
                     >
                       <Sparkles className="h-4 w-4" />
                       {t("apiTests.aiGenerateScenarios")}
@@ -564,13 +604,31 @@ export default function APITestsPage() {
                     <Button
                       size="sm"
                       onClick={() => setAiChatOpen(true)}
-                      className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-md hover:shadow-lg transition-all"
+                      className="btn-ai"
                     >
                       <MessageSquare className="mr-2 h-4 w-4" />
                       {t("apiTests.aiAssistant")}
                     </Button>
                   </>
                 )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportAllTestCases}
+                  disabled={exportingCases}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  {exportingCases ? "\u5bfc\u51fa\u4e2d..." : "\u5bfc\u51fa\u6240\u6709\u6d4b\u8bd5\u7528\u4f8b"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportAllScripts}
+                  disabled={exportingScripts}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  {exportingScripts ? "\u5bfc\u51fa\u4e2d..." : "\u5bfc\u51fa\u6240\u6709\u6d4b\u8bd5\u811a\u672c"}
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -613,7 +671,7 @@ export default function APITestsPage() {
                       <div className="flex items-center justify-between mb-6">
                         <div>
                           <h2 className="text-xl font-bold flex items-center gap-2">
-                            <Zap className="h-5 w-5 text-purple-500" />
+                            <Zap className="h-5 w-5 text-[hsl(var(--chart-5))]" />
                             {t("apiTests.testArtifacts")}
                           </h2>
                           <p className="text-sm text-muted-foreground mt-1">
@@ -784,6 +842,23 @@ export default function APITestsPage() {
             toast.success(t("apiTests.apiDocParseSuccess"));
             loadAPITests();
             folderTreeRef.current?.refresh();
+          }}
+        />
+
+        {/* AI生成对话框 */}
+        <AIGenerateAPITestDialog
+          open={aiGenerateDialogOpen}
+          onOpenChange={setAiGenerateDialogOpen}
+          projectIdentifier={projectId}
+          onSuccess={() => {
+            toast.success(t("apiTests.apiDocParseSuccess"));
+            loadAPITests();
+            folderTreeRef.current?.refresh();
+          }}
+          onOpenChat={(prompt) => {
+            setAiChatInitialPrompt(prompt);
+            setAiChatKey(prev => prev + 1);
+            setAiChatOpen(true);
           }}
         />
 

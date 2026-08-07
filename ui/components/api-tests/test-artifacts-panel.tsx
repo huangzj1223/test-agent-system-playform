@@ -54,20 +54,20 @@ const artifactTypeConfig = {
   API_TEST_PLAN: {
     icon: FileText,
     label: "测试计划",
-    color: "text-blue-500",
-    bgColor: "bg-blue-50 dark:bg-blue-950",
+    color: "text-[hsl(var(--chart-5))]",
+    bgColor: "bg-[hsl(var(--chart-5)/0.08)] dark:bg-[hsl(var(--chart-5)/0.15)]",
   },
   API_TEST_CASE: {
     icon: ScrollText,
     label: "测试用例",
-    color: "text-green-500",
-    bgColor: "bg-green-50 dark:bg-green-950",
+    color: "text-[hsl(var(--success))]",
+    bgColor: "bg-[hsl(var(--success)/0.08)] dark:bg-[hsl(var(--success)/0.15)]",
   },
   API_TEST_SCRIPT: {
     icon: Code,
     label: "测试脚本",
-    color: "text-purple-500",
-    bgColor: "bg-purple-50 dark:bg-purple-950",
+    color: "text-[hsl(var(--chart-1))]",
+    bgColor: "bg-[hsl(var(--chart-1)/0.08)] dark:bg-[hsl(var(--chart-1)/0.15)]",
   },
 };
 // TODO  My80OmFIVnBZMlhwdTRUbGphRG1zWjg2ZVc5alNRPT06ODcwZTA0ZDc=

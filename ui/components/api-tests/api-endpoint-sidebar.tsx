@@ -29,6 +29,7 @@ import {
   Pencil,
   Check,
   Trash2,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -282,13 +283,13 @@ export function APIEndpointSidebar({
   // 获取方法对应的颜色
   const getMethodColor = (method: string) => {
     const colors: Record<string, string> = {
-      GET: "bg-blue-100 text-blue-700 border-blue-200",
-      POST: "bg-green-100 text-green-700 border-green-200",
-      PUT: "bg-orange-100 text-orange-700 border-orange-200",
-      DELETE: "bg-red-100 text-red-700 border-red-200",
-      PATCH: "bg-purple-100 text-purple-700 border-purple-200",
+      GET: "bg-[hsl(var(--chart-1))] text-[hsl(var(--chart-1))] border-[hsl(var(--chart-1)/0.3)]",
+      POST: "bg-[hsl(var(--chart-2))] text-[hsl(var(--chart-2))] border-[hsl(var(--chart-2)/0.3)]",
+      PUT: "bg-[hsl(var(--chart-3))] text-[hsl(var(--chart-3))] border-[hsl(var(--chart-3)/0.3)]",
+      DELETE: "bg-[hsl(var(--chart-4))] text-[hsl(var(--chart-4))] border-[hsl(var(--chart-4)/0.3)]",
+      PATCH: "bg-[hsl(var(--chart-5))] text-[hsl(var(--chart-5))] border-[hsl(var(--chart-5)/0.3)]",
     };
-    return colors[method.toUpperCase()] || "bg-gray-100 text-gray-700 border-gray-200";
+    return colors[method.toUpperCase()] || "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border-[hsl(var(--border))]";
   };
 
   if (loading) {
@@ -342,7 +343,7 @@ export function APIEndpointSidebar({
   return (
     <div className="flex flex-col h-full bg-background">
       {/* 头部 - 优化设计 */}
-      <div className="border-b bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/30 dark:via-purple-950/30 dark:to-pink-950/30">
+      <div className="border-b bg-gradient-to-r from-[hsl(var(--chart-1)/0.08)] via-[hsl(var(--chart-5)/0.08)] to-[hsl(var(--chart-4)/0.08)] dark:from-[hsl(var(--chart-1)/0.15)] dark:via-[hsl(var(--chart-5)/0.15)] dark:to-[hsl(var(--chart-4)/0.15)]">
         <div className="px-6 py-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
@@ -400,7 +401,7 @@ export function APIEndpointSidebar({
                 </div>
               ) : (
                 <>
-                  <h3 className="text-xl font-bold mb-1 truncate bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <h3 className="text-xl font-bold mb-1 truncate bg-gradient-to-r from-[hsl(var(--chart-1))] to-[hsl(var(--chart-5))] bg-clip-text text-transparent">
                     {endpoint.display_name}
                   </h3>
                   <code className="text-sm text-muted-foreground font-mono bg-white/50 dark:bg-black/20 px-2 py-1 rounded">
@@ -415,7 +416,7 @@ export function APIEndpointSidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 hover:bg-gray-100"
+                    className="h-9 w-9 hover:bg-[hsl(var(--muted))]"
                     onClick={handleCancelEdit}
                     disabled={saving}
                   >
@@ -424,7 +425,7 @@ export function APIEndpointSidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 hover:bg-green-50 hover:text-green-600"
+                    className="h-9 w-9 hover:bg-[hsl(var(--success)/0.1)] hover:text-[hsl(var(--success))]"
                     onClick={handleSaveEdit}
                     disabled={saving}
                   >
@@ -436,7 +437,7 @@ export function APIEndpointSidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 hover:bg-green-50 hover:text-green-600"
+                    className="h-9 w-9 hover:bg-[hsl(var(--success)/0.1)] hover:text-[hsl(var(--success))]"
                     onClick={onRefresh}
                     title={t("apiTests.refreshData")}
                   >
@@ -445,7 +446,7 @@ export function APIEndpointSidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 hover:bg-blue-50 hover:text-blue-600"
+                    className="h-9 w-9 hover:bg-[hsl(var(--info)/0.1)] hover:text-[hsl(var(--info))]"
                     onClick={handleStartEdit}
                     title={t("apiTests.editEndpointInfo")}
                   >
@@ -454,7 +455,7 @@ export function APIEndpointSidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 hover:bg-red-50 hover:text-red-600"
+                    className="h-9 w-9 hover:bg-[hsl(var(--destructive)/0.1)] hover:text-[hsl(var(--destructive))]"
                     onClick={() => setShowDeleteDialog(true)}
                     title={t("apiTests.deleteEndpoint")}
                   >
@@ -463,7 +464,7 @@ export function APIEndpointSidebar({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 hover:bg-gray-100 hover:text-gray-600"
+                    className="h-9 w-9 hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--muted-foreground))]"
                     onClick={onClose}
                   >
                     <X className="h-5 w-5" />
@@ -477,25 +478,25 @@ export function APIEndpointSidebar({
           <div className="grid grid-cols-3 gap-3 mt-4">
             <div className="bg-white/60 dark:bg-black/20 rounded-lg p-3 border">
               <div className="flex items-center gap-2 mb-1">
-                <FileCode className="h-4 w-4 text-blue-500" />
+                <FileCode className="h-4 w-4 text-[hsl(var(--chart-1))]" />
                 <span className="text-xs text-muted-foreground">{t("apiTests.testCases")}</span>
               </div>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-[hsl(var(--chart-1))]">
                 {endpoint.total_test_cases || 0}
               </div>
             </div>
             <div className="bg-white/60 dark:bg-black/20 rounded-lg p-3 border">
               <div className="flex items-center gap-2 mb-1">
-                <Play className="h-4 w-4 text-green-500" />
+                <Play className="h-4 w-4 text-[hsl(var(--chart-2))]" />
                 <span className="text-xs text-muted-foreground">{t("apiTests.executionCount")}</span>
               </div>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-[hsl(var(--chart-2))]">
                 {endpoint.total_test_runs || 0}
               </div>
             </div>
             <div className="bg-white/60 dark:bg-black/20 rounded-lg p-3 border">
               <div className="flex items-center gap-2 mb-1">
-                <CheckCircle2 className="h-4 w-4 text-purple-500" />
+                <CheckCircle2 className="h-4 w-4 text-[hsl(var(--chart-5))]" />
                 <span className="text-xs text-muted-foreground">{t("apiTests.lastStatus")}</span>
               </div>
               <div className="text-sm font-semibold">
@@ -518,9 +519,9 @@ export function APIEndpointSidebar({
         <div className="p-6 space-y-4">
           {/* 描述信息卡片 */}
           {(endpoint.summary || endpoint.description || editing) && (
-            <div className="rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20 p-4">
+            <div className="rounded-xl border-2 border-[hsl(var(--chart-1)/0.3)] bg-gradient-to-br from-[hsl(var(--chart-1)/0.05)] to-[hsl(var(--chart-5)/0.05)] dark:from-[hsl(var(--chart-1)/0.1)] dark:to-[hsl(var(--chart-5)/0.1)] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Globe className="h-4 w-4 text-blue-500" />
+                <Globe className="h-4 w-4 text-[hsl(var(--chart-1))]" />
                 <span className="font-semibold text-sm">{t("apiTests.endpointDescription")}</span>
               </div>
               {editing ? (
@@ -559,9 +560,9 @@ export function APIEndpointSidebar({
             <Separator />
             {/* 高级编辑区域 */}
             <div className="p-6 space-y-4">
-              <div className="rounded-xl border-2 border-orange-200 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/20 dark:to-amber-950/20 p-4">
+              <div className="rounded-xl border-2 border-[hsl(var(--chart-3)/0.3)] bg-gradient-to-br from-[hsl(var(--chart-3)/0.05)] to-[hsl(var(--chart-3)/0.08)] dark:from-[hsl(var(--chart-3)/0.1)] dark:to-[hsl(var(--chart-3)/0.12)] p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <FileCode className="h-4 w-4 text-orange-500" />
+                  <FileCode className="h-4 w-4 text-[hsl(var(--chart-3))]" />
                   <span className="font-semibold text-sm">{t("apiTests.advancedEdit")}</span>
                   <span className="text-xs text-muted-foreground ml-auto">JSON {t("common.format")}</span>
                 </div>
@@ -683,7 +684,7 @@ export function APIEndpointSidebar({
                 {endpoint.parameters.map((param: any, index: number) => (
                   <div
                     key={index}
-                    className="rounded-xl border-2 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 p-4 hover:shadow-md hover:border-primary/50 transition-all"
+                    className="rounded-xl border-2 bg-gradient-to-br from-[hsl(var(--muted))] to-[hsl(var(--card)/0.5)] dark:from-[hsl(var(--sidebar)/0.5)] dark:to-[hsl(var(--sidebar)/0.3)] p-4 hover:shadow-md hover:border-[hsl(var(--primary)/0.5)] transition-all"
                   >
                     <div className="flex items-center gap-2 mb-3">
                       <code className="font-semibold text-sm bg-white dark:bg-black px-2 py-1 rounded border">
@@ -725,8 +726,8 @@ export function APIEndpointSidebar({
               expanded={expandedSections.has("requestBody")}
               onToggle={() => toggleSection("requestBody")}
             >
-              <div className="rounded-xl border-2 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 p-4">
-                <pre className="text-xs overflow-x-auto font-mono bg-white dark:bg-black p-3 rounded border">
+              <div className="rounded-xl border-2 bg-gradient-to-br from-[hsl(var(--muted))] to-[hsl(var(--card)/0.5)] dark:from-[hsl(var(--sidebar)/0.5)] dark:to-[hsl(var(--sidebar)/0.3)] p-4">
+                <pre className="text-xs overflow-x-auto font-mono bg-[hsl(var(--card))] dark:bg-[hsl(var(--sidebar)/0.3)] p-3 rounded border">
                   {JSON.stringify(endpoint.request_body, null, 2)}
                 </pre>
               </div>
@@ -745,7 +746,7 @@ export function APIEndpointSidebar({
                 {Object.entries(endpoint.responses).map(([code, response]: [string, any]) => (
                   <div
                     key={code}
-                    className="rounded-xl border-2 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900 dark:to-gray-900 p-4 hover:shadow-md hover:border-primary/50 transition-all"
+                    className="rounded-xl border-2 bg-gradient-to-br from-[hsl(var(--muted))] to-[hsl(var(--card)/0.5)] dark:from-[hsl(var(--sidebar)/0.5)] dark:to-[hsl(var(--sidebar)/0.3)] p-4 hover:shadow-md hover:border-[hsl(var(--primary)/0.5)] transition-all"
                   >
                     <div className="flex items-center gap-2 mb-3">
                       <Badge
@@ -766,7 +767,7 @@ export function APIEndpointSidebar({
                       )}
                     </div>
                     {response.content && (
-                      <pre className="text-xs overflow-x-auto font-mono bg-white dark:bg-black p-3 rounded border mt-2">
+                      <pre className="text-xs overflow-x-auto font-mono bg-[hsl(var(--card))] dark:bg-[hsl(var(--sidebar)/0.3)] p-3 rounded border mt-2">
                         {JSON.stringify(response.content, null, 2)}
                       </pre>
                     )}
@@ -795,8 +796,8 @@ export function APIEndpointSidebar({
                   className="min-h-[120px] resize-none"
                 />
               </div>
-              <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="font-medium text-blue-700 dark:text-blue-400 mb-1">💡 {t("common.info")}</p>
+              <div className="text-xs text-muted-foreground bg-[hsl(var(--info)/0.06)] dark:bg-[hsl(var(--info)/0.12)] p-3 rounded-lg border border-[hsl(var(--info)/0.2)] dark:border-[hsl(var(--info)/0.3)]">
+                <p className="mb-1 inline-flex items-center gap-1 font-medium text-[hsl(var(--info))] dark:text-[hsl(var(--info))]"><Info className="h-4 w-4" />{t("common.info")}</p>
                 <p>{t("apiTests.autoGenerateNote")}</p>
               </div>
             </div>
@@ -805,14 +806,14 @@ export function APIEndpointSidebar({
       </div>
 
       {/* 底部操作栏 */}
-      <div className="border-t-2 px-6 py-4 bg-gradient-to-r from-slate-50 via-gray-50 to-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-900">
+      <div className="border-t-2 px-6 py-4 bg-gradient-to-r from-[hsl(var(--muted))] via-[hsl(var(--card))] to-[hsl(var(--muted))] dark:from-[hsl(var(--sidebar)/0.5)] dark:via-[hsl(var(--sidebar)/0.3)] dark:to-[hsl(var(--sidebar)/0.5)]">
         {editing ? (
           <div className="flex gap-3">
             <Button
               variant="outline"
               onClick={handleCancelEdit}
               disabled={saving}
-              className="flex-1 border-2 hover:bg-gray-50"
+              className="flex-1 border-2 hover:bg-[hsl(var(--muted))]"
             >
               <X className="mr-2 h-4 w-4" />
               {t("common.cancel")}
@@ -820,7 +821,7 @@ export function APIEndpointSidebar({
             <Button
               onClick={handleSaveEdit}
               disabled={saving}
-              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all"
+              className="flex-1 bg-gradient-to-r from-[hsl(var(--success))] to-[hsl(var(--chart-2))] hover:from-[hsl(var(--success)/0.85)] hover:to-[hsl(var(--chart-2)/0.85)] shadow-md hover:shadow-lg transition-all"
             >
               {saving ? (
                 <>
@@ -840,14 +841,14 @@ export function APIEndpointSidebar({
             <Button
               variant="outline"
               onClick={handleStartEdit}
-              className="flex-1 border-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+              className="flex-1 border-2 hover:bg-[hsl(var(--info)/0.1)] hover:text-[hsl(var(--info))] hover:border-[hsl(var(--info)/0.3)]"
             >
               <Pencil className="mr-2 h-4 w-4" />
               {t("apiTests.editInfo")}
             </Button>
             <Button
               onClick={handleAIGenerate}
-              className="flex-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 shadow-md hover:shadow-lg transition-all"
+              className="flex-1 bg-gradient-to-r from-[hsl(var(--chart-1))] via-[hsl(var(--chart-5))] to-[hsl(var(--chart-5))] hover:from-[hsl(var(--chart-1)/0.85)] hover:via-[hsl(var(--chart-5)/0.85)] hover:to-[hsl(var(--chart-5)/0.85)] shadow-md hover:shadow-lg transition-all"
             >
               <Zap className="mr-2 h-5 w-5" />
               {t("apiTests.aiGenerateTest")}
@@ -916,8 +917,8 @@ function CollapsibleSection({
         onClick={onToggle}
         className={cn(
           "w-full flex items-center justify-between px-5 py-4 transition-all",
-          "hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50",
-          expanded && "bg-gradient-to-r from-blue-50/30 to-purple-50/30"
+          "hover:bg-gradient-to-r hover:from-[hsl(var(--muted)/0.5)] hover:to-[hsl(var(--accent)/0.5)]",
+          expanded && "bg-gradient-to-r from-[hsl(var(--muted)/0.3)] to-[hsl(var(--accent)/0.3)]"
         )}
       >
         <div className="flex items-center gap-3">

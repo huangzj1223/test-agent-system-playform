@@ -1,0 +1,42 @@
+:root {
+  /* 主题色 */
+  --primary-color: #1171F8;
+  --success-color: #00b42a;
+  --warning-color: #ff7d00;
+  --danger-color: #f53f3f;
+  --info-color: #1171F8;
+
+  /* 文字色 */
+  --text-primary: #1d2129;
+  --text-secondary: #4e5969;
+  --text-disabled: #86909c;
+
+  /* 背景色 */
+  --bg-page: #f2f3f5;
+  --bg-card: #ffffff;
+
+  /* 边框色 */
+  --border-color: #e5e6eb;
+
+  /* 间距 */
+  --spacing-xs: 0.107rem; /* 4px */
+  --spacing-sm: 0.213rem; /* 8px */
+  --spacing-md: 0.427rem; /* 16px */
+  --spacing-lg: 0.64rem; /* 24px */
+  --spacing-xl: 0.853rem; /* 32px */
+
+  /* 圆角 */
+  --radius-sm: 0.107rem; /* 4px */
+  --radius-md: 0.213rem; /* 8px */
+  --radius-lg: 0.427rem; /* 16px */
+}
+
+/* 覆盖 Vant 主题色 */
+:root:root {
+  --van-primary-color: #1171F8;
+  --van-success-color: #00b42a;
+  --van-warning-color: #ff7d00;
+  --van-danger-color: #f53f3f;
+
+  --van-cell-vertical-padding: 14px;
+}

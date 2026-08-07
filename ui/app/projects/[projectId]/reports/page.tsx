@@ -112,11 +112,11 @@ export default function ReportsPage() {
           <div className="rounded-lg border bg-card p-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">通过率</span>
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
+              <CheckCircle2 className="h-4 w-4 text-[hsl(var(--success))]" />
             </div>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-2xl font-bold">{mockStats.passRate}%</span>
-              <span className="flex items-center text-xs text-green-500">
+              <span className="flex items-center text-xs text-[hsl(var(--success))]">
                 <TrendingUp className="h-3 w-3" />
                 {mockStats.passRateTrend}%
               </span>
@@ -133,7 +133,7 @@ export default function ReportsPage() {
               <span className="text-2xl font-bold">
                 {mockStats.avgExecutionTime}
               </span>
-              <span className="flex items-center text-xs text-green-500">
+              <span className="flex items-center text-xs text-[hsl(var(--success))]">
                 <TrendingDown className="h-3 w-3" />
                 {Math.abs(mockStats.executionTimeTrend)}h
               </span>
@@ -146,11 +146,11 @@ export default function ReportsPage() {
           <div className="rounded-lg border bg-card p-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">待处理缺陷</span>
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+              <AlertTriangle className="h-4 w-4 text-[hsl(var(--warning))]" />
             </div>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-2xl font-bold">{mockStats.openDefects}</span>
-              <span className="flex items-center text-xs text-green-500">
+              <span className="flex items-center text-xs text-[hsl(var(--success))]">
                 <TrendingDown className="h-3 w-3" />
                 {Math.abs(mockStats.defectsTrend)}
               </span>
@@ -180,11 +180,11 @@ export default function ReportsPage() {
                     <div className="flex-1">
                       <div className="font-medium">{run.name}</div>
                       <div className="mt-1 flex items-center gap-4 text-sm">
-                        <span className="flex items-center gap-1 text-green-600">
+                        <span className="flex items-center gap-1 text-[hsl(var(--success))]">
                           <CheckCircle2 className="h-4 w-4" />
                           {run.passed} 通过
                         </span>
-                        <span className="flex items-center gap-1 text-red-600">
+                        <span className="flex items-center gap-1 text-[hsl(var(--destructive))]">
                           <XCircle className="h-4 w-4" />
                           {run.failed} 失败
                         </span>

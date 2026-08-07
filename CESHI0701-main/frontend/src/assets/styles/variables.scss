@@ -1,0 +1,257 @@
+// Light 主题变量 ｜ Dark 主题变量
+// 这个文件定义了整个应用的颜色系统，包括明亮模式和暗黑模式的所有颜色变量
+
+:root {
+  // 主题色彩 - 定义应用的核心颜色
+  --art-primary: 93, 135, 255; // 主色调 - 蓝色
+  --art-secondary: 73, 190, 255; // 次要色 - 浅蓝色
+  --art-error: 250, 137, 107; // 错误色 - 橙红色
+  --art-info: 107, 125, 155; // 信息色 - 灰蓝色
+  --art-success: 19, 222, 185; // 成功色 - 青绿色
+  --art-warning: 255, 174, 31; // 警告色 - 橙色
+  --art-danger: 255, 77, 79; // 危险色 - 红色
+
+  // 主题背景色 - 用于状态提示的背景色
+  --art-bg-primary: 236, 242, 255; // 主色背景
+  --art-bg-secondary: 232, 247, 255; // 次要色背景
+  --art-bg-success: 230, 255, 250; // 成功状态背景
+  --art-bg-error: 253, 237, 232; // 错误状态背景
+  --art-bg-info: 240, 242, 247; // 信息状态背景
+  --art-bg-warning: 254, 245, 229; // 警告状态背景
+  --art-bg-danger: 253, 237, 232; // 危险状态背景
+
+  --art-hoverColor: 246, 249, 252; // 悬停状态颜色
+  --art-grey100: 242, 246, 250; // 灰色调100
+  --art-grey200: 234, 239, 244; // 灰色调200
+
+  --art-color: #ffffff; // 基础白色
+  --art-light: #f9f9f9; // 浅色背景
+  --art-dark: #1e2129; // 深色背景
+
+  // 灰度色阶系统 - 从浅到深的灰色渐变
+  --art-text-muted: #99a1b7; // 静音文字色
+  --art-gray-100: #f9f9f9; // 最浅灰色
+  --art-gray-100-rgb: 249, 249, 249; // RGB格式
+  --art-gray-200: #f1f1f4; // 浅灰色
+  --art-gray-200-rgb: 241, 241, 244; // RGB格式
+  --art-gray-300: #dbdfe9; // 中浅灰色
+  --art-gray-300-rgb: 219, 223, 233; // RGB格式
+  --art-gray-400: #c4cada; // 中灰色
+  --art-gray-400-rgb: 196, 202, 218; // RGB格式
+  --art-gray-500: #99a1b7; // 标准灰色
+  --art-gray-500-rgb: 153, 161, 183; // RGB格式
+  --art-gray-600: #78829d; // 中深灰色
+  --art-gray-600-rgb: 120, 130, 157; // RGB格式
+  --art-gray-700: #4b5675; // 深灰色
+  --art-gray-700-rgb: 75, 86, 117; // RGB格式
+  --art-gray-800: #252f4a; // 很深灰色
+  --art-gray-800-rgb: 37, 47, 74; // RGB格式
+  --art-gray-900: #071437; // 最深灰色
+  --art-gray-900-rgb: 7, 20, 55; // RGB格式
+
+  // 文字颜色系统 - 对应灰度色阶的文字颜色
+  --art-text-muted: #99a1b7; // 静音文字
+  --art-text-gray-100: #f9f9f9; // 最浅文字色
+  --art-text-gray-200: #f1f1f4; // 浅文字色
+  --art-text-gray-300: #dbdfe9; // 中浅文字色
+  --art-text-gray-400: #c4cada; // 中文字色
+  --art-text-gray-500: #99a1b7; // 标准文字色
+  --art-text-gray-600: #78829d; // 中深文字色
+  --art-text-gray-700: #4b5675; // 深文字色
+  --art-text-gray-800: #252f4a; // 很深文字色
+  --art-text-gray-900: #071437; // 最深文字色
+  --art-text-gray-1000: #1d2129; // 主要文字颜色
+
+  // 边框颜色
+  --art-border-color: #eaebf1; // 标准边框色
+  --art-border-dashed-color: #dbdfe9; // 虚线边框色
+  --art-root-card-border-color: #f1f1f4; // 根卡片边框色
+
+  // 阴影效果 - 不同强度的阴影
+  --art-box-shadow-xs: 0 0.1rem 0.75rem 0.25rem rgba(0, 0, 0, 0.05); // 超小阴影
+  --art-box-shadow-sm: 0 0.1rem 1rem 0.25rem rgba(0, 0, 0, 0.05); // 小阴影
+  --art-box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 0, 0, 0.075); // 标准阴影
+  --art-box-shadow-lg: 0 1rem 2rem 1rem rgba(0, 0, 0, 0.1); // 大阴影
+
+  // 根卡片样式
+  --art-root-card-box-shadow: 0px 3px 4px 0px rgba(0, 0, 0, 0.03); // 根卡片阴影
+  --art-root-card-border-color: #f1f1f4; // 根卡片边框色
+
+  // 主要背景色
+  --art-bg-color: #f2f2f6; // 页面底部背景色
+  --art-main-bg-color: #ffffff; // 主内容区背景色
+}
+
+// 暗黑主题变量 - 当HTML根元素有dark类时生效
+html.dark {
+  // 主题色彩 - 暗黑模式下保持相同的主题色
+  --art-primary: 93, 135, 255; // 主色调
+  --art-secondary: 73, 190, 255; // 次要色
+  --art-error: 250, 137, 107; // 错误色
+  --art-info: 107, 125, 155; // 信息色
+  --art-success: 19, 222, 185; // 成功色
+  --art-warning: 255, 174, 31; // 警告色
+  --art-danger: 255, 77, 79; // 危险色
+
+  // 暗黑模式主题背景色 - 适配暗色背景的状态色
+  --art-bg-primary: 37, 54, 98; // 主色背景（暗色版）
+  --art-bg-secondary: 28, 69, 93; // 次要色背景（暗色版）
+  --art-bg-success: 27, 60, 72; // 成功状态背景（暗色版）
+  --art-bg-error: 75, 49, 61; // 错误状态背景（暗色版）
+  --art-bg-info: 45, 50, 62; // 信息状态背景（暗色版）
+  --art-bg-warning: 77, 58, 42; // 警告状态背景（暗色版）
+  --art-bg-danger: 100, 49, 61; // 危险状态背景（暗色版）
+
+  --art-hoverColor: 51, 63, 85; // 暗色悬停状态
+  --art-grey100: 51, 63, 85; // 暗色灰度100
+  --art-grey200: 70, 86, 112; // 暗色灰度200
+
+  --art-color: #000000; // 暗色基础色
+  --art-light: #1b1c22; // 暗色浅色背景
+  --art-dark: #272a34; // 暗色深色背景
+
+  // 暗黑模式灰度色阶 - 与明亮模式相反，从深到浅
+  --art-text-muted: #636674; // 暗色静音文字
+  --art-gray-100: #1b1c22; // 最深灰色（暗色模式）
+  --art-gray-100-rgb: 27, 28, 34; // RGB格式
+  --art-gray-200: #26272f; // 深灰色
+  --art-gray-200-rgb: 38, 39, 47; // RGB格式
+  --art-gray-300: #363843; // 中深灰色
+  --art-gray-300-rgb: 54, 56, 67; // RGB格式
+  --art-gray-400: #464852; // 中灰色
+  --art-gray-400-rgb: 70, 72, 82; // RGB格式
+  --art-gray-500: #636674; // 标准灰色
+  --art-gray-500-rgb: 99, 102, 116; // RGB格式
+  --art-gray-600: #808290; // 中浅灰色
+  --art-gray-600-rgb: 128, 130, 144; // RGB格式
+  --art-gray-700: #9a9cae; // 浅灰色
+  --art-gray-700-rgb: 154, 156, 174; // RGB格式
+  --art-gray-800: #b5b7c8; // 很浅灰色
+  --art-gray-800-rgb: 181, 183, 200; // RGB格式
+  --art-gray-900: #f5f5f5; // 最浅灰色（暗色模式）
+  --art-gray-900-rgb: 245, 245, 245; // RGB格式
+
+  // 暗黑模式文字颜色 - 对应暗色灰度的文字色
+  --art-text-muted: #636674; // 暗色静音文字
+  --art-text-gray-100: #1b1c22; // 最深文字色（暗色模式）
+  --art-text-gray-200: #26272f; // 深文字色
+  --art-text-gray-300: #363843; // 中深文字色
+  --art-text-gray-400: #464852; // 中文字色
+  --art-text-gray-500: #636674; // 标准文字色
+  --art-text-gray-600: #808290; // 中浅文字色
+  --art-text-gray-700: #9a9cae; // 浅文字色
+  --art-text-gray-800: #b5b7c8; // 很浅文字色
+  --art-text-gray-900: #f5f5f5; // 最浅文字色（暗色模式）
+  --art-text-gray-1000: rgba(#ffffff, 0.7); // 主要文字颜色
+
+  // 暗黑模式边框色
+  --art-border-color: #26272f; // 暗色标准边框
+  --art-border-dashed-color: #363843; // 暗色虚线边框
+  --art-root-card-border-color: #1e2027; // 暗色根卡片边框
+
+  // 暗黑模式阴影 - 保持相同的阴影效果
+  --art-box-shadow-xs: 0 0.1rem 0.75rem 0.25rem rgba(0, 0, 0, 0.05); // 超小阴影
+  --art-box-shadow-sm: 0 0.1rem 1rem 0.25rem rgba(0, 0, 0, 0.05); // 小阴影
+  --art-box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 0, 0, 0.075); // 标准阴影
+  --art-box-shadow-lg: 0 1rem 2rem 1rem rgba(0, 0, 0, 0.1); // 大阴影
+
+  // 暗黑模式根卡片样式
+  --art-root-card-box-shadow: none; // 暗色模式无阴影
+  --art-root-card-border-color: #1e2027; // 暗色根卡片边框
+
+  // 暗黑模式主要背景色
+  --art-bg-color: #070707; // 暗色页面底部背景
+  --art-main-bg-color: #161618; // 暗色主内容区背景
+}
+
+// CSS 全局变量 - 基于RGB变量的复合样式
+:root {
+  --art-card-border: rgba(var(--art-gray-300-rgb), 0.8); // 卡片边框颜色（带透明度）
+  --art-card-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.04); // 卡片阴影效果
+}
+
+// 响应式断点 - 不同设备的屏幕尺寸断点
+$device-notebook: 1600px; // 笔记本电脑
+$device-ipad-pro: 1180px; // iPad Pro
+$device-ipad: 800px; // iPad
+$device-ipad-vertical: 900px; // iPad 竖屏模式
+$device-phone: 500px; // 手机设备
+
+// 背景色工具类 - 基于主题色的背景样式
+.bg-primary {
+  background-color: rgb(var(--art-bg-primary)) !important; // 主色背景
+  color: rgb(var(--art-primary)) !important; // 主色文字
+}
+
+.bg-secondary {
+  background-color: rgb(var(--art-bg-secondary)) !important; // 次要色背景
+  color: rgb(var(--art-secondary)) !important; // 次要色文字
+  border: 1px solid var(--art-secondary); // 次要色边框
+}
+
+.bg-warning {
+  background-color: rgb(var(--art-bg-warning)) !important; // 警告色背景
+  color: rgb(var(--art-warning)) !important; // 警告色文字
+}
+
+.bg-error {
+  background-color: rgb(var(--art-bg-error)) !important; // 错误色背景
+  color: rgb(var(--art-error)) !important; // 错误色文字
+}
+
+.bg-success {
+  background-color: rgb(var(--art-bg-success)) !important; // 成功色背景
+  color: rgb(var(--art-success)) !important; // 成功色文字
+}
+
+.bg-info {
+  background-color: rgb(var(--art-bg-info)) !important; // 信息色背景
+  color: rgb(var(--art-info)) !important; // 信息色文字
+}
+
+.bg-danger {
+  background-color: rgb(var(--art-bg-danger)) !important; // 危险色背景
+  color: rgb(var(--art-danger)) !important; // 危险色文字
+}
+
+// 灰度背景工具类
+.bg-grey100 {
+  background-color: rgb(var(--art-grey100)) !important; // 灰度100背景
+}
+
+.bg-grey200 {
+  background-color: rgb(var(--art-grey200)) !important; // 灰度200背景
+}
+
+.bg-hoverColor {
+  background-color: rgb(var(--art-hoverColor)) !important; // 悬停状态背景
+}
+
+// 文字颜色工具类 - 基于主题色的文字样式
+.text-primary {
+  color: rgb(var(--art-primary)) !important; // 主色文字
+}
+
+.text-secondary {
+  color: rgb(var(--art-secondary)) !important; // 次要色文字
+}
+
+.text-error {
+  color: rgb(var(--art-error)) !important; // 错误色文字
+}
+
+.text-danger {
+  color: rgb(var(--art-danger)) !important; // 危险色文字
+}
+
+.text-info {
+  color: rgb(var(--art-info)) !important; // 信息色文字
+}
+
+.text-success {
+  color: rgb(var(--art-success)) !important; // 成功色文字
+}
+
+.text-warning {
+  color: rgb(var(--art-warning)) !important; // 警告色文字
+}

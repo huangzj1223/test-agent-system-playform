@@ -441,7 +441,7 @@ export default function WebTestsPage() {
             <div className="p-3 border-b bg-background">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-blue-500" />
+                  <Globe className="h-4 w-4 text-[hsl(var(--chart-1))]" />
                   {t("webTests.testManagement")}
                 </h3>
               </div>
@@ -490,7 +490,7 @@ export default function WebTestsPage() {
             {/* 工具栏 */}
             <div className="flex items-center justify-between border-b px-4 py-3 bg-muted/20">
               <div className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-blue-500" />
+                <Layers className="h-5 w-5 text-[hsl(var(--chart-1))]" />
                 <div>
                   <h2 className="text-lg font-semibold">
                     {selectedFolderName || t("webTests.allFunctions")}
@@ -506,7 +506,7 @@ export default function WebTestsPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setAiGenerateDialogOpen(true)}
-                  className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-md hover:shadow-lg transition-all"
+                  className="bg-gradient-to-r from-[hsl(var(--chart-1))] to-[hsl(var(--neon-cyan))] hover:from-[hsl(var(--chart-1)/0.9)] hover:to-[hsl(var(--neon-cyan)/0.9)] text-[hsl(var(--card-bg))] border-0 shadow-md hover:shadow-lg transition-all"
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
                   AI 生成
@@ -523,7 +523,7 @@ export default function WebTestsPage() {
                 <Button
                   size="sm"
                   onClick={() => setAiChatOpen(true)}
-                  className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0 shadow-md hover:shadow-lg transition-all"
+                  className="bg-gradient-to-r from-[hsl(var(--chart-1))] to-[hsl(var(--neon-cyan))] hover:from-[hsl(var(--chart-1)/0.9)] hover:to-[hsl(var(--neon-cyan)/0.9)] text-[hsl(var(--card-bg))] border-0 shadow-md hover:shadow-lg transition-all"
                 >
                   <MessageSquare className="mr-2 h-4 w-4" />
                   AI 助手
@@ -577,11 +577,11 @@ export default function WebTestsPage() {
                     );
                     if (!currentSubFunction) return null;
                     return (
-                      <div className="mb-6 rounded-xl border-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 p-4 shadow-sm">
+                      <div className="mb-6 rounded-xl border-2 bg-gradient-to-r from-[hsl(var(--chart-5)/0.08)] to-[hsl(var(--chart-1)/0.08)] dark:from-[hsl(var(--chart-5)/0.15)] dark:to-[hsl(var(--chart-1)/0.15)] p-4 shadow-sm">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-2">
-                              <FileCode className="h-5 w-5 text-blue-500 shrink-0" />
+                              <FileCode className="h-5 w-5 text-[hsl(var(--chart-1))] shrink-0" />
                               <h3 className="text-lg font-semibold truncate">
                                 {currentSubFunction.display_name}
                               </h3>
@@ -591,10 +591,10 @@ export default function WebTestsPage() {
                               <Badge
                                 className={cn(
                                   "shrink-0 text-xs",
-                                  currentSubFunction.test_type === "functional" ? "bg-blue-500 text-white" :
-                                  currentSubFunction.test_type === "validation" ? "bg-green-500 text-white" :
-                                  currentSubFunction.test_type === "ui" ? "bg-purple-500 text-white" :
-                                  "bg-gray-500 text-white"
+                                  currentSubFunction.test_type === "functional" ? "bg-[hsl(var(--chart-5))] text-[hsl(var(--card-bg))]" :
+                                  currentSubFunction.test_type === "validation" ? "bg-[hsl(var(--success))] text-[hsl(var(--card-bg))]" :
+                                  currentSubFunction.test_type === "ui" ? "bg-[hsl(var(--chart-1))] text-[hsl(var(--card-bg))]" :
+                                  "bg-[hsl(var(--muted))] text-[hsl(var(--card-bg))]"
                                 )}
                               >
                                 {currentSubFunction.test_type}
@@ -602,10 +602,10 @@ export default function WebTestsPage() {
                               <Badge
                                 className={cn(
                                   "shrink-0 text-xs",
-                                  currentSubFunction.priority === "critical" ? "bg-red-500 text-white" :
-                                  currentSubFunction.priority === "high" ? "bg-orange-500 text-white" :
-                                  currentSubFunction.priority === "medium" ? "bg-yellow-500 text-white" :
-                                  "bg-gray-500 text-white"
+                                  currentSubFunction.priority === "critical" ? "bg-[hsl(var(--destructive))] text-[hsl(var(--card-bg))]" :
+                                  currentSubFunction.priority === "high" ? "bg-[hsl(var(--chart-3))] text-[hsl(var(--card-bg))]" :
+                                  currentSubFunction.priority === "medium" ? "bg-[hsl(var(--warning))] text-[hsl(var(--card-bg))]" :
+                                  "bg-[hsl(var(--muted))] text-[hsl(var(--card-bg))]"
                                 )}
                               >
                                 {currentSubFunction.priority}
@@ -634,7 +634,7 @@ export default function WebTestsPage() {
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <h2 className="text-xl font-bold flex items-center gap-2">
-                        <Zap className="h-5 w-5 text-purple-500" />
+                        <Zap className="h-5 w-5 text-[hsl(var(--chart-1))]" />
                         {t("webTests.testArtifacts")}
                       </h2>
                       <p className="text-sm text-muted-foreground mt-1">
@@ -659,7 +659,7 @@ export default function WebTestsPage() {
                   )}
 
                   {webSubFunctions.length > 0 && !selectedSubFunctionId && (
-                    <div className="text-center py-12 border-2 border-dashed rounded-xl bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20">
+                    <div className="text-center py-12 border-2 border-dashed rounded-xl bg-gradient-to-br from-[hsl(var(--chart-5)/0.08)]/50 to-[hsl(var(--chart-1)/0.08)]/50 dark:from-[hsl(var(--chart-5)/0.15)] dark:to-[hsl(var(--chart-1)/0.15)]">
                       <FileCode className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                       <p className="text-lg font-semibold mb-2">请在抽屉中选择一个子功能</p>
                       <p className="text-sm text-muted-foreground mb-4">
@@ -895,7 +895,7 @@ export default function WebTestsPage() {
           <DrawerContent direction="right" className="h-full w-[500px] border-l rounded-none">
             <DrawerHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
               <div className="flex items-center gap-2">
-                <FileCode className="h-5 w-5 text-blue-500" />
+                <FileCode className="h-5 w-5 text-[hsl(var(--chart-1))]" />
                 <DrawerTitleComp>子功能列表</DrawerTitleComp>
                 <span className="text-sm text-muted-foreground">
                   ({selectedWebFunction ? `${selectedWebFunction.display_name} - ` : ""}{webSubFunctions.length})

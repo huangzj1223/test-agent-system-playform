@@ -1,0 +1,178 @@
+- generic [active] [ref=f2e1]:
+  - alert [ref=f2e2]
+  - generic [ref=f2e3]:
+    - complementary [ref=f2e4]:
+      - generic [ref=f2e5]:
+        - link "智能体测试系统 智能体测试系统 质量智能网络" [ref=f2e7] [cursor=pointer]:
+          - /url: /projects
+          - img "智能体测试系统" [ref=f2e9]
+          - generic [ref=f2e17]:
+            - generic [ref=f2e18]: 智能体测试系统
+            - generic [ref=f2e19]: 质量智能网络
+        - navigation [ref=f2e23]:
+          - generic [ref=f2e24]:
+            - generic [ref=f2e25]: 工作台
+            - link "系统总览" [ref=f2e26] [cursor=pointer]:
+              - /url: /projects
+            - link "项目空间" [ref=f2e35] [cursor=pointer]:
+              - /url: /projects/spaces
+            - link "全局任务" [ref=f2e48] [cursor=pointer]:
+              - /url: /projects/agent-tasks
+            - link "智能测试" [ref=f2e54] [cursor=pointer]:
+              - /url: /chat
+          - generic [ref=f2e69]:
+            - generic [ref=f2e70]:
+              - generic [ref=f2e71]: 项目入口
+              - generic [ref=f2e72]: "3"
+            - link "模型工厂 PR-3" [ref=f2e73] [cursor=pointer]:
+              - /url: /projects/PR-3
+              - generic [ref=f2e85]:
+                - generic [ref=f2e86]: 模型工厂
+                - generic [ref=f2e87]: PR-3
+            - link "企业知识助手 PR-2" [ref=f2e88] [cursor=pointer]:
+              - /url: /projects/PR-2
+              - generic [ref=f2e100]:
+                - generic [ref=f2e101]: 企业知识助手
+                - generic [ref=f2e102]: PR-2
+            - link "数据工厂 PR-1" [ref=f2e103] [cursor=pointer]:
+              - /url: /projects/PR-1
+              - generic [ref=f2e115]:
+                - generic [ref=f2e116]: 数据工厂
+                - generic [ref=f2e117]: PR-1
+    - generic [ref=f2e118]:
+      - banner [ref=f2e119]:
+        - generic [ref=f2e121]:
+          - generic [ref=f2e122]: 智能质量控制中心
+          - heading "系统总览" [level=1] [ref=f2e123]
+        - generic [ref=f2e124]:
+          - generic [ref=f2e125]:
+            - generic "运行中" [ref=f2e126]
+            - text: 智能体链路在线
+          - button "通知" [ref=f2e129] [cursor=pointer]
+          - button "帮助" [ref=f2e130] [cursor=pointer]
+          - button [ref=f2e131] [cursor=pointer]
+      - main [ref=f2e134]:
+        - generic [ref=f2e135]:
+          - generic [ref=f2e136]:
+            - generic [ref=f2e137]:
+              - generic [ref=f2e138]: 智能质量网络
+              - heading "掌握质量全貌，驱动智能闭环" [level=1] [ref=f2e151]
+              - paragraph [ref=f2e152]: 预览跨项目质量态势、智能体运行和风险分布 · 最后更新 刚刚
+            - button "刷新数据" [ref=f2e153] [cursor=pointer]
+          - generic [ref=f2e154]:
+            - generic [ref=f2e155]:
+              - generic [ref=f2e156]: 活跃项目
+              - generic [ref=f2e169]:
+                - generic [ref=f2e170]: "1"
+                - generic [ref=f2e171]: / 3
+            - generic [ref=f2e172]:
+              - generic [ref=f2e173]: 测试资产
+              - generic [ref=f2e179]: "23"
+            - generic [ref=f2e181]:
+              - generic [ref=f2e182]: 运行任务
+              - generic [ref=f2e188]: "0"
+            - generic [ref=f2e190]:
+              - generic [ref=f2e191]: 待人工处置
+              - generic [ref=f2e206]: "10"
+            - generic [ref=f2e209]:
+              - generic [ref=f2e210]: 执行通过率
+              - generic [ref=f2e215]: 38%
+          - generic [ref=f2e218]:
+            - generic [ref=f2e219]:
+              - generic [ref=f2e220]:
+                - generic [ref=f2e221]: 智能体协作星图
+                - paragraph [ref=f2e235]: 全部项目 · 7 阶段自动流转 · 1/4
+              - generic [ref=f2e236]:
+                - generic [ref=f2e237]: 1 关注
+                - generic [ref=f2e239]:
+                  - button "上一个星图" [ref=f2e240] [cursor=pointer]
+                  - button "暂停星图动画" [ref=f2e243] [cursor=pointer]
+                  - button "切换为 2D 视图" [ref=f2e247] [cursor=pointer]:
+                    - generic [ref=f2e251]: 3D
+                  - button "下一个星图" [ref=f2e252] [cursor=pointer]
+            - generic [ref=f2e255]:
+              - img "全部项目 银河质量闭环"
+              - link "进入全部项目" [ref=f2e256] [cursor=pointer]:
+                - /url: /projects/spaces
+                - generic [ref=f2e257]:
+                  - generic [ref=f2e258]: 协作核心
+                  - strong [ref=f2e259]: 全部项目
+                  - generic [ref=f2e260]: 7 个阶段流转中
+              - button "01 需求分析，待接入，待接入" [ref=f2e261] [cursor=pointer]:
+                - generic [ref=f2e271]:
+                  - generic [ref=f2e272]:
+                    - generic [ref=f2e273]: "01"
+                    - strong [ref=f2e274]: 需求分析
+                  - generic [ref=f2e275]:
+                    - generic [ref=f2e277]: 待接入
+                    - generic [ref=f2e278]: 待接入
+              - button "02 测试设计，已就绪，13" [ref=f2e279] [cursor=pointer]:
+                - generic [ref=f2e293]:
+                  - generic [ref=f2e294]:
+                    - generic [ref=f2e295]: "02"
+                    - strong [ref=f2e296]: 测试设计
+                  - generic [ref=f2e297]:
+                    - generic [ref=f2e299]: 已就绪
+                    - generic [ref=f2e300]: "13"
+              - button "03 脚本生成，已就绪，10" [ref=f2e301] [cursor=pointer]:
+                - generic [ref=f2e311]:
+                  - generic [ref=f2e312]:
+                    - generic [ref=f2e313]: "03"
+                    - strong [ref=f2e314]: 脚本生成
+                  - generic [ref=f2e315]:
+                    - generic [ref=f2e317]: 已就绪
+                    - generic [ref=f2e318]: "10"
+              - button "04 自动执行，空闲，0" [ref=f2e319] [cursor=pointer]:
+                - generic [ref=f2e329]:
+                  - generic [ref=f2e330]:
+                    - generic [ref=f2e331]: "04"
+                    - strong [ref=f2e332]: 自动执行
+                  - generic [ref=f2e333]:
+                    - generic [ref=f2e335]: 空闲
+                    - generic [ref=f2e336]: "0"
+              - button "05 结果分析，需关注，8" [ref=f2e337] [cursor=pointer]:
+                - generic [ref=f2e351]:
+                  - generic [ref=f2e352]:
+                    - generic [ref=f2e353]: "05"
+                    - strong [ref=f2e354]: 结果分析
+                  - generic [ref=f2e355]:
+                    - generic [ref=f2e357]: 需关注
+                    - generic [ref=f2e358]: "8"
+              - button "06 失败修复，空闲，0" [ref=f2e359] [cursor=pointer]:
+                - generic [ref=f2e378]:
+                  - generic [ref=f2e379]:
+                    - generic [ref=f2e380]: "06"
+                    - strong [ref=f2e381]: 失败修复
+                  - generic [ref=f2e382]:
+                    - generic [ref=f2e384]: 空闲
+                    - generic [ref=f2e385]: "0"
+              - button "07 回归验证，已就绪，3" [ref=f2e386] [cursor=pointer]:
+                - generic [ref=f2e395]:
+                  - generic [ref=f2e396]:
+                    - generic [ref=f2e397]: "07"
+                    - strong [ref=f2e398]: 回归验证
+                  - generic [ref=f2e399]:
+                    - generic [ref=f2e401]: 已就绪
+                    - generic [ref=f2e402]: "3"
+            - generic [ref=f2e403]:
+              - generic [ref=f2e413]:
+                - text: 当前阶段
+                - generic [ref=f2e414]:
+                  - strong [ref=f2e415]: 05 结果分析
+                  - generic "需关注" [ref=f2e416]
+                - paragraph [ref=f2e420]: 阶段 5 / 7 · 负责人：待数据接入
+              - generic [ref=f2e421]:
+                - generic [ref=f2e422]:
+                  - paragraph [ref=f2e423]: 已完成的失败原因分析
+                  - generic [ref=f2e424]:
+                    - generic [ref=f2e425]: 8关联任务
+                    - generic [ref=f2e426]: 5风险异常
+                    - generic [ref=f2e427]: 待接入预计完成
+                - link "阶段详情" [ref=f2e428] [cursor=pointer]:
+                  - /url: /projects
+            - generic [ref=f2e432]:
+              - button "切换到 全部项目" [ref=f2e433] [cursor=pointer]
+              - button "切换到 数据工厂" [ref=f2e434] [cursor=pointer]
+              - button "切换到 企业知识助手" [ref=f2e435] [cursor=pointer]
+              - button "切换到 模型工厂" [ref=f2e436] [cursor=pointer]
+  - region "Notifications alt+T"

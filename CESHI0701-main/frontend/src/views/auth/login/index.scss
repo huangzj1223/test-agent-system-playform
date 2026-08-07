@@ -1,0 +1,230 @@
+@use '@styles/variables.scss' as *;
+
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100vh;
+  background: #e8eef6;
+}
+
+.login-card {
+  display: flex;
+  width: 860px;
+  height: 520px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  animation: fadeInUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* ===== 左侧品牌区 ===== */
+.brand-panel {
+  position: relative;
+  width: 340px;
+  flex-shrink: 0;
+  background: linear-gradient(145deg, #1a56db 0%, #1e3a8a 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  overflow: hidden;
+
+  .brand-logo {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  .brand-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+
+  .brand-desc {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.65);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .brand-circles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .circle-1 {
+      width: 200px;
+      height: 200px;
+      top: -60px;
+      right: -60px;
+    }
+
+    .circle-2 {
+      width: 160px;
+      height: 160px;
+      bottom: -50px;
+      left: -50px;
+    }
+  }
+}
+
+/* ===== 右侧表单区 ===== */
+.form-panel {
+  flex: 1;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 48px;
+
+  .form-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+  }
+
+  .form-subtitle {
+    font-size: 14px;
+    color: #909399;
+    margin-bottom: 32px;
+  }
+
+  .login-form {
+    :deep(.el-form-item) {
+      margin-bottom: 16px;
+    }
+
+    :deep(.el-input__wrapper) {
+      border-radius: 10px;
+      height: 40px;
+      box-shadow: 0 0 0 1px #dcdfe6;
+      transition: all 0.3s ease;
+
+      &:hover {
+        box-shadow: 0 0 0 1px #c0c4cc;
+      }
+
+      &.is-focus {
+        box-shadow: 0 0 0 1px var(--el-color-primary);
+      }
+    }
+
+    :deep(.el-input__inner) {
+      font-size: 14px;
+      height: 40px;
+      line-height: 40px;
+    }
+
+    :deep(.el-input__prefix) {
+      font-size: 18px;
+      color: #909399;
+    }
+  }
+
+  .form-options {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+    margin-top: 4px;
+  }
+
+  .login-btn {
+    width: 100%;
+    height: 52px;
+    padding: 10px 15px !important;
+    --el-component-custom-height: 46px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 10px;
+    letter-spacing: 2px;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  .default-account {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #c0c4cc;
+    text-align: center;
+  }
+}
+
+.copyright {
+  margin-top: 24px;
+  font-size: 12px;
+  color: #909399;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media only screen and (max-width: $device-ipad-pro) {
+  .login-card {
+    width: 90%;
+    height: auto;
+
+    .brand-panel {
+      display: none;
+    }
+
+    .form-panel {
+      padding: 48px 40px;
+    }
+  }
+}
+
+@media only screen and (max-width: $device-phone) {
+  .login-card {
+    width: 100%;
+    border-radius: 0;
+    height: 100vh;
+    box-shadow: none;
+
+    .form-panel {
+      padding: 40px 28px;
+    }
+  }
+
+  .copyright {
+    display: none;
+  }
+}

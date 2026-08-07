@@ -1,0 +1,44 @@
+# === AI 助手本地配置目录（不入库）===
+.claude/
+.agents/
+.codex/
+.codex-run/
+.cursor/
+.gemini/
+.trae/
+.kiro/
+
+# === 依赖 ===
+node_modules/
+**/node_modules/
+
+# === 构建产物 ===
+dist/
+dist-ssr/
+build/
+**/dist/
+**/dist-ssr/
+
+# === 环境变量与密钥（一律不入库，防止真实密钥泄露到公开仓库）===
+# 说明：server/mobile 含数据库密码、JWT/加密密钥；frontend 含高德地图 KEY/SECRET、锁屏密钥。
+# 全部 .env 不提交，仅保留 *.env.example 模板供他人参照填写。
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# === Python 缓存/虚拟环境 ===
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# === 日志与临时 ===
+*.log
+.DS_Store
+Thumbs.db
+
+# === 编辑器 ===
+.idea/
+.vscode/
+*.swp

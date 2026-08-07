@@ -193,7 +193,7 @@ ${customRequirements.trim()}
   return (
     <div className="flex flex-col h-full bg-background">
       {/* 头部 */}
-      <div className="flex items-center justify-between border-b px-6 py-4 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/30 dark:via-purple-950/30 dark:to-pink-950/30">
+      <div className="flex items-center justify-between border-b px-6 py-4 bg-gradient-to-r from-[hsl(var(--info)/0.08)] via-[hsl(var(--chart-1)/0.08)] to-[hsl(var(--chart-4)/0.08)]">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-mono text-muted-foreground">
@@ -201,7 +201,7 @@ ${customRequirements.trim()}
             </span>
             <Badge variant="secondary">{scenario.status}</Badge>
           </div>
-          <h3 className="text-lg font-bold truncate bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h3 className="text-lg font-bold truncate bg-gradient-to-r from-[hsl(var(--chart-5))] to-[hsl(var(--chart-1))] bg-clip-text text-transparent">
             {scenario.name}
           </h3>
         </div>
@@ -219,21 +219,21 @@ ${customRequirements.trim()}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
         {/* 统计卡片 */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-lg border bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 p-3">
+          <div className="rounded-lg border bg-gradient-to-br from-[hsl(var(--chart-5)/0.08)] to-[hsl(var(--chart-1)/0.08)] p-3">
             <div className="text-xs text-muted-foreground mb-1">步骤数</div>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-[hsl(var(--chart-5))]">
               {scenario.total_steps}
             </div>
           </div>
-          <div className="rounded-lg border bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-3">
+          <div className="rounded-lg border bg-gradient-to-br from-[hsl(var(--success)/0.08)] to-[hsl(var(--chart-2)/0.08)] p-3">
             <div className="text-xs text-muted-foreground mb-1">超时</div>
-            <div className="text-lg font-bold text-green-600">
+            <div className="text-lg font-bold text-[hsl(var(--success))]">
               {scenario.timeout_seconds}s
             </div>
           </div>
-          <div className="rounded-lg border bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 p-3">
+          <div className="rounded-lg border bg-gradient-to-br from-[hsl(var(--chart-1)/0.08)] to-[hsl(var(--chart-4)/0.08)] p-3">
             <div className="text-xs text-muted-foreground mb-1">重试</div>
-            <div className="text-lg font-bold text-purple-600">
+            <div className="text-lg font-bold text-[hsl(var(--chart-1))]">
               {scenario.retry_count}
             </div>
           </div>
@@ -428,7 +428,7 @@ ${customRequirements.trim()}
       <div className="border-t p-4 bg-muted/20">
         <div className="flex gap-2">
           <Button
-            className="flex-1 gap-2 bg-gradient-to-r from-blue-600 to-purple-600"
+            className="flex-1 gap-2 btn-ai"
             onClick={handleExecute}
             disabled={executing || scenario.total_steps === 0}
           >

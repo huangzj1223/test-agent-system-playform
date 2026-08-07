@@ -1,0 +1,11 @@
+import { Module } from '@nestjs/common';
+{{#each entities}}import { {{this.name}}Controller } from './controllers/{{this.tier}}/{{kebab this.name}}.controller';
+{{/each}}{{#each entities}}import { {{this.name}}Service } from './services/{{kebab this.name}}.service';
+{{/each}}
+
+@Module({
+  controllers: [{{#each entities}}{{this.name}}Controller{{#unless @last}}, {{/unless}}{{/each}}],
+  providers: [{{#each entities}}{{this.name}}Service{{#unless @last}}, {{/unless}}{{/each}}],
+  exports: [{{#each entities}}{{this.name}}Service{{#unless @last}}, {{/unless}}{{/each}}],
+})
+export class {{moduleClass}}Module {}

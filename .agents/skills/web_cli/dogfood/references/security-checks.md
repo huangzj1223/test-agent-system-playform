@@ -321,7 +321,7 @@ playwright-cli run-code "async page => {
 
 ```bash
 # Login and capture session state
-playwright-cli open --browser=chromium {login_url}
+playwright-cli open --browser=chrome {login_url}
 playwright-cli snapshot
 playwright-cli fill {email_ref} "test@example.com"
 playwright-cli fill {password_ref} "testpass"

@@ -15,7 +15,6 @@ import time
 from typing import Optional
 
 from langchain_pymupdf4llm import PyMuPDF4LLMLoader
-from app.core.llms import image_model as image_llm_model
 
 try:
     from langchain_community.document_loaders.parsers import LLMImageBlobParser
@@ -62,9 +61,10 @@ def _safe_delete_temp_file(file_path: str, max_retries: int = 3, delay: float = 
 class PDFProcessor:
     """PDF 处理器类"""
 
-    def __init__(self, enable_cache: bool = True):
+    def __init__(self, enable_cache: bool = True, image_model=None):
         self.enable_cache = enable_cache
         self.cache = _pdf_cache if enable_cache else {}
+        self.image_model = image_model
 
     def extract_text(
             self,
@@ -87,6 +87,7 @@ class PDFProcessor:
             filename,
             self.cache if self.enable_cache else None,
             enable_multimodal=enable_multimodal,
+            image_model=self.image_model,
         )
 
     def clear_cache(self):
@@ -133,6 +134,7 @@ def extract_pdf_text(
         filename: str = "unknown.pdf",
         cache: Optional[dict] = None,
         enable_multimodal: Optional[bool] = None,
+        image_model=None,
 ) -> str:
     """
     从PDF字节数据中提取文本，使用缓存避免重复解析
@@ -222,8 +224,13 @@ def extract_pdf_text(
             use_multimodal = False
 
         if use_multimodal:
+            if image_model is None:
+                logger.warning("多模态模型未配置，回退为纯文本解析: %s", filename)
+                use_multimodal = False
+
+        if use_multimodal:
             image_parser = LLMImageBlobParser(
-                model=image_llm_model,
+                model=image_model,
                 prompt=settings.image_parser_prompt
             )
 

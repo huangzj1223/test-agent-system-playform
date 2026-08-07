@@ -116,15 +116,15 @@ export function WebSubFunctionList({
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "critical":
-        return "bg-red-500 text-white";
+        return "bg-[hsl(var(--destructive))] text-white";
       case "high":
-        return "bg-orange-500 text-white";
+        return "bg-[hsl(var(--chart-3))] text-white";
       case "medium":
-        return "bg-yellow-500 text-white";
+        return "bg-[hsl(var(--chart-3))] text-white";
       case "low":
-        return "bg-gray-500 text-white";
+        return "bg-[hsl(var(--muted-foreground))] text-white";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-[hsl(var(--muted-foreground))] text-white";
     }
   };
 
@@ -132,13 +132,13 @@ export function WebSubFunctionList({
   const getTestTypeColor = (testType: string) => {
     switch (testType) {
       case "functional":
-        return "bg-blue-500 text-white";
+        return "bg-[hsl(var(--chart-5))] text-white";
       case "validation":
-        return "bg-green-500 text-white";
+        return "bg-[hsl(var(--success))] text-white";
       case "ui":
-        return "bg-purple-500 text-white";
+        return "bg-[hsl(var(--chart-1))] text-white";
       default:
-        return "bg-gray-500 text-white";
+        return "bg-[hsl(var(--muted-foreground))] text-white";
     }
   };
 
@@ -187,7 +187,7 @@ export function WebSubFunctionList({
           {/* 状态指示器 */}
           <div className="flex-shrink-0">
             {subFunction.total_test_cases > 0 ? (
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              <CheckCircle2 className="h-5 w-5 text-[hsl(var(--success))]" />
             ) : (
               <Clock className="h-5 w-5 text-muted-foreground" />
             )}
@@ -262,7 +262,7 @@ export function WebSubFunctionList({
       {showHeader && (
         <div className="flex items-center justify-between border-b px-4 py-3 bg-muted/20">
           <div className="flex items-center gap-2">
-            <FileCode className="h-5 w-5 text-blue-500" />
+            <FileCode className="h-5 w-5 text-[hsl(var(--chart-5))]" />
             <h2 className="text-lg font-semibold">子功能列表</h2>
             <span className="text-sm text-muted-foreground">
               ({pagination?.total || subFunctions.length})

@@ -4,7 +4,7 @@
 // eslint-disable  MS80OmFIVnBZMlhwdTRUbGphRG1zWjg2TTJkUFVnPT06YzAzMzBlYzc=
 
 import * as React from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { MainLayout } from "@/components/layout";
 import { useLanguage } from "@/providers/LanguageProvider";
@@ -62,6 +62,7 @@ import type {
 
 export default function TestCasesPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const projectId = params.projectId as string;
   const { t } = useLanguage();
 
@@ -283,6 +284,16 @@ export default function TestCasesPage() {
   const [aiChatEnableRag, setAiChatEnableRag] = React.useState(true);
   const [aiChatTemplateType, setAiChatTemplateType] = React.useState<TestCaseTemplate>("test_case");
   const [assistant, setAssistant] = React.useState<Assistant | null>(null);
+  const handledAiOpenRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (handledAiOpenRef.current || searchParams.get("ai") !== "generate") {
+      return;
+    }
+
+    handledAiOpenRef.current = true;
+    setAiGenerateDialogOpen(true);
+  }, [searchParams]);
 
   // 初始化 Assistant
   React.useEffect(() => {

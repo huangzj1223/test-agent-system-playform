@@ -34,6 +34,7 @@ import {
 
 const getStageVisualLevel = constellationCarousel.getStageVisualLevel;
 const getStageOrbDiameter = constellationCarousel.getStageOrbDiameter;
+const getClockwiseRotationOffset = constellationCarousel.getClockwiseRotationOffset;
 
 test("galaxy spatial config keeps orbit geometry centered on the shared runtime focal point", () => {
   assert.equal(GALAXY_SPATIAL_CONFIG.viewBox.width, GALAXY_ORBIT_GEOMETRY.viewBoxWidth);
@@ -93,9 +94,9 @@ test("3D depth bands keep far nodes well behind the overlay and near nodes well 
   assert.ok(nearRange[1] < GALAXY_SPATIAL_CONFIG.foregroundFlowZIndex);
 });
 
-test("Phase 2 static layout keeps all seven stages on one ordered ellipse", () => {
+test("clockwise baseline places 02 on the right while keeping 01 at the foreground focus", () => {
   const nodes = GALAXY_STAGE_KEYS.map((_, index) => computeStaticOrbitNode(index, 7, "3d"));
-  const expectedAngles = [90, 141.4286, 192.8571, 244.2857, 295.7143, 347.1429, 398.5714];
+  const expectedAngles = [90, 38.5714, -12.8571, -64.2857, -115.7143, -167.1429, -218.5714];
 
   assert.equal(nodes.length, 7);
   nodes.forEach((node, index) => {
@@ -104,8 +105,46 @@ test("Phase 2 static layout keeps all seven stages on one ordered ellipse", () =
       + (node.y / GALAXY_ORBIT_GEOMETRY.radiusY) ** 2 - 1) < 0.000001);
   });
   assert.equal(nodes[0].y, GALAXY_ORBIT_GEOMETRY.radiusY);
+  assert.ok(nodes[1].x > 0);
+  assert.ok(nodes[1].y > 0);
   assert.ok(nodes[3].y < 0);
   assert.ok(nodes[4].y < 0);
+});
+
+test("rotation offset increases positively and the declared motion direction is clockwise", () => {
+  assert.equal(constellationCarousel.GALAXY_MOTION_DIRECTION, "clockwise");
+  assert.equal(typeof getClockwiseRotationOffset, "function");
+  assert.equal(getClockwiseRotationOffset(0, 7), 0);
+  assert.ok(getClockwiseRotationOffset(0.25, 7) > 0);
+  assert.ok(getClockwiseRotationOffset(0.75, 7) > getClockwiseRotationOffset(0.25, 7));
+});
+
+test("02 approaches the foreground clockwise while 01 leaves toward the left", () => {
+  const requirementsAtStart = computeOrbitNode(0, 0, 7, "3d");
+  const designAtStart = computeOrbitNode(1, 0, 7, "3d");
+  const requirementsLater = computeOrbitNode(0, 0.25, 7, "3d");
+  const designLater = computeOrbitNode(1, 0.25, 7, "3d");
+
+  assert.equal(requirementsAtStart.y, GALAXY_ORBIT_GEOMETRY.radiusY);
+  assert.ok(designAtStart.x > 0, `02 should start on the right, actual x=${designAtStart.x}`);
+  assert.ok(designAtStart.y > 0, `02 should start below the core, actual y=${designAtStart.y}`);
+  assert.ok(designLater.y > designAtStart.y, "02 should move closer to the bottom focus");
+  assert.ok(requirementsLater.x < requirementsAtStart.x, "01 should leave toward the left");
+});
+
+test("seven stages stay equally spaced while focus advances 01 to 02 and 07 to 01", () => {
+  const step = (Math.PI * 2) / GALAXY_STAGE_KEYS.length;
+  const nodes = GALAXY_STAGE_KEYS.map((_, index) => computeOrbitNode(index, 0.37, 7, "3d"));
+
+  for (let index = 0; index < nodes.length; index += 1) {
+    const next = nodes[(index + 1) % nodes.length];
+    const clockwiseGap = ((nodes[index].angle - next.angle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+    assert.ok(Math.abs(clockwiseGap - step) < 1e-10);
+  }
+
+  assert.equal(getFocusedStageIndex(0, 7), 0);
+  assert.equal(getFocusedStageIndex(1, 7), 1);
+  assert.equal(getFocusedStageIndex(7, 7), 0);
 });
 
 test("Phase 2 static depth levels are ordered and focus never exceeds 1.14", () => {
@@ -370,12 +409,12 @@ test("Phase B：2D 模式保留统一轨道坐标但取消景深模糊", () => {
   assert.ok(flat.opacity >= 0.68 && flat.opacity <= 1);
 });
 
-test("Phase B：轨道随 phase 推进让下一阶段沿正向路径进入前景", () => {
+test("Phase B：轨道随 phase 正向推进形成屏幕坐标系下的顺时针运动", () => {
   const start = computeOrbitNode(0, 0, 7, "3d");
   const later = computeOrbitNode(0, 0.1, 7, "3d");
   const startAngle = Math.atan2(start.y, start.x);
   const laterAngle = Math.atan2(later.y, later.x);
-  const forwardDelta = ((startAngle - laterAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+  const forwardDelta = ((laterAngle - startAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
 
   assert.ok(forwardDelta > 0);
   assert.ok(forwardDelta < Math.PI / 2);
@@ -460,8 +499,8 @@ test("Phase C：每段箭头按两端节点景深尺寸裁剪并沿业务正向�
 
     assert.ok(actualStartGap >= startScreenGap - 2, `${index} 起点未离开当前节点边缘`);
     assert.ok(actualEndGap >= endScreenGap - 2, `${index} 终点进入下一节点内部`);
-    assert.ok(arc.endAngle > arc.startAngle, `${index} 箭头弧段必须沿业务正向`);
-    assert.ok(arc.endAngle - arc.startAngle < (Math.PI * 2) / GALAXY_STAGE_KEYS.length);
+    assert.ok(arc.endAngle < arc.startAngle, `${index} 业务弧段必须匹配顺时针基准角度顺序`);
+    assert.ok(arc.startAngle - arc.endAngle < (Math.PI * 2) / GALAXY_STAGE_KEYS.length);
     assert.equal(
       `${GALAXY_STAGE_KEYS[index]}->${GALAXY_STAGE_KEYS[nextIndex]}`,
       [

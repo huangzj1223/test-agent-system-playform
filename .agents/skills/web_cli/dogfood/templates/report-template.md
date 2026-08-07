@@ -55,7 +55,7 @@
 **Steps to Reproduce:**
 ```bash
 # Exact playwright-cli commands to reproduce
-playwright-cli open --browser=chromium {url}
+playwright-cli open --browser=chrome {url}
 playwright-cli snapshot
 playwright-cli click e5
 playwright-cli console

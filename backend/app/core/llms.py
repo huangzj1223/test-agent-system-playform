@@ -2,20 +2,28 @@
 大语言模型统一配置中心。
 
 采用具体 SDK 类创建模型，确保可控性和兼容性：
-- 文本模型：ChatDeepSeek（深度求索）— 支持思考模式 / 非思考模式
+- 首选文本模型：ChatOpenAI（OpenAI 兼容接口，如 agnes-2.0-flash）
+- DeepSeek 文本模型（作为后备）：ChatDeepSeek — 支持思考模式 / 非思考模式
 - 图片/多模态模型：ChatOpenAI（OpenAI 兼容接口，如豆包、阿里云等）
 """
 
 import logging
 from functools import lru_cache
 from typing import Any
+from uuid import UUID
 
 from langchain_core.language_models import LanguageModelInput, ModelProfile
 from langchain_core.messages import AIMessage
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.settings import settings
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_TEXT_POOL = "system-default-text"
+DEFAULT_IMAGE_POOL = "system-default-image"
+SYSTEM_DEFAULT_POOLS = {DEFAULT_TEXT_POOL, DEFAULT_IMAGE_POOL}
 
 
 # ============================================================================
@@ -70,15 +78,39 @@ def _build_deepseek_agent_chat(**kwargs: Any):
 
 @lru_cache(maxsize=1)
 def get_text_model():
-    """创建文本处理模型（DeepSeek）。
+    """创建文本处理模型。
+
+    优先使用首选文本模型（OpenAI 兼容接口，如 agnes-2.0-flash）；
+    如果未配置或创建失败，则回退到 DeepSeek 模型。
 
     适用于纯文本对话、代码生成、测试用例设计、策略分析等场景。
-    支持思考模式（LLM_THINKING_ENABLED=true）和非思考模式。
 
     Returns:
-        配置好 ModelProfile 的 ChatDeepSeek 实例
+        配置好 ModelProfile 的 ChatOpenAI 或 ChatDeepSeek 实例
     """
-    from langchain_deepseek import ChatDeepSeek
+    # --- 尝试首选模型（OpenAI 兼容接口） ---
+    if settings.text_model_api_key:
+        try:
+            from langchain_openai import ChatOpenAI
+            model = ChatOpenAI(
+                base_url=settings.text_model_api_base,
+                api_key=settings.text_model_api_key,
+                model=settings.text_model_name,
+                max_tokens=settings.text_model_max_tokens,
+                timeout=120,
+                max_retries=5,
+                temperature=0.3,
+            )
+            model.profile = ModelProfile(max_input_tokens=128000)
+            logger.info("Text model ready: %s", settings.text_model_name)
+            return model
+        except Exception as e:
+            logger.warning(
+                f"Failed to create preferred text model "
+                f"({settings.text_model_name}): {e} — falling back to DeepSeek"
+            )
+
+    # --- 回退到 DeepSeek ---
     try:
         thinking_type = "enabled" if settings.llm_thinking_enabled else "disabled"
         extra_body = {"thinking": {"type": thinking_type}}
@@ -91,7 +123,6 @@ def get_text_model():
             "max_retries": 5,
             "extra_body": extra_body,
         }
-        # 非思考模式下 temperature 等采样参数生效；思考模式下 API 会忽略
         if not settings.llm_thinking_enabled:
             common_kwargs["temperature"] = 0.3
 
@@ -103,13 +134,13 @@ def get_text_model():
         model = builder(**common_kwargs)
         model.profile = ModelProfile(max_input_tokens=128000)
         mode_label = "thinking" if settings.llm_thinking_enabled else "agent"
-        logger.info(f"Text model ready: deepseek/{settings.llm_model} (mode={mode_label})")
+        logger.info(f"Text model ready (fallback): deepseek/{settings.llm_model} (mode={mode_label})")
         return model
     except ImportError:
         logger.error("langchain_deepseek not installed. Run: pip install langchain-deepseek")
         raise
     except Exception as e:
-        logger.error(f"Failed to create text model: {e}")
+        logger.error(f"Failed to create fallback text model: {e}")
         raise
 
 
@@ -137,8 +168,116 @@ def get_image_model():
         raise
 
 
-# ============================================================================
-# 全局模型实例（供各 Agent 直接导入使用）
-# ============================================================================
-text_model = get_text_model()
-image_model = get_image_model()
+async def get_text_model_from_config(
+    db: AsyncSession,
+    provider_id: UUID,
+    provider_model_id: str,
+):
+    """Build a chat model from the model configuration tables.
+
+    This is intentionally not cached: admins can edit provider keys and model
+    runtime knobs from the UI, so callers should receive current database state.
+    """
+    from langchain_openai import ChatOpenAI
+
+    from app.models.model_config import ModelConfig, ModelProvider
+    from app.utils.exceptions import NotFoundException, UnprocessableEntityException
+    from app.utils.model_config_crypto import decrypt_secret
+
+    result = await db.execute(
+        select(ModelProvider, ModelConfig)
+        .join(ModelConfig, ModelConfig.provider_id == ModelProvider.id)
+        .where(
+            ModelProvider.id == provider_id,
+            ModelProvider.enabled.is_(True),
+            ModelConfig.model_id == provider_model_id,
+            ModelConfig.enabled.is_(True),
+        )
+    )
+    row = result.one_or_none()
+    if not row:
+        raise NotFoundException(resource_type="模型配置", resource_id=f"{provider_id}/{provider_model_id}")
+
+    provider, model_config = row
+    if not provider.api_key_cipher:
+        raise UnprocessableEntityException("模型服务商尚未配置 API Key")
+
+    if provider.protocol_type not in {"openai", "openai-compatible", "azure-openai"}:
+        raise UnprocessableEntityException(f"暂不支持的模型协议: {provider.protocol_type}")
+
+    kwargs: dict[str, Any] = {
+        "base_url": provider.api_endpoint,
+        "api_key": decrypt_secret(provider.api_key_cipher, settings.model_config_enc_key),
+        "model": model_config.model_id,
+        "timeout": model_config.timeout_sec or 120,
+        "max_retries": model_config.retry_count if model_config.retry_count is not None else 5,
+    }
+    if model_config.max_output_tokens is not None:
+        kwargs["max_tokens"] = model_config.max_output_tokens
+    if model_config.default_temperature is not None:
+        kwargs["temperature"] = model_config.default_temperature
+    if model_config.default_top_p is not None:
+        kwargs["top_p"] = model_config.default_top_p
+
+    model = (
+        _build_deepseek_agent_chat(**kwargs)
+        if provider.provider == "deepseek"
+        else ChatOpenAI(**kwargs)
+    )
+    if model_config.context_window:
+        model.profile = ModelProfile(max_input_tokens=model_config.context_window)
+    return model
+
+
+async def _get_default_model_selection(
+    db: AsyncSession,
+    pool_group: str,
+) -> tuple[UUID, str]:
+    """Return the enabled provider/model selected for one system role."""
+    from app.models.model_config import ModelConfig, ModelProvider
+    from app.utils.exceptions import UnprocessableEntityException
+
+    result = await db.execute(
+        select(ModelProvider.id, ModelConfig.model_id)
+        .join(ModelConfig, ModelConfig.provider_id == ModelProvider.id)
+        .where(
+            ModelProvider.enabled.is_(True),
+            ModelConfig.enabled.is_(True),
+            ModelConfig.pool_group == pool_group,
+        )
+        .order_by(ModelConfig.sort.asc(), ModelProvider.sort.asc(), ModelConfig.created_at.desc())
+        .limit(1)
+    )
+    row = result.one_or_none()
+    if not row:
+        role = "默认文本模型" if pool_group == DEFAULT_TEXT_POOL else "默认多模态模型"
+        raise UnprocessableEntityException(f"尚未在模型配置中设置{role}")
+    return row[0], row[1]
+
+
+async def get_default_text_model_from_config(db: AsyncSession):
+    """Build the current system-default text model exclusively from the database."""
+    provider_id, model_id = await _get_default_model_selection(db, DEFAULT_TEXT_POOL)
+    return await get_text_model_from_config(db, provider_id, model_id)
+
+
+async def get_default_image_model_from_config(db: AsyncSession):
+    """Build the current system-default multimodal model from the database."""
+    provider_id, model_id = await _get_default_model_selection(db, DEFAULT_IMAGE_POOL)
+    return await get_text_model_from_config(db, provider_id, model_id)
+
+
+async def get_default_text_model():
+    """Resolve the latest database-selected text model for an agent run."""
+    from app.config.database import async_session_factory
+
+    async with async_session_factory() as db:
+        return await get_default_text_model_from_config(db)
+
+
+async def get_default_image_model():
+    """Resolve the latest database-selected multimodal model for an agent run."""
+    from app.config.database import async_session_factory
+
+    async with async_session_factory() as db:
+        return await get_default_image_model_from_config(db)
