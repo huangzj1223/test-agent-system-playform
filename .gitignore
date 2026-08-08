@@ -35,6 +35,9 @@ ui/.env.local
 storage/
 exports/
 logs/
+output/
+backend/workspace/web_cli/evidence/
+ui/.playwright-cli/
 *.log
 *.tmp
 *.zip
